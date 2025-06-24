@@ -193,13 +193,13 @@ export default function DefinicoesPage() {
           <FaUserPlus className="text-lg text-green-400" />
           <span className="font-semibold">Gerenciar usuários/revendedores</span>
         </div>
-        <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row gap-2 mb-4 w-full">
+        <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full">
           <input
             name="nome"
             value={novoUsuario.nome}
             onChange={handleAddChange}
             placeholder="Nome"
-            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1"
+            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 h-11"
             disabled={carregando}
           />
           <input
@@ -207,7 +207,7 @@ export default function DefinicoesPage() {
             value={novoUsuario.email}
             onChange={handleAddChange}
             placeholder="Email"
-            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1"
+            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 h-11"
             disabled={carregando}
           />
           <input
@@ -216,10 +216,10 @@ export default function DefinicoesPage() {
             value={novoUsuario.senha}
             onChange={handleAddChange}
             placeholder="Senha"
-            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1"
+            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 h-11"
             disabled={carregando}
           />
-          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium flex-shrink-0" disabled={carregando}>
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium flex-shrink-0 h-11" disabled={carregando}>
             {carregando ? 'Adicionando...' : 'Adicionar'}
           </button>
         </form>
