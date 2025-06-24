@@ -88,10 +88,10 @@ export default function DashboardPage() {
 
       {/* Gráfico de vendas */}
       <div className="bg-gray-900 rounded-lg p-6 shadow flex flex-col gap-4">
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-2">
           <h2 className="text-xl font-bold text-white">Gráfico de Vendas</h2>
           <select
-            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none"
+            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none mt-2 md:mt-0"
             value={tipoGrafico}
             onChange={e => setTipoGrafico(e.target.value as 'mes' | 'ano')}
           >
