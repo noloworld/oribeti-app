@@ -1,8 +1,0 @@
--- CreateTable
-CREATE TABLE "Despesa" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "nome" TEXT NOT NULL,
-    "valor" REAL NOT NULL,
-    "data" DATETIME NOT NULL,
-    "criadoEm" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
