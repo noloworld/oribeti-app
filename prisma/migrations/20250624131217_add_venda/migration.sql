@@ -1,0 +1,12 @@
+-- CreateTable
+CREATE TABLE "Venda" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "clienteId" INTEGER NOT NULL,
+    "nomeProduto" TEXT NOT NULL,
+    "valorRevista" REAL NOT NULL,
+    "valorFinal" REAL NOT NULL,
+    "data" DATETIME NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'PENDENTE',
+    "criadoEm" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Venda_clienteId_fkey" FOREIGN KEY ("clienteId") REFERENCES "Cliente" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
