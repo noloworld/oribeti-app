@@ -205,21 +205,27 @@ export default function ClientesPage() {
             </tr>
           </thead>
           <tbody>
-            {clientes.filter(c => c.nome.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase())).map(cliente => (
-              <tr key={cliente.id} className="border-t border-gray-700">
-                <td className="px-2 py-2 break-words max-w-[120px] sm:max-w-[180px] align-middle">{cliente.nome}</td>
-                <td className="px-2 py-2 break-words max-w-[120px] sm:max-w-[180px] align-middle">{cliente.email}</td>
-                <td className="px-2 py-2 break-words max-w-[100px] align-middle">{cliente.telefone}</td>
-                <td className="px-2 py-2 break-words max-w-[120px] align-middle hidden sm:table-cell">{cliente.morada}</td>
-                <td className="px-2 py-2 align-middle">
-                  <div className="flex flex-col md:flex-row gap-2 w-max">
-                    <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Editar</button>
-                    <button onClick={() => handleDelete(cliente.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">Eliminar</button>
-                    <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">Ver cliente</button>
-                  </div>
-                </td>
+            {clientes.filter(c => c.nome.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase())).length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-center text-gray-400 py-4">Nenhum cliente registado.</td>
               </tr>
-            ))}
+            ) : (
+              clientes.filter(c => c.nome.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase())).map(cliente => (
+                <tr key={cliente.id} className="border-t border-gray-700">
+                  <td className="px-2 py-2 break-words max-w-[120px] sm:max-w-[180px] align-middle">{cliente.nome}</td>
+                  <td className="px-2 py-2 break-words max-w-[120px] sm:max-w-[180px] align-middle">{cliente.email}</td>
+                  <td className="px-2 py-2 break-words max-w-[100px] align-middle">{cliente.telefone}</td>
+                  <td className="px-2 py-2 break-words max-w-[120px] align-middle hidden sm:table-cell">{cliente.morada}</td>
+                  <td className="px-2 py-2 align-middle">
+                    <div className="flex flex-col md:flex-row gap-2 w-max">
+                      <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Editar</button>
+                      <button onClick={() => handleDelete(cliente.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">Eliminar</button>
+                      <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">Ver cliente</button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
