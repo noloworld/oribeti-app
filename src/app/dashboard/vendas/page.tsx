@@ -105,40 +105,63 @@ export default function VendasPage() {
   function handlePrintVenda(venda: Venda) {
     const doc = new jsPDF();
     const dataAtual = new Date().toLocaleDateString();
-    // Título moderno
-    doc.setFontSize(22);
+    // Cabeçalho
+    doc.setFontSize(18);
     doc.setTextColor(40, 40, 120);
-    doc.text('Oribeti', 105, 22, { align: 'center' });
-    doc.setFontSize(14);
-    doc.setTextColor(100, 100, 100);
-    doc.text('Fatura Eletrônica', 105, 32, { align: 'center' });
-    // Linha divisória
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 36, 190, 36);
-    // Dados principais
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Data: ${dataAtual}`, 20, 46);
-    doc.text(`Status: ${venda.status}`, 150, 46);
-    doc.setFontSize(13);
-    doc.setTextColor(40, 40, 120);
-    doc.text('Cliente:', 20, 58);
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`${venda.cliente?.nome || '-'}`, 45, 58);
-    doc.setFontSize(12);
-    doc.text(`Produto: ${venda.nomeProduto}`, 20, 68);
-    // Valor Final em destaque
+    doc.text('Oribeti', 20, 18);
     doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Fatura', 170, 18, { align: 'right' });
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Data: ${dataAtual}`, 20, 26);
+    doc.text(`Nº Fatura: ${venda.id}`, 20, 32);
+    doc.text('IVA: 23%', 170, 26, { align: 'right' });
+    // Cliente
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Cliente:', 20, 42);
+    doc.setFontSize(11);
+    doc.text(`${venda.cliente?.nome || '-'}`, 35, 42);
+    // Tabela de itens
+    let y = 54;
+    doc.setDrawColor(180, 180, 180);
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, y, 170, 10, 'F');
+    doc.setFontSize(11);
+    doc.setTextColor(40, 40, 120);
+    doc.text('Qtd.', 24, y + 7);
+    doc.text('Descrição', 40, y + 7);
+    doc.text('Preço Unit.', 120, y + 7);
+    doc.text('Total', 170, y + 7, { align: 'right' });
+    // Linha do produto
+    y += 12;
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('1', 26, y + 6);
+    doc.text(venda.nomeProduto, 40, y + 6);
+    doc.text(`€${venda.valorFinal.toFixed(2)}`, 120, y + 6);
+    doc.text(`€${venda.valorFinal.toFixed(2)}`, 170, y + 6, { align: 'right' });
+    // Totais
+    y += 18;
+    const subtotal = venda.valorFinal / 1.23;
+    const iva = venda.valorFinal - subtotal;
+    doc.setFontSize(11);
+    doc.setTextColor(80, 80, 80);
+    doc.text('Subtotal:', 120, y);
+    doc.text(`€${subtotal.toFixed(2)}`, 170, y, { align: 'right' });
+    y += 8;
+    doc.text('IVA (23%):', 120, y);
+    doc.text(`€${iva.toFixed(2)}`, 170, y, { align: 'right' });
+    y += 8;
+    doc.setFontSize(13);
     doc.setTextColor(34, 197, 94);
-    doc.text(`Valor Final: €${venda.valorFinal.toFixed(2)}`, 20, 82);
-    // Linha divisória
-    doc.setDrawColor(220, 220, 220);
-    doc.line(20, 90, 190, 90);
+    doc.text('Total:', 120, y);
+    doc.text(`€${venda.valorFinal.toFixed(2)}`, 170, y, { align: 'right' });
     // Rodapé
     doc.setFontSize(10);
     doc.setTextColor(120, 120, 120);
-    doc.text('Documento gerado automaticamente por Oribeti', 105, 200, { align: 'center' });
+    doc.text('Obrigado pela sua compra!', 105, 285, { align: 'center' });
     doc.save(`fatura_${venda.cliente?.nome?.replace(/\s+/g, '_') || 'cliente'}_${dataAtual}.pdf`);
   }
 
