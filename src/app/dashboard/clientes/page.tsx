@@ -194,40 +194,32 @@ export default function ClientesPage() {
         </div>
       </div>
       <div className="overflow-x-auto rounded-lg shadow">
-        <table className="min-w-full bg-gray-800 text-white">
+        <table className="w-full table-auto bg-gray-800 text-white">
           <thead>
             <tr>
-              <th className="px-4 py-2 text-left">Nome</th>
-              <th className="px-4 py-2 text-left">Email</th>
-              <th className="px-4 py-2 text-left">Telefone</th>
-              <th className="px-4 py-2 text-left">Morada</th>
-              <th className="px-4 py-2 text-left">Ações</th>
+              <th className="px-2 py-2 text-left whitespace-nowrap">Nome</th>
+              <th className="px-2 py-2 text-left whitespace-nowrap">Email</th>
+              <th className="px-2 py-2 text-left whitespace-nowrap">Telefone</th>
+              <th className="px-2 py-2 text-left whitespace-nowrap hidden sm:table-cell">Morada</th>
+              <th className="px-2 py-2 text-left whitespace-nowrap">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {clientes
-              .filter(cliente => {
-                const termo = search.toLowerCase();
-                return (
-                  cliente.nome?.toLowerCase().includes(termo) ||
-                  cliente.email?.toLowerCase().includes(termo) ||
-                  cliente.telefone?.toLowerCase().includes(termo) ||
-                  cliente.morada?.toLowerCase().includes(termo)
-                );
-              })
-              .map(cliente => (
-                <tr key={cliente.id} className="border-t border-gray-700">
-                  <td className="px-4 py-2">{cliente.nome}</td>
-                  <td className="px-4 py-2">{cliente.email}</td>
-                  <td className="px-4 py-2">{cliente.telefone}</td>
-                  <td className="px-4 py-2">{cliente.morada}</td>
-                  <td className="px-4 py-2">
-                    <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm mr-2">Editar</button>
+            {clientes.filter(c => c.nome.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase())).map(cliente => (
+              <tr key={cliente.id} className="border-t border-gray-700">
+                <td className="px-2 py-2 break-words max-w-[120px] sm:max-w-[180px] align-middle">{cliente.nome}</td>
+                <td className="px-2 py-2 break-words max-w-[120px] sm:max-w-[180px] align-middle">{cliente.email}</td>
+                <td className="px-2 py-2 break-words max-w-[100px] align-middle">{cliente.telefone}</td>
+                <td className="px-2 py-2 break-words max-w-[120px] align-middle hidden sm:table-cell">{cliente.morada}</td>
+                <td className="px-2 py-2 align-middle">
+                  <div className="flex flex-col md:flex-row gap-2 w-max">
+                    <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Editar</button>
                     <button onClick={() => handleDelete(cliente.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">Eliminar</button>
-                    <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm ml-2">Ver cliente</button>
-                  </td>
-                </tr>
-              ))}
+                    <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">Ver cliente</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

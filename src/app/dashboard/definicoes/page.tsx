@@ -199,53 +199,54 @@ export default function DefinicoesPage() {
             value={novoUsuario.nome}
             onChange={handleAddChange}
             placeholder="Nome"
-            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 min-w-0 md:max-w-[180px]"
+            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1"
+            disabled={carregando}
           />
           <input
             name="email"
             value={novoUsuario.email}
             onChange={handleAddChange}
             placeholder="Email"
-            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 min-w-0 md:max-w-[220px]"
+            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1"
+            disabled={carregando}
           />
           <input
             name="senha"
+            type="password"
             value={novoUsuario.senha}
             onChange={handleAddChange}
             placeholder="Senha"
-            type="password"
-            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 min-w-0 md:max-w-[140px]"
+            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1"
+            disabled={carregando}
           />
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium flex items-center gap-2 md:max-w-[130px] w-full md:w-auto"
-          >
-            <FaUserPlus />Adicionar
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium flex-shrink-0" disabled={carregando}>
+            {carregando ? 'Adicionando...' : 'Adicionar'}
           </button>
         </form>
-        {carregando && <div className="text-sm text-gray-400 mt-2">Carregando...</div>}
-        <table className="min-w-full bg-gray-900 text-white rounded-lg">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 text-left">Nome</th>
-              <th className="px-4 py-2 text-left">Email</th>
-              <th className="px-4 py-2 text-left">Tipo</th>
-              <th className="px-4 py-2 text-left">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {usuarios.map(usuario => (
-              <tr key={usuario.id} className="border-t border-gray-800">
-                <td className="px-4 py-2">{usuario.nome}</td>
-                <td className="px-4 py-2">{usuario.email}</td>
-                <td className="px-4 py-2">{usuario.tipo}</td>
-                <td className="px-4 py-2">
-                  <button onClick={() => handleRemoverUsuario(usuario.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1"><FaTrash />Remover</button>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto text-sm">
+            <thead>
+              <tr>
+                <th className="px-2 py-2 text-left whitespace-nowrap">Nome</th>
+                <th className="px-2 py-2 text-left whitespace-nowrap">Email</th>
+                <th className="px-2 py-2 text-left whitespace-nowrap">Tipo</th>
+                <th className="px-2 py-2 text-left whitespace-nowrap">Ações</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {usuarios.map(usuario => (
+                <tr key={usuario.id} className="border-t border-gray-700">
+                  <td className="px-2 py-2 break-words max-w-[100px] align-middle">{usuario.nome}</td>
+                  <td className="px-2 py-2 break-words max-w-[140px] align-middle">{usuario.email}</td>
+                  <td className="px-2 py-2 align-middle">{usuario.tipo}</td>
+                  <td className="px-2 py-2 align-middle">
+                    <button onClick={() => handleRemoverUsuario(usuario.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs">Remover</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );
