@@ -233,31 +233,33 @@ export default function DespesasPage() {
           leaveTo="opacity-0 scale-95"
         >
           <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
-              <h2 className="text-xl font-bold mb-4">Editar Despesa</h2>
-              <form onSubmit={handleEditSave} className="flex flex-col gap-4">
-                <div>
-                  <label className="block text-gray-300 mb-1">Nome da despesa</label>
-                  <input name="nome" value={despesaEdit.nome} onChange={e => setDespesaEdit({ ...despesaEdit, nome: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="block text-gray-300 mb-1">Valor</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><FaEuroSign /></span>
-                    <input name="valor" value={despesaEdit.valor} onChange={e => setDespesaEdit({ ...despesaEdit, valor: e.target.value })} className="w-full pl-8 pr-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+            {despesaEdit ? (
+              <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold mb-4">Editar Despesa</h2>
+                <form onSubmit={handleEditSave} className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-gray-300 mb-1">Nome da despesa</label>
+                    <input name="nome" value={despesaEdit.nome} onChange={e => setDespesaEdit({ ...despesaEdit, nome: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
                   </div>
-                </div>
-                <div>
-                  <label className="block text-gray-300 mb-1">Data</label>
-                  <input name="data" type="date" value={despesaEdit.data} onChange={e => setDespesaEdit({ ...despesaEdit, data: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
-                </div>
-                <div className="flex justify-end gap-2 mt-2">
-                  <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
-                  <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium">Salvar</button>
-                </div>
-              </form>
-              <button onClick={() => setModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
-            </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Valor</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><FaEuroSign /></span>
+                      <input name="valor" value={despesaEdit.valor} onChange={e => setDespesaEdit({ ...despesaEdit, valor: e.target.value })} className="w-full pl-8 pr-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Data</label>
+                    <input name="data" type="date" value={despesaEdit.data} onChange={e => setDespesaEdit({ ...despesaEdit, data: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                  </div>
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                    <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium">Salvar</button>
+                  </div>
+                </form>
+                <button onClick={() => setModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
+              </div>
+            ) : null}
           </div>
         </Transition.Child>
       </Transition.Root>
@@ -284,15 +286,17 @@ export default function DespesasPage() {
           leaveTo="opacity-0 scale-95"
         >
           <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
-              <h2 className="text-xl font-bold mb-4 text-red-500">Confirmar Eliminação</h2>
-              <p className="mb-6 text-gray-200">Tem certeza que deseja eliminar a despesa <span className="font-semibold">{despesaToDelete.nome}</span>?</p>
-              <div className="flex justify-end gap-2">
-                <button onClick={() => setDeleteModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
-                <button onClick={handleDeleteConfirmed} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-medium">Eliminar</button>
+            {despesaToDelete ? (
+              <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold mb-4 text-red-500">Confirmar Eliminação</h2>
+                <p className="mb-6 text-gray-200">Tem certeza que deseja eliminar a despesa <span className="font-semibold">{despesaToDelete.nome}</span>?</p>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setDeleteModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                  <button onClick={handleDeleteConfirmed} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-medium">Eliminar</button>
+                </div>
+                <button onClick={() => setDeleteModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
               </div>
-              <button onClick={() => setDeleteModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
-            </div>
+            ) : null}
           </div>
         </Transition.Child>
       </Transition.Root>
