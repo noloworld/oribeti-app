@@ -84,7 +84,7 @@ export default function LoginPage() {
           >
             {loading ? (
               <>
-                <img src="/public/gear.gif" alt="Carregando" className="w-6 h-6 inline-block mr-2" />
+                <img src="/gear.gif" alt="Carregando" className="w-6 h-6 inline-block mr-2" />
                 Entrando
               </>
             ) : "Acessar Painel"}
