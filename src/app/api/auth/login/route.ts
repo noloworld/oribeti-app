@@ -31,6 +31,7 @@ export async function POST(req: Request) {
     });
     return res;
   } catch (error) {
+    console.error('ERRO LOGIN:', error);
     return NextResponse.json({ error: 'Erro ao fazer login.' }, { status: 500 });
   }
 } 
