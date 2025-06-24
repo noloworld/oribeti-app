@@ -105,15 +105,40 @@ export default function VendasPage() {
   function handlePrintVenda(venda: Venda) {
     const doc = new jsPDF();
     const dataAtual = new Date().toLocaleDateString();
-    doc.setFontSize(18);
-    doc.text('Oribeti - Fatura Eletrônica', 14, 20);
+    // Título moderno
+    doc.setFontSize(22);
+    doc.setTextColor(40, 40, 120);
+    doc.text('Oribeti', 105, 22, { align: 'center' });
+    doc.setFontSize(14);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Fatura Eletrônica', 105, 32, { align: 'center' });
+    // Linha divisória
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 36, 190, 36);
+    // Dados principais
     doc.setFontSize(12);
-    doc.text(`Data: ${dataAtual}`, 14, 30);
-    doc.text(`Cliente: ${venda.cliente?.nome || '-'}`, 14, 40);
-    doc.text(`Produto: ${venda.nomeProduto}`, 14, 48);
-    doc.text(`Valor Final: €${venda.valorFinal.toFixed(2)}`, 14, 56);
-    doc.text(`Valor Revista: €${venda.valorRevista.toFixed(2)}`, 14, 64);
-    doc.text(`Status: ${venda.status}`, 14, 72);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Data: ${dataAtual}`, 20, 46);
+    doc.text(`Status: ${venda.status}`, 150, 46);
+    doc.setFontSize(13);
+    doc.setTextColor(40, 40, 120);
+    doc.text('Cliente:', 20, 58);
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`${venda.cliente?.nome || '-'}`, 45, 58);
+    doc.setFontSize(12);
+    doc.text(`Produto: ${venda.nomeProduto}`, 20, 68);
+    // Valor Final em destaque
+    doc.setFontSize(16);
+    doc.setTextColor(34, 197, 94);
+    doc.text(`Valor Final: €${venda.valorFinal.toFixed(2)}`, 20, 82);
+    // Linha divisória
+    doc.setDrawColor(220, 220, 220);
+    doc.line(20, 90, 190, 90);
+    // Rodapé
+    doc.setFontSize(10);
+    doc.setTextColor(120, 120, 120);
+    doc.text('Documento gerado automaticamente por Oribeti', 105, 200, { align: 'center' });
     doc.save(`fatura_${venda.cliente?.nome?.replace(/\s+/g, '_') || 'cliente'}_${dataAtual}.pdf`);
   }
 
