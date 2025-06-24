@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import jsPDF from 'jspdf';
 
 interface Cliente {
   id: number;
@@ -99,6 +100,21 @@ export default function VendasPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handlePrintVenda(venda: Venda) {
+    const doc = new jsPDF();
+    const dataAtual = new Date().toLocaleDateString();
+    doc.setFontSize(18);
+    doc.text('Oribeti - Fatura Eletrônica', 14, 20);
+    doc.setFontSize(12);
+    doc.text(`Data: ${dataAtual}`, 14, 30);
+    doc.text(`Cliente: ${venda.cliente?.nome || '-'}`, 14, 40);
+    doc.text(`Produto: ${venda.nomeProduto}`, 14, 48);
+    doc.text(`Valor Final: €${venda.valorFinal.toFixed(2)}`, 14, 56);
+    doc.text(`Valor Revista: €${venda.valorRevista.toFixed(2)}`, 14, 64);
+    doc.text(`Status: ${venda.status}`, 14, 72);
+    doc.save(`fatura_${venda.cliente?.nome?.replace(/\s+/g, '_') || 'cliente'}_${dataAtual}.pdf`);
   }
 
   return (
@@ -224,6 +240,12 @@ export default function VendasPage() {
                       className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
                     >
                       Eliminar
+                    </button>
+                    <button
+                      onClick={() => handlePrintVenda(v)}
+                      className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Imprimir
                     </button>
                   </td>
                 </tr>
