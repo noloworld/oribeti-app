@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
+import { Transition } from '@headlessui/react';
 
 interface Cliente {
   id: number;
@@ -304,203 +305,264 @@ export default function VendasPage() {
       </div>
 
       {/* Modal de Nova Venda */}
-      {showModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
-          onClick={() => setShowModal(false)}
+      <Transition.Root show={showModal} as={Fragment}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
         >
-          <div
-            className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative"
-            onClick={e => e.stopPropagation()}
-          >
-            <h2 className="text-xl font-bold text-white mb-4">Nova Venda</h2>
-            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-              <div>
-                <label className="block text-gray-300 mb-1">Data</label>
-                <input type="date" name="data" value={form.data} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Cliente</label>
-                <select
-                  name="clienteId"
-                  className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none"
-                  value={form.clienteId}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Selecione um cliente</option>
-                  {clientes.map((c) => (
-                    <option key={c.id} value={c.id}>{c.nome}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Produto</label>
-                <input type="text" name="nomeProduto" value={form.nomeProduto} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Nome do produto" required />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Valor Revista (€)</label>
-                <input type="number" name="valorRevista" min="0" step="0.01" value={form.valorRevista} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" required />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Valor Final (€)</label>
-                <input type="number" name="valorFinal" min="0" step="0.01" value={form.valorFinal} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" required />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Status</label>
-                <select name="status" value={form.status} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none">
-                  <option value="PAGO">Pago</option>
-                  <option value="PENDENTE">Pendente</option>
-                </select>
-              </div>
-              <div className="flex justify-end gap-2 mt-2">
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600"
-                  onClick={() => setShowModal(false)}
-                  disabled={loading}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium"
-                  disabled={loading}
-                >
-                  {loading ? 'Salvando...' : 'Salvar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {/* Modal de Editar Venda */}
-      {showEditModal && editVenda && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setShowEditModal(false)}>
-          <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold text-white mb-4">Editar Venda</h2>
-            <form className="flex flex-col gap-4" onSubmit={async (e) => {
-              e.preventDefault();
-              setLoading(true);
-              // Verificar se houve alteração real
-              const original = vendas.find(v => v.id === editVenda.id);
-              if (
-                original &&
-                original.nomeProduto === editVenda.nomeProduto &&
-                original.valorRevista === editVenda.valorRevista &&
-                original.valorFinal === editVenda.valorFinal &&
-                original.status === editVenda.status &&
-                original.data.slice(0,10) === editVenda.data.slice(0,10)
-              ) {
-                setShowEditModal(false); // Nada mudou, só fecha o modal
-                setEditVenda(null);
-                setLoading(false);
-                return;
-              }
-              try {
-                const res = await fetch('/api/vendas', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    id: editVenda.id,
-                    clienteId: editVenda.cliente.id,
-                    nomeProduto: editVenda.nomeProduto,
-                    valorRevista: editVenda.valorRevista,
-                    valorFinal: editVenda.valorFinal,
-                    data: editVenda.data,
-                    status: editVenda.status,
-                  }),
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                  toast.error(data.error || 'Erro ao editar venda.');
-                  setLoading(false);
-                  return;
-                }
-                toast.success('Venda editada com sucesso!');
-                setShowEditModal(false);
-                setEditVenda(null);
-                fetchVendas();
-                window.dispatchEvent(new Event('devedoresUpdate'));
-              } catch {
-                toast.error('Erro ao editar venda.');
-              } finally {
-                setLoading(false);
-              }
-            }}>
-              <div>
-                <label className="block text-gray-300 mb-1">Data</label>
-                <input type="date" value={editVenda.data.slice(0,10)} onChange={e => setEditVenda({ ...editVenda, data: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Cliente</label>
-                <div className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700">
-                  {editVenda.cliente.nome}
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setShowModal(false)} />
+        </Transition.Child>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
+              <h2 className="text-xl font-bold text-white mb-4">Nova Venda</h2>
+              <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+                <div>
+                  <label className="block text-gray-300 mb-1">Data</label>
+                  <input type="date" name="data" value={form.data} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
                 </div>
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Produto</label>
-                <input type="text" value={editVenda.nomeProduto} onChange={e => setEditVenda({ ...editVenda, nomeProduto: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Valor Revista (€)</label>
-                <input type="number" min="0" step="0.01" value={editVenda.valorRevista} onChange={e => setEditVenda({ ...editVenda, valorRevista: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Valor Final (€)</label>
-                <input type="number" min="0" step="0.01" value={editVenda.valorFinal} onChange={e => setEditVenda({ ...editVenda, valorFinal: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Status</label>
-                <select value={editVenda.status} onChange={e => setEditVenda({ ...editVenda, status: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none">
-                  <option value="PAGO">Pago</option>
-                  <option value="PENDENTE">Pendente</option>
-                </select>
-              </div>
-              <div className="flex justify-end gap-2 mt-2">
-                <button type="button" className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600" onClick={() => setShowEditModal(false)} disabled={loading}>Cancelar</button>
-                <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-gray-300 mb-1">Cliente</label>
+                  <select
+                    name="clienteId"
+                    className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none"
+                    value={form.clienteId}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Selecione um cliente</option>
+                    {clientes.map((c) => (
+                      <option key={c.id} value={c.id}>{c.nome}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1">Produto</label>
+                  <input type="text" name="nomeProduto" value={form.nomeProduto} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Nome do produto" required />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1">Valor Revista (€)</label>
+                  <input type="number" name="valorRevista" min="0" step="0.01" value={form.valorRevista} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" required />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1">Valor Final (€)</label>
+                  <input type="number" name="valorFinal" min="0" step="0.01" value={form.valorFinal} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" required />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1">Status</label>
+                  <select name="status" value={form.status} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none">
+                    <option value="PAGO">Pago</option>
+                    <option value="PENDENTE">Pendente</option>
+                  </select>
+                </div>
+                <div className="flex justify-end gap-2 mt-2">
+                  <button
+                    type="button"
+                    className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600"
+                    onClick={() => setShowModal(false)}
+                    disabled={loading}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium"
+                    disabled={loading}
+                  >
+                    {loading ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
-      {/* Modal de Eliminar Venda */}
-      {showDeleteModal && vendaToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-sm text-center">
-            <h2 className="text-xl font-bold text-white mb-4">Eliminar Venda</h2>
-            <p className="text-gray-300 mb-6">Tem certeza que deseja eliminar esta venda? Esta ação não pode ser desfeita.</p>
-            <div className="flex justify-center gap-4">
-              <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
-              <button onClick={async () => {
-                setLoading(true);
-                try {
-                  const res = await fetch('/api/vendas', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: vendaToDelete.id }),
-                  });
-                  const data = await res.json();
-                  if (!res.ok) {
-                    toast.error(data.error || 'Erro ao eliminar venda.');
+        </Transition.Child>
+      </Transition.Root>
+      {/* Modal de Editar Venda */}
+      <Transition.Root show={showEditModal && !!editVenda} as={Fragment}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setShowEditModal(false)} />
+        </Transition.Child>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            {editVenda ? (
+              <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-white mb-4">Editar Venda</h2>
+                <form className="flex flex-col gap-4" onSubmit={async (e) => {
+                  e.preventDefault();
+                  setLoading(true);
+                  // Verificar se houve alteração real
+                  const original = vendas.find(v => v.id === editVenda.id);
+                  if (
+                    original &&
+                    original.nomeProduto === editVenda.nomeProduto &&
+                    original.valorRevista === editVenda.valorRevista &&
+                    original.valorFinal === editVenda.valorFinal &&
+                    original.status === editVenda.status &&
+                    original.data.slice(0,10) === editVenda.data.slice(0,10)
+                  ) {
+                    setShowEditModal(false); // Nada mudou, só fecha o modal
+                    setEditVenda(null);
                     setLoading(false);
                     return;
                   }
-                  toast.success('Venda eliminada com sucesso!');
-                  setShowDeleteModal(false);
-                  setVendaToDelete(null);
-                  fetchVendas();
-                } catch {
-                  toast.error('Erro ao eliminar venda.');
-                } finally {
-                  setLoading(false);
-                }
-              }} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-medium" disabled={loading}>{loading ? 'Eliminando...' : 'Eliminar'}</button>
-            </div>
+                  try {
+                    const res = await fetch('/api/vendas', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        id: editVenda.id,
+                        clienteId: editVenda.cliente.id,
+                        nomeProduto: editVenda.nomeProduto,
+                        valorRevista: editVenda.valorRevista,
+                        valorFinal: editVenda.valorFinal,
+                        data: editVenda.data,
+                        status: editVenda.status,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                      toast.error(data.error || 'Erro ao editar venda.');
+                      setLoading(false);
+                      return;
+                    }
+                    toast.success('Venda editada com sucesso!');
+                    setShowEditModal(false);
+                    setEditVenda(null);
+                    fetchVendas();
+                    window.dispatchEvent(new Event('devedoresUpdate'));
+                  } catch {
+                    toast.error('Erro ao editar venda.');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Data</label>
+                    <input type="date" value={editVenda.data.slice(0,10)} onChange={e => setEditVenda({ ...editVenda, data: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Cliente</label>
+                    <div className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700">
+                      {editVenda.cliente.nome}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Produto</label>
+                    <input type="text" value={editVenda.nomeProduto} onChange={e => setEditVenda({ ...editVenda, nomeProduto: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Valor Revista (€)</label>
+                    <input type="number" min="0" step="0.01" value={editVenda.valorRevista} onChange={e => setEditVenda({ ...editVenda, valorRevista: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Valor Final (€)</label>
+                    <input type="number" min="0" step="0.01" value={editVenda.valorFinal} onChange={e => setEditVenda({ ...editVenda, valorFinal: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Status</label>
+                    <select value={editVenda.status} onChange={e => setEditVenda({ ...editVenda, status: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none">
+                      <option value="PAGO">Pago</option>
+                      <option value="PENDENTE">Pendente</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button type="button" className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600" onClick={() => setShowEditModal(false)} disabled={loading}>Cancelar</button>
+                    <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
+                  </div>
+                </form>
+              </div>
+            ) : null}
           </div>
-        </div>
-      )}
+        </Transition.Child>
+      </Transition.Root>
+      {/* Modal de Eliminar Venda */}
+      <Transition.Root show={showDeleteModal && !!vendaToDelete} as={Fragment}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setShowDeleteModal(false)} />
+        </Transition.Child>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            {vendaToDelete ? (
+              <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-sm text-center pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-white mb-4">Eliminar Venda</h2>
+                <p className="text-gray-300 mb-6">Tem certeza que deseja eliminar esta venda? Esta ação não pode ser desfeita.</p>
+                <div className="flex justify-center gap-4">
+                  <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                  <button onClick={async () => {
+                    setLoading(true);
+                    try {
+                      const res = await fetch('/api/vendas', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: vendaToDelete.id }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) {
+                        toast.error(data.error || 'Erro ao eliminar venda.');
+                        setLoading(false);
+                        return;
+                      }
+                      toast.success('Venda eliminada com sucesso!');
+                      setShowDeleteModal(false);
+                      setVendaToDelete(null);
+                      fetchVendas();
+                    } catch {
+                      toast.error('Erro ao eliminar venda.');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-medium" disabled={loading}>{loading ? 'Eliminando...' : 'Eliminar'}</button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </Transition.Child>
+      </Transition.Root>
     </div>
   );
 } 

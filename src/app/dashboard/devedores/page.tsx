@@ -1,7 +1,8 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { FaEuroSign } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { Transition } from '@headlessui/react';
 
 interface Venda {
   id: number;
@@ -14,6 +15,8 @@ interface Venda {
 export default function DevedoresPage() {
   const [vendasPendentes, setVendasPendentes] = useState<Venda[]>([]);
   const [loading, setLoading] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [vendaToConfirm, setVendaToConfirm] = useState<Venda | null>(null);
 
   const fetchPendentes = async () => {
     try {
@@ -29,15 +32,16 @@ export default function DevedoresPage() {
     fetchPendentes();
   }, []);
 
-  async function marcarComoPago(venda: Venda) {
+  async function marcarComoPagoConfirmado() {
+    if (!vendaToConfirm) return;
     setLoading(true);
     try {
       const res = await fetch('/api/vendas', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...venda,
-          clienteId: venda.cliente.id,
+          ...vendaToConfirm,
+          clienteId: vendaToConfirm.cliente.id,
           status: 'PAGO',
         }),
       });
@@ -45,6 +49,8 @@ export default function DevedoresPage() {
       toast.success('Status alterado para PAGO!');
       fetchPendentes();
       window.dispatchEvent(new Event('devedoresUpdate'));
+      setConfirmModalOpen(false);
+      setVendaToConfirm(null);
     } catch {
       toast.error('Erro ao atualizar status.');
     } finally {
@@ -78,7 +84,7 @@ export default function DevedoresPage() {
                   <td className="px-4 py-2">{new Date(venda.data).toLocaleDateString()}</td>
                   <td className="px-4 py-2">
                     <button
-                      onClick={() => marcarComoPago(venda)}
+                      onClick={() => { setVendaToConfirm(venda); setConfirmModalOpen(true); }}
                       className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
                       disabled={loading}
                     >
@@ -91,6 +97,42 @@ export default function DevedoresPage() {
           </tbody>
         </table>
       </div>
+      {/* Modal de confirmação de pagamento */}
+      <Transition.Root show={confirmModalOpen && !!vendaToConfirm} as={Fragment}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setConfirmModalOpen(false)} />
+        </Transition.Child>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            {vendaToConfirm ? (
+              <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-sm text-center pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-white mb-4">Confirmar Pagamento</h2>
+                <p className="text-gray-300 mb-6">Tem certeza que deseja marcar como <span className="font-semibold text-green-400">PAGO</span> a venda de <span className="font-semibold">{vendaToConfirm.cliente.nome}</span> no valor de <span className="font-semibold">€{vendaToConfirm.valorFinal.toFixed(2)}</span>?</p>
+                <div className="flex justify-center gap-4">
+                  <button onClick={() => setConfirmModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                  <button onClick={marcarComoPagoConfirmado} className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Confirmar'}</button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </Transition.Child>
+      </Transition.Root>
     </div>
   );
 } 

@@ -1,7 +1,8 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
+import { Transition } from '@headlessui/react';
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<any[]>([]);
@@ -258,128 +259,216 @@ export default function ClientesPage() {
         </table>
       </div>
       {/* Modal de adição */}
-      {addModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={handleAddModalClose}>
-          <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md relative" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">Adicionar Cliente</h2>
-            <form onSubmit={handleAddSave} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-gray-300 mb-1">Nome</label>
-                <input name="nome" value={novoCliente.nome} onChange={handleAddChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Email</label>
-                <input name="email" value={novoCliente.email} onChange={handleAddChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Telefone</label>
-                <input name="telefone" value={novoCliente.telefone} onChange={handleAddChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Morada</label>
-                <input name="morada" value={novoCliente.morada} onChange={handleAddChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
-              </div>
-              <div className="flex justify-end gap-2 mt-2">
-                <button type="button" onClick={handleAddModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
-                <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
-              </div>
-            </form>
-            <button onClick={handleAddModalClose} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
+      <Transition.Root show={addModalOpen} as={Fragment}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={handleAddModalClose} />
+        </Transition.Child>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
+              <h2 className="text-xl font-bold mb-4">Adicionar Cliente</h2>
+              <form onSubmit={handleAddSave} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-gray-300 mb-1">Nome</label>
+                  <input name="nome" value={novoCliente.nome} onChange={handleAddChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1">Email</label>
+                  <input name="email" value={novoCliente.email} onChange={handleAddChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1">Telefone</label>
+                  <input name="telefone" value={novoCliente.telefone} onChange={handleAddChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1">Morada</label>
+                  <input name="morada" value={novoCliente.morada} onChange={handleAddChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                </div>
+                <div className="flex justify-end gap-2 mt-2">
+                  <button type="button" onClick={handleAddModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                  <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
+                </div>
+              </form>
+              <button onClick={handleAddModalClose} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
+            </div>
           </div>
-        </div>
-      )}
+        </Transition.Child>
+      </Transition.Root>
       {/* Modal de edição (mock) */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={handleModalClose}>
-          <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md relative" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">Editar Cliente</h2>
-            <form onSubmit={handleEditSave} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-gray-300 mb-1">Nome</label>
-                <input name="nome" value={clienteEdit.nome} onChange={handleEditChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+      <Transition.Root show={modalOpen} as={Fragment}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={handleModalClose} />
+        </Transition.Child>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            {clienteEdit ? (
+              <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold mb-4">Editar Cliente</h2>
+                <form onSubmit={handleEditSave} className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-gray-300 mb-1">Nome</label>
+                    <input name="nome" value={clienteEdit.nome} onChange={handleEditChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Email</label>
+                    <input name="email" value={clienteEdit.email} onChange={handleEditChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Telefone</label>
+                    <input name="telefone" value={clienteEdit.telefone} onChange={handleEditChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Morada</label>
+                    <input name="morada" value={clienteEdit.morada} onChange={handleEditChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                  </div>
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button type="button" onClick={handleModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                    <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium">Salvar</button>
+                  </div>
+                </form>
+                <button onClick={handleModalClose} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
               </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Email</label>
-                <input name="email" value={clienteEdit.email} onChange={handleEditChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Telefone</label>
-                <input name="telefone" value={clienteEdit.telefone} onChange={handleEditChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1">Morada</label>
-                <input name="morada" value={clienteEdit.morada} onChange={handleEditChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
-              </div>
-              <div className="flex justify-end gap-2 mt-2">
-                <button type="button" onClick={handleModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
-                <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium">Salvar</button>
-              </div>
-            </form>
-            <button onClick={handleModalClose} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
+            ) : null}
           </div>
-        </div>
-      )}
+        </Transition.Child>
+      </Transition.Root>
       {/* Modal de confirmação de exclusão */}
-      {confirmDeleteId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-sm text-center">
-            <h2 className="text-xl font-bold text-white mb-4">Eliminar Cliente</h2>
-            <p className="text-gray-300 mb-6">Tem certeza que deseja eliminar este cliente? Esta ação não pode ser desfeita.</p>
-            <div className="flex justify-center gap-4">
-              <button onClick={() => setConfirmDeleteId(null)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
-              <button onClick={confirmDelete} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-medium" disabled={loading}>{loading ? 'Eliminando...' : 'Eliminar'}</button>
+      <Transition.Root show={confirmDeleteId !== null} as={Fragment}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setConfirmDeleteId(null)} />
+        </Transition.Child>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-sm text-center pointer-events-auto" onClick={e => e.stopPropagation()}>
+              <h2 className="text-xl font-bold text-white mb-4">Eliminar Cliente</h2>
+              <p className="text-gray-300 mb-6">Tem certeza que deseja eliminar este cliente? Esta ação não pode ser desfeita.</p>
+              <div className="flex justify-center gap-4">
+                <button onClick={() => setConfirmDeleteId(null)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                <button onClick={confirmDelete} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-medium" disabled={loading}>{loading ? 'Eliminando...' : 'Eliminar'}</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        </Transition.Child>
+      </Transition.Root>
       {/* Modal de Ver Cliente */}
-      {showViewModal && clienteView && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setShowViewModal(false)}>
-          <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-2xl relative" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold text-white mb-4">Detalhes do Cliente</h2>
-            <div className="mb-4">
-              <div className="text-lg font-semibold text-white">{clienteView.nome}</div>
-              <div className="text-gray-300 text-sm">Email: {clienteView.email || '-'}</div>
-              <div className="text-gray-300 text-sm">Telefone: {clienteView.telefone || '-'}</div>
-              <div className="text-gray-300 text-sm">Morada: {clienteView.morada || '-'}</div>
-            </div>
-            <h3 className="text-lg font-bold text-white mb-2 mt-4">Compras</h3>
-            <div className="overflow-x-auto rounded-lg shadow mb-2">
-              <table className="min-w-full bg-gray-800 text-white">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 text-left">Data</th>
-                    <th className="px-4 py-2 text-left">Produto</th>
-                    <th className="px-4 py-2 text-left">Valor Revista (€)</th>
-                    <th className="px-4 py-2 text-left">Valor Final (€)</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {compras.length === 0 ? (
-                    <tr>
-                      <td className="px-4 py-2 text-gray-400" colSpan={5}>Nenhuma compra encontrada.</td>
-                    </tr>
-                  ) : (
-                    compras.map((v, idx) => (
-                      <tr key={v.id || idx} className="border-t border-gray-700">
-                        <td className="px-4 py-2">{new Date(v.data).toLocaleDateString()}</td>
-                        <td className="px-4 py-2">{v.nomeProduto}</td>
-                        <td className="px-4 py-2">€{v.valorRevista.toFixed(2)}</td>
-                        <td className="px-4 py-2">€{v.valorFinal.toFixed(2)}</td>
-                        <td className="px-4 py-2">{v.status}</td>
+      <Transition.Root show={showViewModal && !!clienteView} as={Fragment}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setShowViewModal(false)} />
+        </Transition.Child>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            {clienteView ? (
+              <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-2xl relative pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-white mb-4">Detalhes do Cliente</h2>
+                <div className="mb-4">
+                  <div className="text-lg font-semibold text-white">{clienteView.nome}</div>
+                  <div className="text-gray-300 text-sm">Email: {clienteView.email || '-'}</div>
+                  <div className="text-gray-300 text-sm">Telefone: {clienteView.telefone || '-'}</div>
+                  <div className="text-gray-300 text-sm">Morada: {clienteView.morada || '-'}</div>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2 mt-4">Compras</h3>
+                <div className="overflow-x-auto rounded-lg shadow mb-2">
+                  <table className="min-w-full bg-gray-800 text-white">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-2 text-left">Data</th>
+                        <th className="px-4 py-2 text-left">Produto</th>
+                        <th className="px-4 py-2 text-left">Valor Revista (€)</th>
+                        <th className="px-4 py-2 text-left">Valor Final (€)</th>
+                        <th className="px-4 py-2 text-left">Status</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex justify-end mt-4">
-              <button onClick={() => setShowViewModal(false)} className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600">Fechar</button>
-            </div>
+                    </thead>
+                    <tbody>
+                      {compras.length === 0 ? (
+                        <tr>
+                          <td className="px-4 py-2 text-gray-400" colSpan={5}>Nenhuma compra encontrada.</td>
+                        </tr>
+                      ) : (
+                        compras.map((v, idx) => (
+                          <tr key={v.id || idx} className="border-t border-gray-700">
+                            <td className="px-4 py-2">{new Date(v.data).toLocaleDateString()}</td>
+                            <td className="px-4 py-2">{v.nomeProduto}</td>
+                            <td className="px-4 py-2">€{v.valorRevista.toFixed(2)}</td>
+                            <td className="px-4 py-2">€{v.valorFinal.toFixed(2)}</td>
+                            <td className="px-4 py-2">{v.status}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex justify-end mt-4">
+                  <button onClick={() => setShowViewModal(false)} className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600">Fechar</button>
+                </div>
+              </div>
+            ) : null}
           </div>
-        </div>
-      )}
+        </Transition.Child>
+      </Transition.Root>
     </div>
   );
 } 
