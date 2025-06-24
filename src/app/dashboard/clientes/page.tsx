@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import jsPDF from 'jspdf';
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<any[]>([]);
@@ -178,6 +179,32 @@ export default function ClientesPage() {
     }
   }
 
+  function handlePrint(cliente: any) {
+    const doc = new jsPDF();
+    const dataAtual = new Date().toLocaleDateString();
+    doc.setFontSize(18);
+    doc.text('Oribeti - Fatura Eletrônica', 14, 20);
+    doc.setFontSize(12);
+    doc.text(`Data: ${dataAtual}`, 14, 30);
+    doc.text(`Cliente: ${cliente.nome}`, 14, 40);
+    doc.text(`Email: ${cliente.email || '-'}`, 14, 48);
+    doc.text(`Telefone: ${cliente.telefone || '-'}`, 14, 56);
+    doc.text(`Morada: ${cliente.morada || '-'}`, 14, 64);
+    // Produtos adquiridos (busca compras do cliente)
+    if (compras.length > 0) {
+      doc.text('Produtos adquiridos:', 14, 74);
+      let y = 82;
+      compras.forEach((v: any, idx: number) => {
+        doc.text(`${idx + 1}. Produto: ${v.nomeProduto}`, 16, y);
+        doc.text(`   Valor: €${v.valorFinal.toFixed(2)}`, 16, y + 8);
+        y += 16;
+      });
+    } else {
+      doc.text('Nenhum produto adquirido.', 14, 74);
+    }
+    doc.save(`fatura_${cliente.nome.replace(/\s+/g, '_')}_${dataAtual}.pdf`);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -221,6 +248,7 @@ export default function ClientesPage() {
                       <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Editar</button>
                       <button onClick={() => handleDelete(cliente.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">Eliminar</button>
                       <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">Ver cliente</button>
+                      <button onClick={() => handlePrint(cliente)} className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm">Imprimir</button>
                     </div>
                   </td>
                 </tr>
