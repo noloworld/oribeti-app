@@ -188,12 +188,12 @@ export default function DefinicoesPage() {
         </form>
       </section>
       {/* Gerenciar usuários */}
-      <section className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-4 max-w-2xl">
+      <section className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-4 max-w-3xl mx-auto px-2">
         <div className="flex items-center gap-2 mb-2">
           <FaUserPlus className="text-lg text-green-400" />
           <span className="font-semibold">Gerenciar usuários/revendedores</span>
         </div>
-        <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full max-w-3xl">
+        <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full">
           <input
             name="nome"
             value={novoUsuario.nome}
@@ -219,7 +219,7 @@ export default function DefinicoesPage() {
             className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 h-11"
             disabled={carregando}
           />
-          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium flex-shrink-0 h-11" disabled={carregando}>
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded w-auto min-w-[110px]" disabled={carregando}>
             {carregando ? 'Adicionando...' : 'Adicionar'}
           </button>
         </form>
