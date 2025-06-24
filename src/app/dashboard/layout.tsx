@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog } from 'react-icons/fa';
+import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes } from 'react-icons/fa';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mounted, setMounted] = useState(false);
   const [userInfo, setUserInfo] = useState<{ nome: string; tipo: string } | null>(null);
   const [numDevedores, setNumDevedores] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -78,56 +79,76 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white flex">
-      {/* Sidebar */}
-      {mounted && (
-        <aside className="w-64 bg-gray-800 p-6 flex flex-col gap-8 min-h-screen">
-          {/* Logo Oribeti */}
-          <div className="mb-6 flex items-center justify-center">
-            <span className="text-3xl font-extrabold tracking-wide text-white drop-shadow-lg select-none">Oribeti</span>
-          </div>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="bg-green-500 rounded-full w-10 h-10 flex items-center justify-center font-bold">
-              {userInfo ? userInfo.nome.slice(0,2).toUpperCase() : 'NS'}
-            </div>
-            <div>
-              <div className="font-semibold">{userInfo ? userInfo.nome : 'Nome Admin'}</div>
-              <div className="text-xs text-gray-400">{userInfo ? (userInfo.tipo === 'ADMIN' ? 'Administrador' : 'Revendedor') : 'Administrador'}</div>
-            </div>
-          </div>
-          <nav className="flex flex-col gap-2 mb-8">
-            {links.map(link => (
-              <a
-                key={link.href}
-                href={link.href}
-                className={
-                  isActive(link)
-                    ? 'bg-green-600 rounded px-3 py-2 font-medium flex items-center'
-                    : 'hover:bg-gray-700 rounded px-3 py-2 flex items-center'
-                }
-              >
-                {link.icon}
-                <span className={link.label === 'Registo Vendas' ? 'whitespace-nowrap' : ''}>{link.label}</span>
-                {link.label === 'Devedores' && numDevedores > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-xs font-bold">
-                    {numDevedores}
-                  </span>
-                )}
-              </a>
-            ))}
-          </nav>
-          <button
-            onClick={handleLogout}
-            className="mt-auto bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium"
-            disabled={loggingOut}
-          >
-            {loggingOut ? 'Saindo...' : 'Sair'}
+    <main className="min-h-screen bg-gray-900 text-white flex flex-col md:flex-row">
+      {/* Mobile Navbar */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-gray-800">
+        <span className="text-2xl font-extrabold">Oribeti</span>
+        <button onClick={() => setShowMenu(true)} className="text-white p-2 focus:outline-none">
+          <FaBars className="w-7 h-7" />
+        </button>
+      </div>
+      {/* Sidebar (drawer no mobile) */}
+      <aside className={`
+        fixed z-40 top-0 left-0 h-full w-64 bg-gray-800 p-6 flex flex-col gap-8 min-h-screen transition-transform duration-300
+        ${showMenu ? 'translate-x-0' : '-translate-x-full'}
+        md:static md:translate-x-0 md:flex
+      `} style={{ maxWidth: '100vw' }}>
+        {/* Fechar no mobile */}
+        <div className="md:hidden flex justify-end mb-4">
+          <button onClick={() => setShowMenu(false)} className="text-white p-2 focus:outline-none">
+            <FaTimes className="w-7 h-7" />
           </button>
-          {logoutMsg && <div className="mt-4 bg-green-700 text-white text-center rounded p-2">{logoutMsg}</div>}
-        </aside>
+        </div>
+        {/* Logo Oribeti */}
+        <div className="mb-6 flex items-center justify-center">
+          <span className="text-3xl font-extrabold tracking-wide text-white drop-shadow-lg select-none">Oribeti</span>
+        </div>
+        <div className="flex items-center gap-3 mb-8">
+          <div className="bg-green-500 rounded-full w-10 h-10 flex items-center justify-center font-bold">
+            {userInfo ? userInfo.nome.slice(0,2).toUpperCase() : 'NS'}
+          </div>
+          <div>
+            <div className="font-semibold">{userInfo ? userInfo.nome : 'Nome Admin'}</div>
+            <div className="text-xs text-gray-400">{userInfo ? (userInfo.tipo === 'ADMIN' ? 'Administrador' : 'Revendedor') : 'Administrador'}</div>
+          </div>
+        </div>
+        <nav className="flex flex-col gap-2 mb-8">
+          {links.map(link => (
+            <a
+              key={link.href}
+              href={link.href}
+              className={
+                isActive(link)
+                  ? 'bg-green-600 rounded px-3 py-2 font-medium flex items-center'
+                  : 'hover:bg-gray-700 rounded px-3 py-2 flex items-center'
+              }
+              onClick={() => setShowMenu(false)}
+            >
+              {link.icon}
+              <span className={link.label === 'Registo Vendas' ? 'whitespace-nowrap' : ''}>{link.label}</span>
+              {link.label === 'Devedores' && numDevedores > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-xs font-bold">
+                  {numDevedores}
+                </span>
+              )}
+            </a>
+          ))}
+        </nav>
+        <button
+          onClick={handleLogout}
+          className="mt-auto bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium"
+          disabled={loggingOut}
+        >
+          {loggingOut ? 'Saindo...' : 'Sair'}
+        </button>
+        {logoutMsg && <div className="mt-4 bg-green-700 text-white text-center rounded p-2">{logoutMsg}</div>}
+      </aside>
+      {/* Overlay para fechar o menu no mobile */}
+      {showMenu && (
+        <div className="fixed inset-0 z-30 bg-black bg-opacity-40 md:hidden" onClick={() => setShowMenu(false)}></div>
       )}
       {/* Main Content */}
-      <section className="flex-1 p-6">
+      <section className="flex-1 p-4 sm:p-6 overflow-x-auto">
         {children}
       </section>
     </main>
