@@ -10,6 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
     "@prisma/client": "^6.10.1",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.2",
