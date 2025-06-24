@@ -193,7 +193,7 @@ export default function DefinicoesPage() {
           <FaUserPlus className="text-lg text-green-400" />
           <span className="font-semibold">Gerenciar usuários/revendedores</span>
         </div>
-        <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full">
+        <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full max-w-3xl">
           <input
             name="nome"
             value={novoUsuario.nome}
