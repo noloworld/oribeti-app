@@ -192,13 +192,14 @@ export default function DefinicoesPage() {
             <FaUserPlus className="text-lg text-green-400" />
             <span className="font-semibold">Gerenciar usuários/revendedores</span>
           </div>
-          <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full">
+          <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full flex-wrap">
             <input
               name="nome"
               value={novoUsuario.nome}
               onChange={handleAddChange}
               placeholder="Nome"
-              className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 h-11"
+              className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
+              required
               disabled={carregando}
             />
             <input
@@ -206,16 +207,19 @@ export default function DefinicoesPage() {
               value={novoUsuario.email}
               onChange={handleAddChange}
               placeholder="Email"
-              className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 h-11"
+              type="email"
+              className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
+              required
               disabled={carregando}
             />
             <input
               name="senha"
-              type="password"
               value={novoUsuario.senha}
               onChange={handleAddChange}
               placeholder="Senha"
-              className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none flex-1 h-11"
+              type="password"
+              className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
+              required
               disabled={carregando}
             />
             <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded w-auto min-w-[110px]" disabled={carregando}>
