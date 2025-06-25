@@ -448,12 +448,12 @@ export default function VendasPage() {
                         Valor em dívida: €{valorEmDivida.toFixed(2)}
                       </div>
                     )}
+                    <div>
+                      <label className="block text-gray-300 mb-1">Observações</label>
+                      <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
+                    </div>
                   </>
                 )}
-                <div>
-                  <label className="block text-gray-300 mb-1">Observações</label>
-                  <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
-                </div>
                 <div className="flex justify-end gap-2 mt-2">
                   <button
                     type="button"
@@ -607,12 +607,12 @@ export default function VendasPage() {
                           Valor em dívida: €{(editVenda.valorFinal - (editVenda.valorPago || 0)).toFixed(2)}
                         </div>
                       )}
+                      <div>
+                        <label className="block text-gray-300 mb-1">Observações</label>
+                        <textarea value={editVenda.observacoes || ''} onChange={e => setEditVenda({ ...editVenda, observacoes: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
+                      </div>
                     </>
                   )}
-                  <div>
-                    <label className="block text-gray-300 mb-1">Observações</label>
-                    <textarea value={editVenda.observacoes || ''} onChange={e => setEditVenda({ ...editVenda, observacoes: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
-                  </div>
                   <div>
                     <label className="block text-gray-300 mb-1">Status</label>
                     <select value={editVenda.status} onChange={e => setEditVenda({ ...editVenda, status: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none">
