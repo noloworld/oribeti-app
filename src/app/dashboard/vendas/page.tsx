@@ -385,12 +385,6 @@ export default function VendasPage() {
                         >
                           Adicionar Pagamento
                         </button>
-                        <button
-                          onClick={() => handlePrintVenda(v)}
-                          className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm"
-                        >
-                          Imprimir
-                        </button>
                       </td>
                     </tr>
                   ))

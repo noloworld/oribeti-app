@@ -137,11 +137,30 @@ export default function DevedoresPage() {
                       <tr>
                         <td colSpan={5} className="bg-gray-900 p-4">
                           <div className="font-semibold mb-2 text-white">Histórico de Pagamentos</div>
-                          {historico.length === 0 ? (
-                            <div className="text-gray-400">Nenhum pagamento registrado.</div>
-                          ) : (
+                          {(() => {
+                            const totalPagamentos = historico.length;
+                            const produto = 'produto'; // Substitua se tiver nome do produto na venda
+                            const valorTotal = venda.valorFinal;
+                            const valorEmDivida = valorTotal - (venda.valorPago || 0);
+                            if (totalPagamentos === 0) {
+                              return <div className="text-gray-400 mb-2">Nenhum pagamento registrado.</div>;
+                            }
+                            if (valorEmDivida <= 0) {
+                              return (
+                                <div className="text-green-400 mb-2 text-sm">
+                                  Este cliente pagou em {totalPagamentos} vez{totalPagamentos > 1 ? 'es' : ''}: {historico.map((p, i) => `${i+1}ª - €${p.valor.toFixed(2)}`).join(', ')} um {produto} de €{valorTotal.toFixed(2)}.
+                                </div>
+                              );
+                            }
+                            return (
+                              <div className="text-yellow-400 mb-2 text-sm">
+                                Este cliente até ao momento pagou {totalPagamentos} vez{totalPagamentos > 1 ? 'es' : ''} um {produto} de €{valorTotal.toFixed(2)}, ainda falta pagar €{valorEmDivida.toFixed(2)}.
+                              </div>
+                            );
+                          })()}
+                          {historico.length === 0 ? null : (
                             <ul className="space-y-1">
-                              {historico.map(p => (
+                              {historico.map((p, idx) => (
                                 <li key={p.id} className="flex items-center gap-4 text-sm">
                                   <span className="text-green-400 font-bold">€{p.valor.toFixed(2)}</span>
                                   <span className="text-gray-300">{new Date(p.data).toLocaleDateString()}</span>
