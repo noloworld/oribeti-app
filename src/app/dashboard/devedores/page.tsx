@@ -11,6 +11,7 @@ interface Venda {
   valorPago?: number;
   data: string;
   status: string;
+  nomeProduto: string;
 }
 
 interface Pagamento {
@@ -136,10 +137,10 @@ export default function DevedoresPage() {
                     {historicoAberto === venda.id && (
                       <tr>
                         <td colSpan={5} className="bg-gray-900 p-4">
-                          <div className="font-semibold mb-2 text-white">Histórico de Pagamentos</div>
+                          <div className="font-semibold mb-2 text-white">{venda.nomeProduto}</div>
                           {(() => {
                             const totalPagamentos = historico.length;
-                            const produto = 'produto'; // Substitua se tiver nome do produto na venda
+                            const produto = venda.nomeProduto;
                             const valorTotal = venda.valorFinal;
                             const valorEmDivida = valorTotal - (venda.valorPago || 0);
                             if (totalPagamentos === 0) {
