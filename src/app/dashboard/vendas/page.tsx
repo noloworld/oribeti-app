@@ -617,16 +617,20 @@ export default function VendasPage() {
                     <button
                       type="button"
                       onClick={() => setIsEditPrestacoes(!isEditPrestacoes)}
+                      disabled={(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0}
                       className={`px-3 py-1 rounded text-sm font-medium transition ${
                         isEditPrestacoes 
                           ? 'bg-yellow-600 text-white' 
                           : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      }`}
+                      } ${(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       {isEditPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
                     </button>
                     {!isEditPrestacoes && (
                       <span className="text-green-400 text-sm">Pagamento total à vista</span>
+                    )}
+                    {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
+                      <span className="text-yellow-400 text-sm">Venda em prestações - use "Adicionar Pagamento"</span>
                     )}
                   </div>
                   {isEditPrestacoes && (

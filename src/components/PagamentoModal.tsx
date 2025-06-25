@@ -35,23 +35,31 @@ export default function PagamentoModal({
     e.preventDefault();
     
     console.log('Submetendo pagamento:', { vendaId, valorFinal, valorPago, form });
+    console.log('Valor em dívida:', valorEmDivida);
+    console.log('Valor máximo:', valorMaximo);
     
     if (!form.valor || !form.data) {
+      console.log('Campos obrigatórios não preenchidos');
       toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
 
     const valor = Number(form.valor);
+    console.log('Valor convertido:', valor);
+    
     if (valor <= 0) {
+      console.log('Valor menor ou igual a zero');
       toast.error('O valor deve ser maior que zero.');
       return;
     }
 
     if (valor > valorMaximo) {
+      console.log('Valor maior que o máximo permitido');
       toast.error(`O valor não pode ser maior que €${valorMaximo.toFixed(2)}.`);
       return;
     }
 
+    console.log('Validações passaram, enviando requisição...');
     setLoading(true);
     try {
       console.log('Enviando requisição para API...');
@@ -71,11 +79,13 @@ export default function PagamentoModal({
       console.log('Dados da resposta:', data);
       
       if (!res.ok) {
+        console.log('Erro na API:', data.error);
         toast.error(data.error || 'Erro ao adicionar pagamento.');
         setLoading(false);
         return;
       }
 
+      console.log('Pagamento criado com sucesso, fechando modal...');
       toast.success('Pagamento adicionado com sucesso!');
       setForm({
         valor: '',

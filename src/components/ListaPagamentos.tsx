@@ -71,6 +71,7 @@ export default function ListaPagamentos({
   };
 
   const handlePagamentoAdded = () => {
+    console.log('handlePagamentoAdded chamado');
     fetchPagamentos();
     onPagamentoAdded();
   };
@@ -128,7 +129,10 @@ export default function ListaPagamentos({
           <h3 className="text-lg font-semibold text-white">Histórico de Pagamentos</h3>
           {valorEmDivida > 0 && (
             <button
-              onClick={() => setShowModal(true)}
+              onClick={() => {
+                console.log('Clicando em Adicionar Pagamento, showModal:', showModal);
+                setShowModal(true);
+              }}
               className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium"
             >
               + Adicionar Pagamento
@@ -175,7 +179,10 @@ export default function ListaPagamentos({
       {/* Modal de adicionar pagamento */}
       <PagamentoModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          console.log('Fechando modal de pagamento');
+          setShowModal(false);
+        }}
         vendaId={vendaId}
         valorFinal={valorFinal}
         valorPago={valorPago}

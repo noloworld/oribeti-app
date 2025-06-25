@@ -30,10 +30,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { vendaId, valor, data, observacoes } = body;
     
+    console.log('API Pagamentos - Recebido:', { vendaId, valor, data, observacoes });
+    
     if (!vendaId || !valor || !data) {
+      console.log('API Pagamentos - Campos obrigatórios faltando');
       return NextResponse.json({ error: 'vendaId, valor e data são obrigatórios.' }, { status: 400 });
     }
 
+    console.log('API Pagamentos - Criando pagamento...');
     // Criar o pagamento
     const pagamento = await prisma.pagamento.create({
       data: {
@@ -44,12 +48,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log('API Pagamentos - Pagamento criado:', pagamento);
+
     // Atualizar valorPago na venda
     const pagamentos = await prisma.pagamento.findMany({
       where: { vendaId: Number(vendaId) },
     });
     
     const totalPago = pagamentos.reduce((sum, p) => sum + p.valor, 0);
+    console.log('API Pagamentos - Total pago:', totalPago);
     
     // Buscar a venda para obter o valorFinal
     const venda = await prisma.venda.findUnique({
@@ -57,11 +64,13 @@ export async function POST(req: NextRequest) {
     });
 
     if (!venda) {
+      console.log('API Pagamentos - Venda não encontrada');
       return NextResponse.json({ error: 'Venda não encontrada.' }, { status: 404 });
     }
 
     // Atualizar valorPago e status na venda
     const statusAutomatico = totalPago >= venda.valorFinal ? 'PAGO' : 'PENDENTE';
+    console.log('API Pagamentos - Status automático:', statusAutomatico);
     
     await prisma.venda.update({
       where: { id: Number(vendaId) },
@@ -71,8 +80,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log('API Pagamentos - Venda atualizada com sucesso');
     return NextResponse.json(pagamento, { status: 201 });
   } catch (error) {
+    console.error('API Pagamentos - Erro:', error);
     return NextResponse.json({ error: 'Erro ao criar pagamento.' }, { status: 500 });
   }
 }
