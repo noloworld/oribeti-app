@@ -439,15 +439,21 @@ export default function VendasPage() {
                   )}
                 </div>
                 {isPrestacoes && (
-                  <ListaPagamentos
-                    vendaId={0} // Será definido após criar a venda
-                    valorFinal={Number(form.valorFinal) || 0}
-                    valorPago={Number(form.valorPago) || 0}
-                    onPagamentoAdded={() => {
-                      // Atualizar vendas após adicionar pagamento
-                      fetchVendas();
-                    }}
-                  />
+                  <>
+                    <div>
+                      <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
+                      <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
+                    </div>
+                    {valorEmDivida > 0 && (
+                      <div className="bg-yellow-600 text-white p-2 rounded text-sm">
+                        Valor em dívida: €{valorEmDivida.toFixed(2)}
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-gray-300 mb-1">Observações</label>
+                      <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
+                    </div>
+                  </>
                 )}
                 <div className="flex justify-end gap-2 mt-2">
                   <button
@@ -592,29 +598,24 @@ export default function VendasPage() {
                     )}
                   </div>
                   {isEditPrestacoes && (
-                    <>
-                      <div>
-                        <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
-                        <input type="number" min="0" step="0.01" value={editVenda.valorPago || 0} onChange={e => setEditVenda({ ...editVenda, valorPago: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
-                      </div>
-                      {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
-                        <div className="bg-yellow-600 text-white p-2 rounded text-sm">
-                          Valor em dívida: €{(editVenda.valorFinal - (editVenda.valorPago || 0)).toFixed(2)}
-                        </div>
-                      )}
-                      <div>
-                        <label className="block text-gray-300 mb-1">Observações</label>
-                        <textarea value={editVenda.observacoes || ''} onChange={e => setEditVenda({ ...editVenda, observacoes: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
-                      </div>
-                    </>
+                    <ListaPagamentos
+                      vendaId={editVenda.id}
+                      valorFinal={editVenda.valorFinal}
+                      valorPago={editVenda.valorPago || 0}
+                      onPagamentoAdded={() => {
+                        fetchVendas();
+                        // Atualizar o editVenda com os novos valores
+                        fetch(`/api/vendas`)
+                          .then((res) => res.json())
+                          .then((data) => {
+                            const vendaAtualizada = data.vendas.find((v: any) => v.id === editVenda.id);
+                            if (vendaAtualizada) {
+                              setEditVenda(vendaAtualizada);
+                            }
+                          });
+                      }}
+                    />
                   )}
-                  <div>
-                    <label className="block text-gray-300 mb-1">Status</label>
-                    <select value={editVenda.status} onChange={e => setEditVenda({ ...editVenda, status: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none">
-                      <option value="PAGO">Pago</option>
-                      <option value="PENDENTE">Pendente</option>
-                    </select>
-                  </div>
                   <div className="flex justify-end gap-2 mt-2">
                     <button type="button" className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600" onClick={() => setShowEditModal(false)} disabled={loading}>Cancelar</button>
                     <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
