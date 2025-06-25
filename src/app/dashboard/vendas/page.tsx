@@ -561,7 +561,14 @@ export default function VendasPage() {
                 }}>
                   <div>
                     <label className="block text-gray-300 mb-1">Data</label>
-                    <input type="date" value={editVenda.data.slice(0,10)} onChange={e => setEditVenda({ ...editVenda, data: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                    <input 
+                      type="date" 
+                      value={editVenda.data.slice(0,10)} 
+                      onChange={e => setEditVenda({ ...editVenda, data: e.target.value })} 
+                      className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" 
+                      disabled={isEditPrestacoes}
+                      required 
+                    />
                   </div>
                   <div>
                     <label className="block text-gray-300 mb-1">Cliente</label>
@@ -571,15 +578,40 @@ export default function VendasPage() {
                   </div>
                   <div>
                     <label className="block text-gray-300 mb-1">Produto</label>
-                    <input type="text" value={editVenda.nomeProduto} onChange={e => setEditVenda({ ...editVenda, nomeProduto: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                    <input 
+                      type="text" 
+                      value={editVenda.nomeProduto} 
+                      onChange={e => setEditVenda({ ...editVenda, nomeProduto: e.target.value })} 
+                      className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" 
+                      disabled={isEditPrestacoes}
+                      required 
+                    />
                   </div>
                   <div>
                     <label className="block text-gray-300 mb-1">Valor Revista (€)</label>
-                    <input type="number" min="0" step="0.01" value={editVenda.valorRevista} onChange={e => setEditVenda({ ...editVenda, valorRevista: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                    <input 
+                      type="number" 
+                      min="0" 
+                      step="0.01" 
+                      value={editVenda.valorRevista} 
+                      onChange={e => setEditVenda({ ...editVenda, valorRevista: Number(e.target.value) })} 
+                      className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" 
+                      disabled={isEditPrestacoes}
+                      required 
+                    />
                   </div>
                   <div>
                     <label className="block text-gray-300 mb-1">Valor Final (€)</label>
-                    <input type="number" min="0" step="0.01" value={editVenda.valorFinal} onChange={e => setEditVenda({ ...editVenda, valorFinal: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                    <input 
+                      type="number" 
+                      min="0" 
+                      step="0.01" 
+                      value={editVenda.valorFinal} 
+                      onChange={e => setEditVenda({ ...editVenda, valorFinal: Number(e.target.value) })} 
+                      className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" 
+                      disabled={isEditPrestacoes}
+                      required 
+                    />
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <button

@@ -34,6 +34,8 @@ export default function PagamentoModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Submetendo pagamento:', { vendaId, valorFinal, valorPago, form });
+    
     if (!form.valor || !form.data) {
       toast.error('Preencha todos os campos obrigatórios.');
       return;
@@ -52,6 +54,7 @@ export default function PagamentoModal({
 
     setLoading(true);
     try {
+      console.log('Enviando requisição para API...');
       const res = await fetch('/api/pagamentos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,9 +66,13 @@ export default function PagamentoModal({
         }),
       });
 
+      console.log('Resposta da API:', res.status);
       const data = await res.json();
+      console.log('Dados da resposta:', data);
+      
       if (!res.ok) {
         toast.error(data.error || 'Erro ao adicionar pagamento.');
+        setLoading(false);
         return;
       }
 
@@ -77,7 +84,8 @@ export default function PagamentoModal({
       });
       onPagamentoAdded();
       onClose();
-    } catch {
+    } catch (error) {
+      console.error('Erro ao adicionar pagamento:', error);
       toast.error('Erro ao adicionar pagamento.');
     } finally {
       setLoading(false);
