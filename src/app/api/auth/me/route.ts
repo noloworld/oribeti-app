@@ -17,6 +17,11 @@ export async function GET(req: Request) {
     } catch {
       return NextResponse.json({ error: 'Token inválido.' }, { status: 401 });
     }
+    // Atualiza o campo lastOnline para agora
+    await prisma.user.update({
+      where: { id: payload.id },
+      data: { lastOnline: new Date() },
+    });
     const user = await prisma.user.findUnique({
       where: { id: payload.id },
       select: { id: true, nome: true, email: true, tipo: true },

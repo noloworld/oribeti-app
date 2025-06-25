@@ -1,7 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes } from 'react-icons/fa';
+import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
+import { Transition } from '@headlessui/react';
+import Link from 'next/link';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -12,6 +14,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userInfo, setUserInfo] = useState<{ nome: string; tipo: string } | null>(null);
   const [numDevedores, setNumDevedores] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [showOnline, setShowOnline] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -47,6 +51,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => {
       window.removeEventListener('devedoresUpdate', handleDevedoresUpdate);
     };
+  }, []);
+
+  useEffect(() => {
+    let interval: any;
+    async function fetchOnline() {
+      try {
+        const res = await fetch('/api/usuarios?online=1');
+        if (!res.ok) return;
+        const data = await res.json();
+        setOnlineUsers(data);
+      } catch {}
+    }
+    fetchOnline();
+    interval = setInterval(fetchOnline, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   async function handleLogout() {
@@ -101,7 +120,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
         {/* Logo Oribeti */}
         <div className="mb-6 flex items-center justify-center">
-          <span className="text-3xl font-extrabold tracking-wide text-white drop-shadow-lg select-none">Oribeti</span>
+          <Link href="/dashboard" className="text-3xl font-extrabold tracking-wide text-white drop-shadow-lg select-none hover:text-green-400 transition-colors" title="Ir para Resumo Geral">
+            Oribeti
+          </Link>
         </div>
         <div className="flex items-center gap-3 mb-8">
           {!userInfo ? (
@@ -132,9 +153,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href={link.href}
               className={
                 isActive(link)
-                  ? 'bg-green-600 rounded px-3 py-2 font-medium flex items-center'
-                  : 'hover:bg-gray-700 rounded px-3 py-2 flex items-center'
+                  ? 'bg-green-600 rounded px-3 py-2 font-medium flex items-center transition-all duration-300 shadow-lg scale-[1.03]'
+                  : 'hover:bg-gray-700 rounded px-3 py-2 flex items-center transition-all duration-300'
               }
+              style={{ transition: 'background 0.3s, box-shadow 0.3s, transform 0.2s' }}
               onClick={() => setShowMenu(false)}
             >
               {link.icon}
@@ -162,8 +184,58 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
       {/* Main Content */}
       <section className="flex-1 p-4 sm:p-6 overflow-x-auto">
-        {children}
+        <Transition
+          appear
+          show={true}
+          enter="transition-opacity duration-500"
+          enterFrom="opacity-0 translate-y-4"
+          enterTo="opacity-100 translate-y-0"
+          leave="transition-opacity duration-300"
+          leaveFrom="opacity-100 translate-y-0"
+          leaveTo="opacity-0 translate-y-4"
+        >
+          <div>
+            {children}
+          </div>
+        </Transition>
       </section>
+      {/* Widget de usuários online */}
+      <div className="fixed z-50 bottom-6 right-6 flex flex-col items-end gap-2">
+        <button
+          className="bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition"
+          onClick={() => setShowOnline(v => !v)}
+          title="Usuários online"
+        >
+          <span className="relative flex h-3 w-3 mr-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          </span>
+          <FaUserCircle className="text-xl" />
+          <span className="font-bold">Online</span>
+          <span className="ml-1 bg-white text-green-700 rounded-full px-2 text-xs font-bold">{onlineUsers.length}</span>
+        </button>
+        {showOnline && (
+          <div className="bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto animate-fadeIn">
+            <div className="font-bold text-green-400 mb-2 flex items-center gap-2"><FaUserCircle /> Usuários Online</div>
+            {onlineUsers.length === 0 ? (
+              <div className="text-gray-400 text-sm">Ninguém online agora.</div>
+            ) : (
+              <ul className="space-y-2">
+                {onlineUsers.map((u) => (
+                  <li key={u.id} className="flex items-center gap-2 p-2 rounded hover:bg-gray-800 transition">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span className="font-semibold text-white">{u.nome}</span>
+                    <span className="text-xs px-2 py-0.5 rounded bg-green-800 text-green-200 ml-auto">{u.tipo}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
     </main>
   );
 } 

@@ -19,6 +19,7 @@ model User {
   senha     String   // hash da senha
   tipo      UserType @default(REVENDEDOR)
   criadoEm  DateTime @default(now())
+  lastOnline DateTime? // Data/hora do último acesso online
 }
 
 enum UserType {

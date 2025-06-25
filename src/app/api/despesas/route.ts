@@ -3,10 +3,23 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const despesas = await prisma.despesa.findMany({ orderBy: { data: 'desc' } });
-    return NextResponse.json(despesas);
+    // Paginação
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const skip = (page - 1) * limit;
+
+    const [total, despesas] = await Promise.all([
+      prisma.despesa.count(),
+      prisma.despesa.findMany({
+        orderBy: { data: 'desc' },
+        skip,
+        take: limit,
+      })
+    ]);
+    return NextResponse.json({ despesas, total });
   } catch (e) {
     return NextResponse.json({ error: 'Erro ao buscar despesas.' }, { status: 500 });
   }

@@ -3,6 +3,18 @@ import React, { useEffect, useState, Fragment } from "react";
 import { FaEuroSign } from "react-icons/fa";
 import { Toaster, toast } from "sonner";
 import { Transition } from "@headlessui/react";
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function DespesasPage() {
   const [despesas, setDespesas] = useState<any[]>([]);
@@ -13,22 +25,39 @@ export default function DespesasPage() {
   const [despesaEdit, setDespesaEdit] = useState<any>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [despesaToDelete, setDespesaToDelete] = useState<any>(null);
+  const [vendas, setVendas] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const totalPages = Math.ceil(total / limit);
 
   // Buscar despesas ao carregar
   useEffect(() => {
     fetchDespesas();
+    fetchVendas();
   }, []);
 
   async function fetchDespesas() {
     setLoading(true);
     try {
-      const res = await fetch("/api/despesas");
+      const res = await fetch(`/api/despesas?page=${page}&limit=${limit}`);
       const data = await res.json();
-      setDespesas(data);
+      setDespesas(data.despesas || []);
+      setTotal(data.total || 0);
     } catch {
       toast.error("Erro ao buscar despesas");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchVendas() {
+    try {
+      const res = await fetch('/api/vendas');
+      const data = await res.json();
+      setVendas(data);
+    } catch {
+      toast.error('Erro ao buscar vendas');
     }
   }
 
@@ -109,6 +138,41 @@ export default function DespesasPage() {
       setDespesaToDelete(null);
     }
   }
+
+  // Agregar despesas e vendas por mês
+  const meses = [
+    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+  ];
+  const despesasPorMes = Array(12).fill(0);
+  const vendasPorMes = Array(12).fill(0);
+  despesas.forEach((d) => {
+    const mes = new Date(d.data).getMonth();
+    despesasPorMes[mes] += Number(d.valor);
+  });
+  vendas.forEach((v) => {
+    const mes = new Date(v.data).getMonth();
+    vendasPorMes[mes] += Number(v.valorFinal);
+  });
+  const chartData = {
+    labels: meses,
+    datasets: [
+      {
+        label: 'Despesas (€)',
+        data: despesasPorMes,
+        backgroundColor: '#ef4444',
+      },
+      {
+        label: 'Vendas (€)',
+        data: vendasPorMes,
+        backgroundColor: '#22c55e',
+      },
+    ],
+  };
+
+  useEffect(() => {
+    fetchDespesas();
+    // eslint-disable-next-line
+  }, [page, limit]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -300,6 +364,47 @@ export default function DespesasPage() {
           </div>
         </Transition.Child>
       </Transition.Root>
+      {/* Gráfico comparativo despesas vs vendas */}
+      <div className="bg-gray-900 rounded-lg p-6 shadow flex flex-col gap-4">
+        <h2 className="text-xl font-bold text-white mb-2">Comparativo Despesas x Vendas (por mês)</h2>
+        <div className="w-full max-w-2xl mx-auto" style={{height: 350}}>
+          <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' } }, maintainAspectRatio: false }} height={350} />
+        </div>
+      </div>
+      {/* Componente de paginação */}
+      <div className="flex justify-between items-center mt-4">
+        <div className="text-gray-400 text-sm">
+          Página {page} de {totalPages || 1}
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >Anterior</button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              className={`px-3 py-1 rounded ${p === page ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+              onClick={() => setPage(p)}
+            >{p}</button>
+          ))}
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || totalPages === 0}
+          >Próxima</button>
+          <select
+            className="ml-4 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700"
+            value={limit}
+            onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}
+          >
+            {[5, 10, 20, 50].map(opt => (
+              <option key={opt} value={opt}>{opt} por página</option>
+            ))}
+          </select>
+        </div>
+      </div>
     </div>
   );
 } 

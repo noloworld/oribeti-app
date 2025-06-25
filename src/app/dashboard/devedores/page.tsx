@@ -17,12 +17,18 @@ export default function DevedoresPage() {
   const [loading, setLoading] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [vendaToConfirm, setVendaToConfirm] = useState<Venda | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const totalPages = Math.ceil(total / limit);
 
   const fetchPendentes = async () => {
     try {
-      const res = await fetch('/api/vendas');
+      const res = await fetch(`/api/vendas?page=${page}&limit=${limit}`);
       const data = await res.json();
-      setVendasPendentes((data || []).filter((v: Venda) => v.status === 'PENDENTE'));
+      const pendentes = (data.vendas || []).filter((v: Venda) => v.status === 'PENDENTE');
+      setVendasPendentes(pendentes);
+      setTotal(data.total ? data.total : 0);
     } catch {
       toast.error('Erro ao buscar devedores.');
     }
@@ -30,7 +36,8 @@ export default function DevedoresPage() {
 
   useEffect(() => {
     fetchPendentes();
-  }, []);
+    // eslint-disable-next-line
+  }, [page, limit]);
 
   async function marcarComoPagoConfirmado() {
     if (!vendaToConfirm) return;
@@ -133,6 +140,40 @@ export default function DevedoresPage() {
           </div>
         </Transition.Child>
       </Transition.Root>
+      {/* Componente de paginação */}
+      <div className="flex justify-between items-center mt-4">
+        <div className="text-gray-400 text-sm">
+          Página {page} de {totalPages || 1}
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >Anterior</button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              className={`px-3 py-1 rounded ${p === page ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+              onClick={() => setPage(p)}
+            >{p}</button>
+          ))}
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || totalPages === 0}
+          >Próxima</button>
+          <select
+            className="ml-4 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700"
+            value={limit}
+            onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}
+          >
+            {[5, 10, 20, 50].map(opt => (
+              <option key={opt} value={opt}>{opt} por página</option>
+            ))}
+          </select>
+        </div>
+      </div>
     </div>
   );
 } 

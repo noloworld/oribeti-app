@@ -40,6 +40,10 @@ export default function VendasPage() {
   const [statusFiltro, setStatusFiltro] = useState<'TODOS' | 'PAGO' | 'PENDENTE'>('TODOS');
   const [anoFiltro, setAnoFiltro] = useState<string>('TODOS');
   const anosDisponiveis = Array.from(new Set(vendas.map(v => new Date(v.data).getFullYear())));
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const totalPages = Math.ceil(total / limit);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -52,13 +56,17 @@ export default function VendasPage() {
 
   // Buscar vendas ao carregar a página ou após nova venda
   const fetchVendas = () => {
-    fetch("/api/vendas")
+    fetch(`/api/vendas?page=${page}&limit=${limit}`)
       .then((res) => res.json())
-      .then((data) => setVendas(data || []));
+      .then((data) => {
+        setVendas(data.vendas || []);
+        setTotal(data.total || 0);
+      });
   };
   useEffect(() => {
     fetchVendas();
-  }, []);
+    // eslint-disable-next-line
+  }, [page, limit]);
 
   // Manipulação do formulário
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
@@ -302,6 +310,40 @@ export default function VendasPage() {
             )}
           </tbody>
         </table>
+      </div>
+      {/* Componente de paginação */}
+      <div className="flex justify-between items-center mt-4">
+        <div className="text-gray-400 text-sm">
+          Página {page} de {totalPages || 1}
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >Anterior</button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              className={`px-3 py-1 rounded ${p === page ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+              onClick={() => setPage(p)}
+            >{p}</button>
+          ))}
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || totalPages === 0}
+          >Próxima</button>
+          <select
+            className="ml-4 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700"
+            value={limit}
+            onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}
+          >
+            {[5, 10, 20, 50].map(opt => (
+              <option key={opt} value={opt}>{opt} por página</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Modal de Nova Venda */}

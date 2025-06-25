@@ -4,7 +4,18 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  if (searchParams.get('online') === '1') {
+    // Retorna usuários online (lastOnline nos últimos 2 minutos)
+    const doisMinAtras = new Date(Date.now() - 2 * 60 * 1000);
+    const online = await prisma.user.findMany({
+      where: { lastOnline: { gte: doisMinAtras } },
+      select: { id: true, nome: true, email: true, tipo: true, lastOnline: true },
+      orderBy: { nome: 'asc' },
+    });
+    return NextResponse.json(online);
+  }
   try {
     const usuarios = await prisma.user.findMany({
       select: {

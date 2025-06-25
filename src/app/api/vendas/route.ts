@@ -1,17 +1,30 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const vendas = await prisma.venda.findMany({
-      include: {
-        cliente: { select: { id: true, nome: true } },
-      },
-      orderBy: { data: 'desc' },
-    });
-    return NextResponse.json(vendas);
+    // Paginação
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const skip = (page - 1) * limit;
+
+    // Filtros e busca podem ser adicionados aqui se necessário
+
+    const [total, vendas] = await Promise.all([
+      prisma.venda.count(),
+      prisma.venda.findMany({
+        include: {
+          cliente: { select: { id: true, nome: true } },
+        },
+        orderBy: { data: 'desc' },
+        skip,
+        take: limit,
+      })
+    ]);
+    return NextResponse.json({ vendas, total });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao buscar vendas.' }, { status: 500 });
   }

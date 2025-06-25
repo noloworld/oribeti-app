@@ -22,6 +22,8 @@ export default function ClientesPage() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [clienteView, setClienteView] = useState<any>(null);
   const [compras, setCompras] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 7;
 
   // Buscar clientes da API
   const fetchClientes = () => {
@@ -206,6 +208,11 @@ export default function ClientesPage() {
     doc.save(`fatura_${cliente.nome.replace(/\s+/g, '_')}_${dataAtual}.pdf`);
   }
 
+  const filteredClientes = clientes.filter(c => c.nome.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase()));
+  const totalPages = Math.ceil(filteredClientes.length / pageSize);
+  const paginatedClientes = filteredClientes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  useEffect(() => { setCurrentPage(1); }, [search]);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -233,12 +240,12 @@ export default function ClientesPage() {
             </tr>
           </thead>
           <tbody>
-            {clientes.filter(c => c.nome.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase())).length === 0 ? (
+            {paginatedClientes.length === 0 ? (
               <tr>
                 <td colSpan={5} className="text-center text-gray-400 py-4">Nenhum cliente registado.</td>
               </tr>
-            ) : (
-              clientes.filter(c => c.nome.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase())).map(cliente => (
+            ) :
+              paginatedClientes.map(cliente => (
                 <tr key={cliente.id} className="border-t border-gray-700">
                   <td className="px-2 py-2 break-words max-w-[120px] sm:max-w-[180px] align-middle">{cliente.nome}</td>
                   <td className="px-2 py-2 break-words max-w-[120px] sm:max-w-[180px] align-middle">{cliente.email}</td>
@@ -254,10 +261,20 @@ export default function ClientesPage() {
                   </td>
                 </tr>
               ))
-            )}
+            }
           </tbody>
         </table>
       </div>
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-4">
+          <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40">«</button>
+          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40">‹</button>
+          <span className="px-3 py-1 rounded bg-gray-800 text-green-400 font-bold">{currentPage} / {totalPages}</span>
+          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40">›</button>
+          <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40">»</button>
+        </div>
+      )}
       {/* Modal de adição */}
       <Transition.Root show={addModalOpen} as={Fragment}>
         <Transition.Child
