@@ -4,6 +4,7 @@ import React, { useState, useEffect, Fragment } from 'react';
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import { Transition } from '@headlessui/react';
+import ListaPagamentos from '../../../components/ListaPagamentos';
 
 interface Cliente {
   id: number;
@@ -438,21 +439,15 @@ export default function VendasPage() {
                   )}
                 </div>
                 {isPrestacoes && (
-                  <>
-                    <div>
-                      <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
-                      <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
-                    </div>
-                    {valorEmDivida > 0 && (
-                      <div className="bg-yellow-600 text-white p-2 rounded text-sm">
-                        Valor em dívida: €{valorEmDivida.toFixed(2)}
-                      </div>
-                    )}
-                    <div>
-                      <label className="block text-gray-300 mb-1">Observações</label>
-                      <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
-                    </div>
-                  </>
+                  <ListaPagamentos
+                    vendaId={0} // Será definido após criar a venda
+                    valorFinal={Number(form.valorFinal) || 0}
+                    valorPago={Number(form.valorPago) || 0}
+                    onPagamentoAdded={() => {
+                      // Atualizar vendas após adicionar pagamento
+                      fetchVendas();
+                    }}
+                  />
                 )}
                 <div className="flex justify-end gap-2 mt-2">
                   <button

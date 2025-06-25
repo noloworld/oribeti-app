@@ -49,6 +49,17 @@ model Venda {
   data         DateTime
   status       VendaStatus @default(PENDENTE)
   criadoEm     DateTime @default(now())
+  pagamentos   Pagamento[]
+}
+
+model Pagamento {
+  id           Int      @id @default(autoincrement())
+  vendaId      Int
+  venda        Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  valor        Float
+  data         DateTime
+  observacoes  String?
+  criadoEm     DateTime @default(now())
 }
 
 enum VendaStatus {

@@ -18,6 +18,10 @@ export async function GET(req: NextRequest) {
       prisma.venda.findMany({
         include: {
           cliente: { select: { id: true, nome: true } },
+          pagamentos: {
+            orderBy: { data: 'desc' },
+            take: 1, // Apenas o pagamento mais recente
+          },
         },
         orderBy: { data: 'desc' },
         skip,
@@ -56,8 +60,22 @@ export async function POST(req: Request) {
       },
       include: {
         cliente: { select: { id: true, nome: true } },
+        pagamentos: true,
       },
     });
+
+    // Se há valor pago, criar o primeiro pagamento
+    if (valorPagoNum > 0) {
+      await prisma.pagamento.create({
+        data: {
+          vendaId: venda.id,
+          valor: valorPagoNum,
+          data: new Date(data),
+          observacoes: observacoes || null,
+        },
+      });
+    }
+
     return NextResponse.json(venda, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao registrar venda.' }, { status: 500 });
