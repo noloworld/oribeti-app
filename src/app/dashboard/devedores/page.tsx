@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, Fragment } from 'react';
-import { FaEuroSign } from 'react-icons/fa';
+import { FaEuroSign, FaHistory } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { Transition } from '@headlessui/react';
 
@@ -13,8 +13,17 @@ interface Venda {
   status: string;
 }
 
+interface Pagamento {
+  id: number;
+  valor: number;
+  data: string;
+  observacoes?: string;
+}
+
 export default function DevedoresPage() {
-  const [vendasPendentes, setVendasPendentes] = useState<Venda[]>([]);
+  const [vendas, setVendas] = useState<Venda[]>([]);
+  const [historicoAberto, setHistoricoAberto] = useState<number | null>(null);
+  const [pagamentos, setPagamentos] = useState<Record<number, Pagamento[]>>({});
   const [loading, setLoading] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [vendaToConfirm, setVendaToConfirm] = useState<Venda | null>(null);
@@ -23,20 +32,29 @@ export default function DevedoresPage() {
   const [total, setTotal] = useState(0);
   const totalPages = Math.ceil(total / limit);
 
-  const fetchPendentes = async () => {
+  const fetchVendas = async () => {
     try {
       const res = await fetch(`/api/vendas?page=${page}&limit=${limit}`);
       const data = await res.json();
-      const devedores = (data.vendas || []).filter((v: Venda) => (v.valorFinal - (v.valorPago || 0)) > 0);
-      setVendasPendentes(devedores);
+      setVendas(data.vendas || []);
       setTotal(data.total ? data.total : 0);
     } catch {
-      toast.error('Erro ao buscar devedores.');
+      toast.error('Erro ao buscar vendas.');
+    }
+  };
+
+  const fetchPagamentos = async (vendaId: number) => {
+    try {
+      const res = await fetch(`/api/pagamentos?vendaId=${vendaId}`);
+      const data = await res.json();
+      setPagamentos(prev => ({ ...prev, [vendaId]: data || [] }));
+    } catch {
+      toast.error('Erro ao buscar histórico de pagamentos.');
     }
   };
 
   useEffect(() => {
-    fetchPendentes();
+    fetchVendas();
     // eslint-disable-next-line
   }, [page, limit]);
 
@@ -56,7 +74,7 @@ export default function DevedoresPage() {
       });
       if (!res.ok) throw new Error();
       toast.success('Status alterado para PAGO!');
-      fetchPendentes();
+      fetchVendas();
       window.dispatchEvent(new Event('devedoresUpdate'));
       setConfirmModalOpen(false);
       setVendaToConfirm(null);
@@ -75,61 +93,97 @@ export default function DevedoresPage() {
           <thead>
             <tr>
               <th className="px-4 py-2 text-left">Nome</th>
+              <th className="px-4 py-2 text-left">Valor máximo devido</th>
               <th className="px-4 py-2 text-left">Valor em dívida</th>
-              <th className="px-4 py-2 text-left">Desde</th>
+              <th className="px-4 py-2 text-left">Último pagamento</th>
               <th className="px-4 py-2 text-left">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {vendasPendentes.length === 0 ? (
+            {vendas.length === 0 ? (
               <tr>
-                <td className="px-4 py-2 text-gray-400" colSpan={4}>Nenhum cliente devedor.</td>
+                <td className="px-4 py-2 text-gray-400" colSpan={5}>Nenhum cliente devedor.</td>
               </tr>
             ) : (
-              vendasPendentes.map(venda => (
-                <tr key={venda.id} className="border-t border-gray-700">
-                  <td className="px-4 py-2">{venda.cliente?.nome}</td>
-                  <td className="px-4 py-2">€{(venda.valorFinal - (venda.valorPago || 0)).toFixed(2)}</td>
-                  <td className="px-4 py-2">{new Date(venda.data).toLocaleDateString()}</td>
-                  <td className="px-4 py-2">
-                    <button
-                      onClick={() => { setVendaToConfirm(venda); setConfirmModalOpen(true); }}
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
-                      disabled={loading}
-                    >
-                      Pago
-                    </button>
-                  </td>
-                </tr>
-              ))
+              vendas.map(venda => {
+                const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
+                const historico = pagamentos[venda.id] || [];
+                const valorMaxDevido = Math.max(venda.valorFinal, ...historico.map(p => p.valor));
+                const ultimoPagamento = historico.length > 0 ? historico[0] : null;
+                return (
+                  <React.Fragment key={venda.id}>
+                    <tr className="border-t border-gray-700">
+                      <td className="px-4 py-2">{venda.cliente?.nome}</td>
+                      <td className="px-4 py-2">€{valorMaxDevido.toFixed(2)}</td>
+                      <td className="px-4 py-2">€{valorEmDivida.toFixed(2)}</td>
+                      <td className="px-4 py-2">{ultimoPagamento ? new Date(ultimoPagamento.data).toLocaleDateString() : '-'}</td>
+                      <td className="px-4 py-2 flex gap-2">
+                        <button
+                          onClick={() => {
+                            if (historicoAberto === venda.id) {
+                              setHistoricoAberto(null);
+                            } else {
+                              setHistoricoAberto(venda.id);
+                              if (!pagamentos[venda.id]) fetchPagamentos(venda.id);
+                            }
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1"
+                        >
+                          <FaHistory /> Histórico
+                        </button>
+                      </td>
+                    </tr>
+                    {historicoAberto === venda.id && (
+                      <tr>
+                        <td colSpan={5} className="bg-gray-900 p-4">
+                          <div className="font-semibold mb-2 text-white">Histórico de Pagamentos</div>
+                          {historico.length === 0 ? (
+                            <div className="text-gray-400">Nenhum pagamento registrado.</div>
+                          ) : (
+                            <ul className="space-y-1">
+                              {historico.map(p => (
+                                <li key={p.id} className="flex items-center gap-4 text-sm">
+                                  <span className="text-green-400 font-bold">€{p.valor.toFixed(2)}</span>
+                                  <span className="text-gray-300">{new Date(p.data).toLocaleDateString()}</span>
+                                  {p.observacoes && <span className="text-gray-400 italic">{p.observacoes}</span>}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
       {/* Modal de confirmação de pagamento */}
-      <Transition.Root show={confirmModalOpen && !!vendaToConfirm} as={Fragment}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setConfirmModalOpen(false)} />
-        </Transition.Child>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0 scale-95"
-          enterTo="opacity-100 scale-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100 scale-100"
-          leaveTo="opacity-0 scale-95"
-        >
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            {vendaToConfirm ? (
+      {confirmModalOpen && vendaToConfirm && (
+        <Transition.Root show={confirmModalOpen} as={Fragment}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setConfirmModalOpen(false)} />
+          </Transition.Child>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+          >
+            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
               <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-sm text-center pointer-events-auto" onClick={e => e.stopPropagation()}>
                 <h2 className="text-xl font-bold text-white mb-4">Confirmar Pagamento</h2>
                 <p className="text-gray-300 mb-6">Tem certeza que deseja marcar como <span className="font-semibold text-green-400">PAGO</span> a venda de <span className="font-semibold">{vendaToConfirm.cliente.nome}</span> no valor de <span className="font-semibold">€{(vendaToConfirm.valorFinal - (vendaToConfirm.valorPago || 0)).toFixed(2)}</span>?</p>
@@ -138,10 +192,10 @@ export default function DevedoresPage() {
                   <button onClick={marcarComoPagoConfirmado} className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Confirmar'}</button>
                 </div>
               </div>
-            ) : null}
-          </div>
-        </Transition.Child>
-      </Transition.Root>
+            </div>
+          </Transition.Child>
+        </Transition.Root>
+      )}
       {/* Componente de paginação */}
       <div className="flex justify-between items-center mt-4">
         <div className="text-gray-400 text-sm">

@@ -249,86 +249,156 @@ export default function VendasPage() {
           </select>
         </div>
       </div>
-      {/* Tabela de vendas */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-gray-800 rounded-lg">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 text-left text-gray-300">Data</th>
-              <th className="px-4 py-2 text-left text-gray-300">Cliente</th>
-              <th className="px-4 py-2 text-left text-gray-300">Produto</th>
-              <th className="px-4 py-2 text-left text-gray-300">Valor Revista (€)</th>
-              <th className="px-4 py-2 text-left text-gray-300">Valor Final (€)</th>
-              <th className="px-4 py-2 text-left text-gray-300">Valor Pago (€)</th>
-              <th className="px-4 py-2 text-left text-gray-300">Em Dívida (€)</th>
-              <th className="px-4 py-2 text-left text-gray-300">Status</th>
-              <th className="px-4 py-2 text-left text-gray-300">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vendas.filter(v => (statusFiltro === 'TODOS' ? true : v.status === statusFiltro)
-              && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
-            ).length === 0 ? (
-              <tr>
-                <td className="px-4 py-2 text-gray-400" colSpan={9}>
-                  Nenhuma venda registrada ainda.
-                </td>
-              </tr>
-            ) : (
-              vendas.filter(v => (statusFiltro === 'TODOS' ? true : v.status === statusFiltro)
-                && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
-              ).map((v) => (
-                <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
-                  <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
-                  <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
-                  <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
-                  <td className="px-4 py-2 text-gray-200">€ {v.valorRevista.toFixed(2)}</td>
-                  <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
-                  <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
-                  <td className="px-4 py-2 text-gray-200">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
-                  <td className="px-4 py-2">
-                    <span
-                      className={
-                        (v.valorFinal - (v.valorPago || 0)) <= 0
-                          ? 'bg-green-600 text-white px-3 py-1 rounded font-semibold'
-                          : 'bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold'
-                      }
-                    >
-                      {(v.valorFinal - (v.valorPago || 0)) <= 0 ? 'PAGO' : 'PENDENTE'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 flex gap-2">
-                    <button
-                      onClick={() => {
-                        setEditVenda(v);
-                        setIsEditPrestacoes((v.valorPago || 0) < v.valorFinal);
-                        setShowEditModal(true);
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVendaToDelete(v);
-                        setShowDeleteModal(true);
-                      }}
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Eliminar
-                    </button>
-                    <button
-                      onClick={() => handlePrintVenda(v)}
-                      className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Imprimir
-                    </button>
-                  </td>
+      {/* Tabelas separadas */}
+      <div className="space-y-8">
+        {/* Tabela de Clientes em Dia */}
+        <div>
+          <h2 className="text-xl font-bold mb-4 text-green-400">Clientes em Dia</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-gray-800 rounded-lg">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2 text-left text-gray-300">Data</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Cliente</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Produto</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Valor Revista (€)</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Valor Final (€)</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Valor Pago (€)</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Status</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Ações</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
+                  (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
+                  (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
+                ).length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-2 text-gray-400" colSpan={8}>
+                      Nenhum cliente em dia encontrado.
+                    </td>
+                  </tr>
+                ) : (
+                  vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
+                    (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
+                    (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
+                  ).map((v) => (
+                    <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                      <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
+                      <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
+                      <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {v.valorRevista.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
+                      <td className="px-4 py-2">
+                        <span className="bg-green-600 text-white px-3 py-1 rounded font-semibold">
+                          PAGO
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditVenda(v);
+                            setIsEditPrestacoes(false);
+                            setShowEditModal(true);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setVendaToDelete(v);
+                            setShowDeleteModal(true);
+                          }}
+                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Eliminar
+                        </button>
+                        <button
+                          onClick={() => handlePrintVenda(v)}
+                          className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Imprimir
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Tabela de Devedores */}
+        <div>
+          <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-gray-800 rounded-lg">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2 text-left text-gray-300">Data</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Cliente</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Produto</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Valor Final (€)</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Valor Pago (€)</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Em Dívida (€)</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Status</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) > 0 && 
+                  (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
+                  (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
+                ).length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-2 text-gray-400" colSpan={8}>
+                      Nenhum devedor encontrado.
+                    </td>
+                  </tr>
+                ) : (
+                  vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) > 0 && 
+                    (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
+                    (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
+                  ).map((v) => (
+                    <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                      <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
+                      <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
+                      <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
+                      <td className="px-4 py-2">
+                        <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold">
+                          PENDENTE
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditVenda(v);
+                            setIsEditPrestacoes(true);
+                            setShowEditModal(true);
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Adicionar Pagamento
+                        </button>
+                        <button
+                          onClick={() => handlePrintVenda(v)}
+                          className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Imprimir
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
       {/* Componente de paginação */}
       <div className="flex justify-between items-center mt-4">
@@ -502,10 +572,22 @@ export default function VendasPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
             {editVenda ? (
               <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
-                <h2 className="text-xl font-bold text-white mb-4">Editar Venda</h2>
+                <h2 className="text-xl font-bold text-white mb-4">
+                  {isEditPrestacoes ? 'Adicionar Pagamento' : 'Editar Venda'}
+                </h2>
                 <form className="flex flex-col gap-4" onSubmit={async (e) => {
                   e.preventDefault();
                   setLoading(true);
+                  
+                  // Se for apenas adicionar pagamento, não salvar alterações nos campos
+                  if (isEditPrestacoes) {
+                    setShowEditModal(false);
+                    setEditVenda(null);
+                    setIsEditPrestacoes(false);
+                    setLoading(false);
+                    return;
+                  }
+                  
                   // Verificar se houve alteração real
                   const original = vendas.find(v => v.id === editVenda.id);
                   if (
@@ -613,48 +695,81 @@ export default function VendasPage() {
                       required 
                     />
                   </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsEditPrestacoes(!isEditPrestacoes)}
-                      disabled={(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0}
-                      className={`px-3 py-1 rounded text-sm font-medium transition ${
-                        isEditPrestacoes 
-                          ? 'bg-yellow-600 text-white' 
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      } ${(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      {isEditPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
-                    </button>
-                    {!isEditPrestacoes && (
-                      <span className="text-green-400 text-sm">Pagamento total à vista</span>
-                    )}
-                    {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
-                      <span className="text-yellow-400 text-sm">Venda em prestações - use "Adicionar Pagamento"</span>
-                    )}
-                  </div>
+                  
                   {isEditPrestacoes && (
-                    <ListaPagamentos
-                      vendaId={editVenda.id}
-                      valorFinal={editVenda.valorFinal}
-                      valorPago={editVenda.valorPago || 0}
-                      onPagamentoAdded={() => {
-                        fetchVendas();
-                        // Atualizar o editVenda com os novos valores
-                        fetch(`/api/vendas`)
-                          .then((res) => res.json())
-                          .then((data) => {
-                            const vendaAtualizada = data.vendas.find((v: any) => v.id === editVenda.id);
-                            if (vendaAtualizada) {
-                              setEditVenda(vendaAtualizada);
-                            }
-                          });
-                      }}
-                    />
+                    <>
+                      <div className="bg-yellow-600 text-white p-3 rounded text-sm">
+                        <div className="font-semibold mb-1">Venda em Prestações</div>
+                        <div>Valor em dívida: €{(editVenda.valorFinal - (editVenda.valorPago || 0)).toFixed(2)}</div>
+                        <div>Use o componente abaixo para adicionar pagamentos.</div>
+                      </div>
+                      <ListaPagamentos
+                        vendaId={editVenda.id}
+                        valorFinal={editVenda.valorFinal}
+                        valorPago={editVenda.valorPago || 0}
+                        onPagamentoAdded={() => {
+                          fetchVendas();
+                          // Atualizar o editVenda com os novos valores
+                          fetch(`/api/vendas`)
+                            .then((res) => res.json())
+                            .then((data) => {
+                              const vendaAtualizada = data.vendas.find((v: any) => v.id === editVenda.id);
+                              if (vendaAtualizada) {
+                                setEditVenda(vendaAtualizada);
+                              }
+                            });
+                        }}
+                      />
+                    </>
                   )}
+                  
+                  {!isEditPrestacoes && (
+                    <>
+                      <div className="flex items-center gap-2 mb-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditPrestacoes(!isEditPrestacoes)}
+                          disabled={(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0}
+                          className={`px-3 py-1 rounded text-sm font-medium transition ${
+                            isEditPrestacoes 
+                              ? 'bg-yellow-600 text-white' 
+                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          } ${(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          {isEditPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
+                        </button>
+                        {!isEditPrestacoes && (
+                          <span className="text-green-400 text-sm">Pagamento total à vista</span>
+                        )}
+                        {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
+                          <span className="text-yellow-400 text-sm">Venda em prestações - use "Adicionar Pagamento"</span>
+                        )}
+                      </div>
+                      <ListaPagamentos
+                        vendaId={editVenda.id}
+                        valorFinal={editVenda.valorFinal}
+                        valorPago={editVenda.valorPago || 0}
+                        onPagamentoAdded={() => {
+                          fetchVendas();
+                          // Atualizar o editVenda com os novos valores
+                          fetch(`/api/vendas`)
+                            .then((res) => res.json())
+                            .then((data) => {
+                              const vendaAtualizada = data.vendas.find((v: any) => v.id === editVenda.id);
+                              if (vendaAtualizada) {
+                                setEditVenda(vendaAtualizada);
+                              }
+                            });
+                        }}
+                      />
+                    </>
+                  )}
+                  
                   <div className="flex justify-end gap-2 mt-2">
                     <button type="button" className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600" onClick={() => setShowEditModal(false)} disabled={loading}>Cancelar</button>
-                    <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
+                    {!isEditPrestacoes && (
+                      <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
+                    )}
                   </div>
                 </form>
               </div>
