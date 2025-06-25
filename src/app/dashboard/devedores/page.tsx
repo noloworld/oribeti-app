@@ -8,6 +8,7 @@ interface Venda {
   id: number;
   cliente: { id: number; nome: string };
   valorFinal: number;
+  valorPago?: number;
   data: string;
   status: string;
 }
@@ -26,8 +27,8 @@ export default function DevedoresPage() {
     try {
       const res = await fetch(`/api/vendas?page=${page}&limit=${limit}`);
       const data = await res.json();
-      const pendentes = (data.vendas || []).filter((v: Venda) => v.status === 'PENDENTE');
-      setVendasPendentes(pendentes);
+      const devedores = (data.vendas || []).filter((v: Venda) => (v.valorFinal - (v.valorPago || 0)) > 0);
+      setVendasPendentes(devedores);
       setTotal(data.total ? data.total : 0);
     } catch {
       toast.error('Erro ao buscar devedores.');
@@ -49,6 +50,7 @@ export default function DevedoresPage() {
         body: JSON.stringify({
           ...vendaToConfirm,
           clienteId: vendaToConfirm.cliente.id,
+          valorPago: vendaToConfirm.valorFinal,
           status: 'PAGO',
         }),
       });
@@ -87,7 +89,7 @@ export default function DevedoresPage() {
               vendasPendentes.map(venda => (
                 <tr key={venda.id} className="border-t border-gray-700">
                   <td className="px-4 py-2">{venda.cliente?.nome}</td>
-                  <td className="px-4 py-2">€{venda.valorFinal.toFixed(2)}</td>
+                  <td className="px-4 py-2">€{(venda.valorFinal - (venda.valorPago || 0)).toFixed(2)}</td>
                   <td className="px-4 py-2">{new Date(venda.data).toLocaleDateString()}</td>
                   <td className="px-4 py-2">
                     <button
@@ -130,7 +132,7 @@ export default function DevedoresPage() {
             {vendaToConfirm ? (
               <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-sm text-center pointer-events-auto" onClick={e => e.stopPropagation()}>
                 <h2 className="text-xl font-bold text-white mb-4">Confirmar Pagamento</h2>
-                <p className="text-gray-300 mb-6">Tem certeza que deseja marcar como <span className="font-semibold text-green-400">PAGO</span> a venda de <span className="font-semibold">{vendaToConfirm.cliente.nome}</span> no valor de <span className="font-semibold">€{vendaToConfirm.valorFinal.toFixed(2)}</span>?</p>
+                <p className="text-gray-300 mb-6">Tem certeza que deseja marcar como <span className="font-semibold text-green-400">PAGO</span> a venda de <span className="font-semibold">{vendaToConfirm.cliente.nome}</span> no valor de <span className="font-semibold">€{(vendaToConfirm.valorFinal - (vendaToConfirm.valorPago || 0)).toFixed(2)}</span>?</p>
                 <div className="flex justify-center gap-4">
                   <button onClick={() => setConfirmModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
                   <button onClick={marcarComoPagoConfirmado} className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Confirmar'}</button>

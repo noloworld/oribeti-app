@@ -16,6 +16,8 @@ interface Venda {
   nomeProduto: string;
   valorRevista: number;
   valorFinal: number;
+  valorPago: number;
+  observacoes?: string;
   data: string;
   status: string;
 }
@@ -29,6 +31,8 @@ export default function VendasPage() {
     nomeProduto: '',
     valorRevista: '',
     valorFinal: '',
+    valorPago: '',
+    observacoes: '',
     data: '',
     status: 'PENDENTE',
   });
@@ -69,9 +73,12 @@ export default function VendasPage() {
   }, [page, limit]);
 
   // Manipulação do formulário
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
+
+  // ADICIONAR CÁLCULO AUTOMÁTICO DO VALOR EM DÍVIDA
+  const valorEmDivida = Number(form.valorFinal) - Number(form.valorPago || 0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,6 +97,8 @@ export default function VendasPage() {
           nomeProduto: form.nomeProduto,
           valorRevista: form.valorRevista,
           valorFinal: form.valorFinal,
+          valorPago: form.valorPago,
+          observacoes: form.observacoes,
           data: form.data,
           status: form.status,
         }),
@@ -102,7 +111,7 @@ export default function VendasPage() {
       }
       toast.success('Venda registrada com sucesso!');
       setShowModal(false);
-      setForm({ clienteId: '', nomeProduto: '', valorRevista: '', valorFinal: '', data: '', status: 'PENDENTE' });
+      setForm({ clienteId: '', nomeProduto: '', valorRevista: '', valorFinal: '', valorPago: '', observacoes: '', data: '', status: 'PENDENTE' });
       fetchVendas();
     } catch {
       toast.error('Erro ao registrar venda.');
@@ -243,6 +252,8 @@ export default function VendasPage() {
               <th className="px-4 py-2 text-left text-gray-300">Produto</th>
               <th className="px-4 py-2 text-left text-gray-300">Valor Revista (€)</th>
               <th className="px-4 py-2 text-left text-gray-300">Valor Final (€)</th>
+              <th className="px-4 py-2 text-left text-gray-300">Valor Pago (€)</th>
+              <th className="px-4 py-2 text-left text-gray-300">Em Dívida (€)</th>
               <th className="px-4 py-2 text-left text-gray-300">Status</th>
               <th className="px-4 py-2 text-left text-gray-300">Ações</th>
             </tr>
@@ -252,7 +263,7 @@ export default function VendasPage() {
               && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
             ).length === 0 ? (
               <tr>
-                <td className="px-4 py-2 text-gray-400" colSpan={7}>
+                <td className="px-4 py-2 text-gray-400" colSpan={9}>
                   Nenhuma venda registrada ainda.
                 </td>
               </tr>
@@ -266,17 +277,17 @@ export default function VendasPage() {
                   <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
                   <td className="px-4 py-2 text-gray-200">€ {v.valorRevista.toFixed(2)}</td>
                   <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
+                  <td className="px-4 py-2 text-gray-200">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
                   <td className="px-4 py-2">
                     <span
                       className={
-                        v.status === 'PAGO'
+                        (v.valorFinal - (v.valorPago || 0)) <= 0
                           ? 'bg-green-600 text-white px-3 py-1 rounded font-semibold'
-                          : v.status === 'PENDENTE'
-                          ? 'bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold'
-                          : ''
+                          : 'bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold'
                       }
                     >
-                      {v.status}
+                      {(v.valorFinal - (v.valorPago || 0)) <= 0 ? 'PAGO' : 'PENDENTE'}
                     </span>
                   </td>
                   <td className="px-4 py-2 flex gap-2">
@@ -404,6 +415,19 @@ export default function VendasPage() {
                   <input type="number" name="valorFinal" min="0" step="0.01" value={form.valorFinal} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" required />
                 </div>
                 <div>
+                  <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
+                  <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
+                </div>
+                {valorEmDivida > 0 && (
+                  <div className="bg-yellow-600 text-white p-2 rounded text-sm">
+                    Valor em dívida: €{valorEmDivida.toFixed(2)}
+                  </div>
+                )}
+                <div>
+                  <label className="block text-gray-300 mb-1">Observações</label>
+                  <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
+                </div>
+                <div>
                   <label className="block text-gray-300 mb-1">Status</label>
                   <select name="status" value={form.status} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none">
                     <option value="PAGO">Pago</option>
@@ -486,6 +510,8 @@ export default function VendasPage() {
                         nomeProduto: editVenda.nomeProduto,
                         valorRevista: editVenda.valorRevista,
                         valorFinal: editVenda.valorFinal,
+                        valorPago: editVenda.valorPago || 0,
+                        observacoes: editVenda.observacoes || '',
                         data: editVenda.data,
                         status: editVenda.status,
                       }),
@@ -528,6 +554,19 @@ export default function VendasPage() {
                   <div>
                     <label className="block text-gray-300 mb-1">Valor Final (€)</label>
                     <input type="number" min="0" step="0.01" value={editVenda.valorFinal} onChange={e => setEditVenda({ ...editVenda, valorFinal: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
+                    <input type="number" min="0" step="0.01" value={editVenda.valorPago || 0} onChange={e => setEditVenda({ ...editVenda, valorPago: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                  </div>
+                  {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
+                    <div className="bg-yellow-600 text-white p-2 rounded text-sm">
+                      Valor em dívida: €{(editVenda.valorFinal - (editVenda.valorPago || 0)).toFixed(2)}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-gray-300 mb-1">Observações</label>
+                    <textarea value={editVenda.observacoes || ''} onChange={e => setEditVenda({ ...editVenda, observacoes: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
                   </div>
                   <div>
                     <label className="block text-gray-300 mb-1">Status</label>

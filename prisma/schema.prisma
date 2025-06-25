@@ -44,6 +44,8 @@ model Venda {
   nomeProduto  String
   valorRevista Float
   valorFinal   Float
+  valorPago    Float    @default(0)
+  observacoes  String?
   data         DateTime
   status       VendaStatus @default(PENDENTE)
   criadoEm     DateTime @default(now())

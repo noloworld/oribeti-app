@@ -33,18 +33,26 @@ export async function GET(req: NextRequest) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { clienteId, nomeProduto, valorRevista, valorFinal, data, status } = body;
-    if (!clienteId || !nomeProduto || !valorRevista || !valorFinal || !data || !status) {
-      return NextResponse.json({ error: 'Todos os campos são obrigatórios.' }, { status: 400 });
+    const { clienteId, nomeProduto, valorRevista, valorFinal, valorPago, observacoes, data, status } = body;
+    if (!clienteId || !nomeProduto || !valorRevista || !valorFinal || !data) {
+      return NextResponse.json({ error: 'Campos obrigatórios: clienteId, nomeProduto, valorRevista, valorFinal, data.' }, { status: 400 });
     }
+    
+    // Calcular status automaticamente baseado no valor pago
+    const valorPagoNum = Number(valorPago || 0);
+    const valorFinalNum = Number(valorFinal);
+    const statusAutomatico = valorPagoNum >= valorFinalNum ? 'PAGO' : 'PENDENTE';
+    
     const venda = await prisma.venda.create({
       data: {
         clienteId: Number(clienteId),
         nomeProduto,
         valorRevista: Number(valorRevista),
-        valorFinal: Number(valorFinal),
+        valorFinal: valorFinalNum,
+        valorPago: valorPagoNum,
+        observacoes: observacoes || null,
         data: new Date(data),
-        status,
+        status: statusAutomatico,
       },
       include: {
         cliente: { select: { id: true, nome: true } },
@@ -59,19 +67,27 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, clienteId, nomeProduto, valorRevista, valorFinal, data, status } = body;
-    if (!id || !clienteId || !nomeProduto || !valorRevista || !valorFinal || !data || !status) {
-      return NextResponse.json({ error: 'Todos os campos são obrigatórios.' }, { status: 400 });
+    const { id, clienteId, nomeProduto, valorRevista, valorFinal, valorPago, observacoes, data, status } = body;
+    if (!id || !clienteId || !nomeProduto || !valorRevista || !valorFinal || !data) {
+      return NextResponse.json({ error: 'Campos obrigatórios: id, clienteId, nomeProduto, valorRevista, valorFinal, data.' }, { status: 400 });
     }
+    
+    // Calcular status automaticamente baseado no valor pago
+    const valorPagoNum = Number(valorPago || 0);
+    const valorFinalNum = Number(valorFinal);
+    const statusAutomatico = valorPagoNum >= valorFinalNum ? 'PAGO' : 'PENDENTE';
+    
     const vendaAtualizada = await prisma.venda.update({
       where: { id: Number(id) },
       data: {
         clienteId: Number(clienteId),
         nomeProduto,
         valorRevista: Number(valorRevista),
-        valorFinal: Number(valorFinal),
+        valorFinal: valorFinalNum,
+        valorPago: valorPagoNum,
+        observacoes: observacoes || null,
         data: new Date(data),
-        status,
+        status: statusAutomatico,
       },
       include: {
         cliente: { select: { id: true, nome: true } },
