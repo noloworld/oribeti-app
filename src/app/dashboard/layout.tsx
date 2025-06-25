@@ -104,13 +104,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="text-3xl font-extrabold tracking-wide text-white drop-shadow-lg select-none">Oribeti</span>
         </div>
         <div className="flex items-center gap-3 mb-8">
-          <div className="bg-green-500 rounded-full w-10 h-10 flex items-center justify-center font-bold">
-            {userInfo ? userInfo.nome.slice(0,2).toUpperCase() : 'NS'}
-          </div>
-          <div>
-            <div className="font-semibold">{userInfo ? userInfo.nome : 'Nome Admin'}</div>
-            <div className="text-xs text-gray-400">{userInfo ? (userInfo.tipo === 'ADMIN' ? 'Administrador' : 'Revendedor') : 'Administrador'}</div>
-          </div>
+          {!userInfo ? (
+            // Skeleton ou loading
+            <div className="animate-pulse flex items-center gap-3">
+              <div className="bg-gray-700 rounded-full w-10 h-10" />
+              <div>
+                <div className="bg-gray-700 h-4 w-24 rounded mb-1" />
+                <div className="bg-gray-700 h-3 w-16 rounded" />
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="bg-green-500 rounded-full w-10 h-10 flex items-center justify-center font-bold">
+                {userInfo.nome.slice(0,2).toUpperCase()}
+              </div>
+              <div>
+                <div className="font-semibold">{userInfo.nome}</div>
+                <div className="text-xs text-gray-400">{userInfo.tipo === 'ADMIN' ? 'Administrador' : 'Revendedor'}</div>
+              </div>
+            </>
+          )}
         </div>
         <nav className="flex flex-col gap-2 mb-8">
           {links.map(link => (
