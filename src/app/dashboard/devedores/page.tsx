@@ -86,6 +86,18 @@ export default function DevedoresPage() {
     }
   }
 
+  // Função para determinar o artigo correto (um/uma) para o produto
+  function artigoProduto(nomeProduto: string) {
+    const femininos = [
+      'argola', 'pulseira', 'corrente', 'caneta', 'anel', 'camiseta', 'blusa', 'bolsa', 'corrente', 'moeda', 'pulseira', 'colher', 'cesta', 'caixa', 'camisa', 'carteira', 'jaqueta', 'roupa', 'sandália', 'meia', 'joia', 'joia', 'joias', 'joalheria', 'prata', 'corrente', 'aliança', 'gargantilha', 'corrente', 'correntes', 'alianças', 'gargantilhas', 'pulseiras', 'argolas', 'blusas', 'camisas', 'bolsas', 'carteiras', 'moedas', 'caixas', 'roupas', 'sandálias', 'meias', 'joias', 'joalherias', 'pratas', 'colheres', 'cestas', 'canetas', 'camisetas', 'jaquetas'
+    ];
+    const nome = nomeProduto.trim().toLowerCase();
+    for (const fem of femininos) {
+      if (nome.startsWith(fem)) return 'uma';
+    }
+    return 'um';
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">Clientes Devedores</h1>
@@ -143,19 +155,20 @@ export default function DevedoresPage() {
                             const produto = venda.nomeProduto;
                             const valorTotal = venda.valorFinal;
                             const valorEmDivida = valorTotal - (venda.valorPago || 0);
+                            const artigo = artigoProduto(produto);
                             if (totalPagamentos === 0) {
                               return <div className="text-gray-400 mb-2">Nenhum pagamento registrado.</div>;
                             }
                             if (valorEmDivida <= 0) {
                               return (
                                 <div className="text-green-400 mb-2 text-sm">
-                                  Este cliente pagou em {totalPagamentos} vez{totalPagamentos > 1 ? 'es' : ''}: {historico.map((p, i) => `${i+1}ª - €${p.valor.toFixed(2)}`).join(', ')} um {produto} de €{valorTotal.toFixed(2)}.
+                                  Este cliente pagou em {totalPagamentos} vez{totalPagamentos > 1 ? 'es' : ''}: {historico.map((p, i) => `${i+1}ª - €${p.valor.toFixed(2)}`).join(', ')} {artigo} {produto} de €{valorTotal.toFixed(2)}.
                                 </div>
                               );
                             }
                             return (
                               <div className="text-yellow-400 mb-2 text-sm">
-                                Este cliente até ao momento pagou {totalPagamentos} vez{totalPagamentos > 1 ? 'es' : ''} um {produto} de €{valorTotal.toFixed(2)}, ainda falta pagar €{valorEmDivida.toFixed(2)}.
+                                Este cliente até ao momento pagou {totalPagamentos} vez{totalPagamentos > 1 ? 'es' : ''} {artigo} {produto} de €{valorTotal.toFixed(2)}, ainda falta pagar €{valorEmDivida.toFixed(2)}.
                               </div>
                             );
                           })()}
