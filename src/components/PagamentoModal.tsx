@@ -113,7 +113,7 @@ export default function PagamentoModal({
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={onClose} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={e => e.stopPropagation()} />
       </Transition.Child>
       <Transition.Child
         as={Fragment}
@@ -126,6 +126,13 @@ export default function PagamentoModal({
       >
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
           <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
+            <button
+              type="button"
+              className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl"
+              onClick={onClose}
+              disabled={loading}
+              aria-label="Fechar"
+            >×</button>
             <h2 className="text-xl font-bold text-white mb-4">Adicionar Pagamento</h2>
             
             <div className="bg-yellow-600 text-white p-3 rounded mb-4">
