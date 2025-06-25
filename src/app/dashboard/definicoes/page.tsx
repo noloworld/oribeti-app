@@ -187,70 +187,72 @@ export default function DefinicoesPage() {
             </button>
           </form>
         </section>
-        <section className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-4 w-full md:w-1/2 max-w-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <FaUserPlus className="text-lg text-green-400" />
-            <span className="font-semibold">Gerenciar usuários/revendedores</span>
-          </div>
-          <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full flex-wrap">
-            <input
-              name="nome"
-              value={novoUsuario.nome}
-              onChange={handleAddChange}
-              placeholder="Nome"
-              className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
-              required
-              disabled={carregando}
-            />
-            <input
-              name="email"
-              value={novoUsuario.email}
-              onChange={handleAddChange}
-              placeholder="Email"
-              type="email"
-              className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
-              required
-              disabled={carregando}
-            />
-            <input
-              name="senha"
-              value={novoUsuario.senha}
-              onChange={handleAddChange}
-              placeholder="Senha"
-              type="password"
-              className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
-              required
-              disabled={carregando}
-            />
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded w-auto min-w-[110px]" disabled={carregando}>
-              {carregando ? 'Adicionando...' : 'Adicionar'}
-            </button>
-          </form>
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto text-sm">
-              <thead>
-                <tr>
-                  <th className="px-2 py-2 text-left whitespace-nowrap">Nome</th>
-                  <th className="px-2 py-2 text-left whitespace-nowrap">Email</th>
-                  <th className="px-2 py-2 text-left whitespace-nowrap">Tipo</th>
-                  <th className="px-2 py-2 text-left whitespace-nowrap">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usuarios.map(usuario => (
-                  <tr key={usuario.id} className="border-t border-gray-700">
-                    <td className="px-2 py-2 break-words max-w-[100px] align-middle">{usuario.nome}</td>
-                    <td className="px-2 py-2 break-words max-w-[140px] align-middle">{usuario.email}</td>
-                    <td className="px-2 py-2 align-middle">{usuario.tipo}</td>
-                    <td className="px-2 py-2 align-middle">
-                      <button onClick={() => handleRemoverUsuario(usuario.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs">Remover</button>
-                    </td>
+        {meuUsuario?.tipo === 'ADMIN' && (
+          <section className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-4 w-full md:w-1/2 max-w-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <FaUserPlus className="text-lg text-green-400" />
+              <span className="font-semibold">Gerenciar usuários/revendedores</span>
+            </div>
+            <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full flex-wrap">
+              <input
+                name="nome"
+                value={novoUsuario.nome}
+                onChange={handleAddChange}
+                placeholder="Nome"
+                className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
+                required
+                disabled={carregando}
+              />
+              <input
+                name="email"
+                value={novoUsuario.email}
+                onChange={handleAddChange}
+                placeholder="Email"
+                type="email"
+                className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
+                required
+                disabled={carregando}
+              />
+              <input
+                name="senha"
+                value={novoUsuario.senha}
+                onChange={handleAddChange}
+                placeholder="Senha"
+                type="password"
+                className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
+                required
+                disabled={carregando}
+              />
+              <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded w-auto min-w-[110px]" disabled={carregando}>
+                {carregando ? 'Adicionando...' : 'Adicionar'}
+              </button>
+            </form>
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto text-sm">
+                <thead>
+                  <tr>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">Nome</th>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">Email</th>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">Tipo</th>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                </thead>
+                <tbody>
+                  {usuarios.map(usuario => (
+                    <tr key={usuario.id} className="border-t border-gray-700">
+                      <td className="px-2 py-2 break-words max-w-[100px] align-middle">{usuario.nome}</td>
+                      <td className="px-2 py-2 break-words max-w-[140px] align-middle">{usuario.email}</td>
+                      <td className="px-2 py-2 align-middle">{usuario.tipo}</td>
+                      <td className="px-2 py-2 align-middle">
+                        <button onClick={() => handleRemoverUsuario(usuario.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs">Remover</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
