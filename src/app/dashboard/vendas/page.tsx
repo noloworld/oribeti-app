@@ -48,6 +48,8 @@ export default function VendasPage() {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const totalPages = Math.ceil(total / limit);
+  const [isPrestacoes, setIsPrestacoes] = useState(false);
+  const [isEditPrestacoes, setIsEditPrestacoes] = useState(false);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -83,12 +85,15 @@ export default function VendasPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // Validação simples
-    if (!form.clienteId || !form.nomeProduto || !form.valorRevista || !form.valorFinal || !form.data || !form.status) {
-      toast.error('Preencha todos os campos.');
+    if (!form.clienteId || !form.nomeProduto || !form.valorRevista || !form.valorFinal || !form.data) {
+      toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
     setLoading(true);
     try {
+      // Calcular valor pago automaticamente
+      const valorPago = isPrestacoes ? Number(form.valorPago || 0) : Number(form.valorFinal);
+      
       const res = await fetch('/api/vendas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,10 +102,10 @@ export default function VendasPage() {
           nomeProduto: form.nomeProduto,
           valorRevista: form.valorRevista,
           valorFinal: form.valorFinal,
-          valorPago: form.valorPago,
+          valorPago: valorPago,
           observacoes: form.observacoes,
           data: form.data,
-          status: form.status,
+          status: 'PENDENTE', // Será calculado automaticamente na API
         }),
       });
       const data = await res.json();
@@ -112,6 +117,7 @@ export default function VendasPage() {
       toast.success('Venda registrada com sucesso!');
       setShowModal(false);
       setForm({ clienteId: '', nomeProduto: '', valorRevista: '', valorFinal: '', valorPago: '', observacoes: '', data: '', status: 'PENDENTE' });
+      setIsPrestacoes(false); // Reset do estado de prestações
       fetchVendas();
     } catch {
       toast.error('Erro ao registrar venda.');
@@ -294,6 +300,7 @@ export default function VendasPage() {
                     <button
                       onClick={() => {
                         setEditVenda(v);
+                        setIsEditPrestacoes((v.valorPago || 0) < v.valorFinal);
                         setShowEditModal(true);
                       }}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
@@ -414,25 +421,38 @@ export default function VendasPage() {
                   <label className="block text-gray-300 mb-1">Valor Final (€)</label>
                   <input type="number" name="valorFinal" min="0" step="0.01" value={form.valorFinal} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" required />
                 </div>
-                <div>
-                  <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
-                  <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsPrestacoes(!isPrestacoes)}
+                    className={`px-3 py-1 rounded text-sm font-medium transition ${
+                      isPrestacoes 
+                        ? 'bg-yellow-600 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    {isPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
+                  </button>
+                  {!isPrestacoes && (
+                    <span className="text-green-400 text-sm">Pagamento total à vista</span>
+                  )}
                 </div>
-                {valorEmDivida > 0 && (
-                  <div className="bg-yellow-600 text-white p-2 rounded text-sm">
-                    Valor em dívida: €{valorEmDivida.toFixed(2)}
-                  </div>
+                {isPrestacoes && (
+                  <>
+                    <div>
+                      <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
+                      <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
+                    </div>
+                    {valorEmDivida > 0 && (
+                      <div className="bg-yellow-600 text-white p-2 rounded text-sm">
+                        Valor em dívida: €{valorEmDivida.toFixed(2)}
+                      </div>
+                    )}
+                  </>
                 )}
                 <div>
                   <label className="block text-gray-300 mb-1">Observações</label>
                   <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
-                </div>
-                <div>
-                  <label className="block text-gray-300 mb-1">Status</label>
-                  <select name="status" value={form.status} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none">
-                    <option value="PAGO">Pago</option>
-                    <option value="PENDENTE">Pendente</option>
-                  </select>
                 </div>
                 <div className="flex justify-end gap-2 mt-2">
                   <button
@@ -492,7 +512,8 @@ export default function VendasPage() {
                     original.nomeProduto === editVenda.nomeProduto &&
                     original.valorRevista === editVenda.valorRevista &&
                     original.valorFinal === editVenda.valorFinal &&
-                    original.status === editVenda.status &&
+                    original.valorPago === editVenda.valorPago &&
+                    original.observacoes === editVenda.observacoes &&
                     original.data.slice(0,10) === editVenda.data.slice(0,10)
                   ) {
                     setShowEditModal(false); // Nada mudou, só fecha o modal
@@ -501,6 +522,9 @@ export default function VendasPage() {
                     return;
                   }
                   try {
+                    // Calcular valor pago automaticamente
+                    const valorPago = isEditPrestacoes ? Number(editVenda.valorPago || 0) : Number(editVenda.valorFinal);
+                    
                     const res = await fetch('/api/vendas', {
                       method: 'PUT',
                       headers: { 'Content-Type': 'application/json' },
@@ -510,10 +534,10 @@ export default function VendasPage() {
                         nomeProduto: editVenda.nomeProduto,
                         valorRevista: editVenda.valorRevista,
                         valorFinal: editVenda.valorFinal,
-                        valorPago: editVenda.valorPago || 0,
+                        valorPago: valorPago,
                         observacoes: editVenda.observacoes || '',
                         data: editVenda.data,
-                        status: editVenda.status,
+                        status: 'PENDENTE', // Será calculado automaticamente na API
                       }),
                     });
                     const data = await res.json();
@@ -525,6 +549,7 @@ export default function VendasPage() {
                     toast.success('Venda editada com sucesso!');
                     setShowEditModal(false);
                     setEditVenda(null);
+                    setIsEditPrestacoes(false); // Reset do estado de prestações
                     fetchVendas();
                     window.dispatchEvent(new Event('devedoresUpdate'));
                   } catch {
@@ -555,14 +580,34 @@ export default function VendasPage() {
                     <label className="block text-gray-300 mb-1">Valor Final (€)</label>
                     <input type="number" min="0" step="0.01" value={editVenda.valorFinal} onChange={e => setEditVenda({ ...editVenda, valorFinal: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
                   </div>
-                  <div>
-                    <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
-                    <input type="number" min="0" step="0.01" value={editVenda.valorPago || 0} onChange={e => setEditVenda({ ...editVenda, valorPago: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                  <div className="flex items-center gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditPrestacoes(!isEditPrestacoes)}
+                      className={`px-3 py-1 rounded text-sm font-medium transition ${
+                        isEditPrestacoes 
+                          ? 'bg-yellow-600 text-white' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      {isEditPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
+                    </button>
+                    {!isEditPrestacoes && (
+                      <span className="text-green-400 text-sm">Pagamento total à vista</span>
+                    )}
                   </div>
-                  {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
-                    <div className="bg-yellow-600 text-white p-2 rounded text-sm">
-                      Valor em dívida: €{(editVenda.valorFinal - (editVenda.valorPago || 0)).toFixed(2)}
-                    </div>
+                  {isEditPrestacoes && (
+                    <>
+                      <div>
+                        <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
+                        <input type="number" min="0" step="0.01" value={editVenda.valorPago || 0} onChange={e => setEditVenda({ ...editVenda, valorPago: Number(e.target.value) })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
+                      </div>
+                      {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
+                        <div className="bg-yellow-600 text-white p-2 rounded text-sm">
+                          Valor em dívida: €{(editVenda.valorFinal - (editVenda.valorPago || 0)).toFixed(2)}
+                        </div>
+                      )}
+                    </>
                   )}
                   <div>
                     <label className="block text-gray-300 mb-1">Observações</label>
