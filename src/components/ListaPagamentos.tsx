@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import PagamentoModal from './PagamentoModal';
+import { FaEuroSign } from 'react-icons/fa';
 
 interface Pagamento {
   id: number;
@@ -26,7 +26,9 @@ export default function ListaPagamentos({
 }: ListaPagamentosProps) {
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [showInput, setShowInput] = useState(false);
+  const [novoValor, setNovoValor] = useState('');
+  const [loadingNovo, setLoadingNovo] = useState(false);
 
   const valorEmDivida = valorFinal - valorPago;
 
@@ -70,10 +72,43 @@ export default function ListaPagamentos({
     }
   };
 
-  const handlePagamentoAdded = () => {
-    console.log('handlePagamentoAdded chamado');
-    fetchPagamentos();
-    onPagamentoAdded();
+  const handleAddPagamentoInline = async () => {
+    if (!novoValor || isNaN(Number(novoValor)) || Number(novoValor) <= 0) {
+      toast.error('Digite um valor válido.');
+      return;
+    }
+    if (Number(novoValor) > valorEmDivida) {
+      toast.error(`O valor não pode ser maior que €${valorEmDivida.toFixed(2)}`);
+      return;
+    }
+    setLoadingNovo(true);
+    try {
+      const res = await fetch('/api/pagamentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vendaId,
+          valor: novoValor,
+          data: new Date().toISOString().split('T')[0],
+          observacoes: '',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || 'Erro ao adicionar pagamento.');
+        setLoadingNovo(false);
+        return;
+      }
+      setNovoValor('');
+      setShowInput(false);
+      fetchPagamentos();
+      onPagamentoAdded();
+      toast.success('Pagamento adicionado!');
+    } catch {
+      toast.error('Erro ao adicionar pagamento.');
+    } finally {
+      setLoadingNovo(false);
+    }
   };
 
   if (loading) {
@@ -127,16 +162,44 @@ export default function ListaPagamentos({
       <div>
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-semibold text-white">Histórico de Pagamentos</h3>
-          {valorEmDivida > 0 && (
+          {valorEmDivida > 0 && !showInput && (
             <button
-              onClick={() => {
-                console.log('Clicando em Adicionar Pagamento, showModal:', showModal);
-                setShowModal(true);
-              }}
+              type="button"
+              onClick={() => setShowInput(true)}
               className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium"
             >
               + Adicionar Pagamento
             </button>
+          )}
+          {showInput && (
+            <div className="flex items-center gap-2">
+              <span className="text-gray-300"><FaEuroSign /></span>
+              <input
+                type="number"
+                min="0.01"
+                max={valorEmDivida}
+                step="0.01"
+                value={novoValor}
+                onChange={e => setNovoValor(e.target.value)}
+                className="px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 w-24 focus:outline-none"
+                placeholder={`0,00 (máx: €${valorEmDivida.toFixed(2)})`}
+                disabled={loadingNovo}
+              />
+              <button
+                type="button"
+                onClick={handleAddPagamentoInline}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium"
+                disabled={loadingNovo}
+              >
+                {loadingNovo ? 'Guardando...' : 'Guardar'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowInput(false); setNovoValor(''); }}
+                className="text-gray-400 hover:text-white text-lg px-2"
+                disabled={loadingNovo}
+              >×</button>
+            </div>
           )}
         </div>
 
@@ -175,19 +238,6 @@ export default function ListaPagamentos({
           </div>
         )}
       </div>
-
-      {/* Modal de adicionar pagamento */}
-      <PagamentoModal
-        isOpen={showModal}
-        onClose={() => {
-          console.log('Fechando modal de pagamento');
-          setShowModal(false);
-        }}
-        vendaId={vendaId}
-        valorFinal={valorFinal}
-        valorPago={valorPago}
-        onPagamentoAdded={handlePagamentoAdded}
-      />
     </div>
   );
 } 
