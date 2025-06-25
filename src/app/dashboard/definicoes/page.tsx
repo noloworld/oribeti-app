@@ -36,13 +36,11 @@ export default function DefinicoesPage() {
   useEffect(() => {
     async function fetchMeuUsuario() {
       try {
-        const res = await fetch('/api/usuarios');
-        if (!res.ok) throw new Error('Erro ao buscar usuário');
+        const res = await fetch('/api/auth/me');
+        if (!res.ok) throw new Error('Erro ao buscar usuário logado');
         const data = await res.json();
-        if (data && data.length > 0) {
-          setMeuUsuario(data[0]);
-          setFormEdit({ nome: data[0].nome, email: data[0].email, senha: '' });
-        }
+        setMeuUsuario(data);
+        setFormEdit({ nome: data.nome, email: data.email, senha: '' });
       } catch (err) {
         toast.error('Erro ao buscar usuário logado');
       }
