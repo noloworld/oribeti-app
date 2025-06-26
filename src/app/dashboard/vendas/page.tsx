@@ -274,6 +274,16 @@ export default function VendasPage() {
   const totalPagesDevedores = Math.ceil(devedoresFiltrados.length / limitDevedores);
   const devedoresPagina = devedoresFiltrados.slice((pageDevedores - 1) * limitDevedores, pageDevedores * limitDevedores);
 
+  // Debug logs para entender o problema
+  console.log('Debug devedores:', {
+    todasVendasLength: todasVendas.length,
+    devedoresFiltradosLength: devedoresFiltrados.length,
+    totalPagesDevedores,
+    pageDevedores,
+    devedoresPaginaLength: devedoresPagina.length,
+    shouldShowPagination: devedoresFiltrados.length > 0 && totalPagesDevedores > 1
+  });
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6 text-white">Registo de Vendas</h1>
@@ -530,7 +540,7 @@ export default function VendasPage() {
         <div>
           <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
           {/* Paginação padrão do site para devedores - apenas setas e números */}
-          {devedoresFiltrados.length > 0 && totalPagesDevedores > 1 && (
+          {devedoresPagina.length > 0 && totalPagesDevedores > 1 && devedoresFiltrados.length > 0 && (
             <div className="flex justify-center items-center gap-2 mb-4">
               <button
                 className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
