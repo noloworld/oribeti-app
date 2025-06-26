@@ -513,6 +513,29 @@ export default function VendasPage() {
         {/* Tabela de Devedores */}
         <div>
           <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
+          {/* Paginação moderna centralizada para tabela de Devedores - agora acima da tabela/cards */}
+          {totalPagesDevedores > 1 && (
+            <div className="flex justify-center items-center gap-2 mb-4">
+              <button
+                className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+                onClick={() => setPageDevedores(p => Math.max(1, p - 1))}
+                disabled={pageDevedores === 1}
+              >«</button>
+              {Array.from({ length: totalPagesDevedores }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  className={`px-3 py-1 rounded text-sm ${p === pageDevedores ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+                  onClick={() => setPageDevedores(p)}
+                >{p}</button>
+              ))}
+              <button
+                className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+                onClick={() => setPageDevedores(p => Math.min(totalPagesDevedores, p + 1))}
+                disabled={pageDevedores === totalPagesDevedores}
+              >»</button>
+              <span className="ml-2 text-gray-400 text-sm">Página {pageDevedores} de {totalPagesDevedores}</span>
+            </div>
+          )}
           {/* Tabela tradicional para desktop */}
           <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 rounded-lg shadow hidden md:block">
             <table className="min-w-full bg-gray-800 text-white">
