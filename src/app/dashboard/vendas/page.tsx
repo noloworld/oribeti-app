@@ -513,7 +513,7 @@ export default function VendasPage() {
         {/* Tabela de Devedores */}
         <div>
           <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
-          {/* Paginação moderna centralizada para tabela de Devedores - agora acima da tabela/cards */}
+          {/* Paginação padrão do site para devedores - apenas setas e números */}
           {totalPagesDevedores > 1 && (
             <div className="flex justify-center items-center gap-2 mb-4">
               <button
@@ -533,7 +533,6 @@ export default function VendasPage() {
                 onClick={() => setPageDevedores(p => Math.min(totalPagesDevedores, p + 1))}
                 disabled={pageDevedores === totalPagesDevedores}
               >»</button>
-              <span className="ml-2 text-gray-400 text-sm">Página {pageDevedores} de {totalPagesDevedores}</span>
             </div>
           )}
           {/* Tabela tradicional para desktop */}
