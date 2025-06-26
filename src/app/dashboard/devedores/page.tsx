@@ -115,7 +115,7 @@ export default function DevedoresPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">Clientes Devedores</h1>
-      <div className="overflow-x-auto rounded-lg shadow">
+      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96">
         <table className="min-w-full bg-gray-800 text-white">
           <thead>
             <tr>

@@ -83,7 +83,7 @@ export default function VendasNatalPage() {
         <h1 className="text-2xl font-bold">Vendas de Natal</h1>
         <button onClick={handleAddOpen} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Adicionar venda</button>
       </div>
-      <div className="overflow-x-auto rounded-lg shadow">
+      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96">
         <table className="min-w-full bg-gray-800 text-white">
           <thead>
             <tr>

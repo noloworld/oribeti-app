@@ -218,7 +218,7 @@ export default function DespesasPage() {
           Adicionar nova despesa
         </button>
       </div>
-      <div className="overflow-x-auto rounded-lg shadow">
+      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96">
         <table className="min-w-full bg-gray-800 text-white">
           <thead>
             <tr>

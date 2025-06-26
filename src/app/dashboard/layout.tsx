@@ -319,7 +319,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             <span className="ml-1 bg-white text-green-700 rounded-full px-2 text-xs font-bold">{onlineUsers.length}</span>
           </button>
           {showOnline && (
-            <div className="bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto animate-fadeIn">
+            <div className="bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto scrollbar-custom animate-fadeIn">
               <div className="font-bold text-green-400 mb-2 flex items-center gap-2"><FaUserCircle /> Usuários Online</div>
               {onlineUsers.length === 0 ? (
                 <div className="text-gray-400 text-sm">Ninguém online agora.</div>

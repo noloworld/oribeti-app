@@ -240,7 +240,7 @@ export default function ClientesPage() {
           <button onClick={handleAddOpen} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Adicionar cliente</button>
         </div>
       </div>
-      <div className="overflow-x-auto rounded-lg shadow">
+      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96">
         <table className="w-full table-auto bg-gray-800 text-white">
           <thead>
             <tr>
@@ -460,7 +460,7 @@ export default function ClientesPage() {
                   <div className="text-gray-300 text-sm">Morada: {clienteView.morada || '-'}</div>
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2 mt-4">Compras</h3>
-                <div className="overflow-x-auto rounded-lg shadow mb-2">
+                <div className="overflow-x-auto rounded-lg shadow mb-2 scrollbar-custom max-h-[40vh] md:max-h-96">
                   <table className="min-w-full bg-gray-800 text-white">
                     <thead>
                       <tr>

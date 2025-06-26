@@ -225,7 +225,7 @@ export default function DefinicoesPage() {
                 {carregando ? 'Adicionando...' : 'Adicionar'}
               </button>
             </form>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96">
               <table className="w-full table-auto text-sm">
                 <thead>
                   <tr>

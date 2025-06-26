@@ -324,7 +324,7 @@ export default function VendasPage() {
               </button>
             </div>
           )}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96">
             <table className="min-w-full bg-gray-800 rounded-lg">
               <thead>
                 <tr>
@@ -413,7 +413,7 @@ export default function VendasPage() {
         {/* Tabela de Devedores */}
         <div>
           <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96">
             <table className="min-w-full bg-gray-800 rounded-lg">
               <thead>
                 <tr>
