@@ -147,11 +147,13 @@ export default function DespesasPage() {
   ];
   const despesasPorMes = Array(12).fill(0);
   const vendasPorMes = Array(12).fill(0);
-  despesas.forEach((d) => {
+  const despesasArray = Array.isArray(despesas) ? despesas : [];
+  despesasArray.forEach((d) => {
     const mes = new Date(d.data).getMonth();
     despesasPorMes[mes] += Number(d.valor);
   });
-  vendas.forEach((v) => {
+  const vendasArray = Array.isArray(vendas) ? vendas : [];
+  vendasArray.forEach((v) => {
     const mes = new Date(v.data).getMonth();
     vendasPorMes[mes] += Number(v.valorFinal);
   });
@@ -232,10 +234,10 @@ export default function DespesasPage() {
           <tbody>
             {loading ? (
               <tr><td colSpan={4} className="text-center py-8">Carregando...</td></tr>
-            ) : despesas.length === 0 ? (
+            ) : despesasArray.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-8">Nenhuma despesa encontrada.</td></tr>
             ) : (
-              despesas.map((despesa) => (
+              despesasArray.map((despesa) => (
                 <tr key={despesa.id} className="border-t border-gray-700">
                   <td className="px-4 py-2">{despesa.nome}</td>
                   <td className="px-4 py-2">€{Number(despesa.valor).toFixed(2)}</td>
@@ -258,10 +260,10 @@ export default function DespesasPage() {
       </div>
       {/* Cards responsivos para mobile */}
       <div className="block md:hidden space-y-8">
-        {despesas.length === 0 ? (
+        {despesasArray.length === 0 ? (
           <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhuma despesa encontrada.</div>
         ) : (
-          despesas.map((despesa, idx) => (
+          despesasArray.map((despesa, idx) => (
             <div key={despesa.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-400">Nome</span>

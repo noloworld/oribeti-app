@@ -302,9 +302,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           </div>
         </Transition>
       </section>
-      {/* Widget de usuários online */}
+      {/* Widget de usuários online - mobile */}
       {!modalAberto && (
-        <div className="fixed z-50 bottom-6 right-6 flex flex-col items-end gap-2">
+        <div className="fixed z-50 top-2 left-1/2 -translate-x-1/2 md:hidden flex flex-col items-center gap-2">
           <button
             className="bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition"
             onClick={() => setShowOnline(v => !v)}
@@ -319,7 +319,46 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             <span className="ml-1 bg-white text-green-700 rounded-full px-2 text-xs font-bold">{onlineUsers.length}</span>
           </button>
           {showOnline && (
-            <div className="bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto scrollbar-custom animate-fadeIn">
+            <div className="bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto scrollbar-custom animate-fadeIn mt-2">
+              <div className="font-bold text-green-400 mb-2 flex items-center gap-2"><FaUserCircle /> Usuários Online</div>
+              {onlineUsers.length === 0 ? (
+                <div className="text-gray-400 text-sm">Ninguém online agora.</div>
+              ) : (
+                <ul className="space-y-2">
+                  {onlineUsers.map((u) => (
+                    <li key={u.id} className="flex items-center gap-2 p-2 rounded hover:bg-gray-800 transition">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </span>
+                      <span className="font-semibold text-white">{u.nome}</span>
+                      <span className="text-xs px-2 py-0.5 rounded bg-green-800 text-green-200 ml-auto">{u.tipo}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      {/* Widget de usuários online - desktop */}
+      {!modalAberto && (
+        <div className="fixed z-50 bottom-6 right-6 hidden md:flex flex-col items-end gap-2">
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition"
+            onClick={() => setShowOnline(v => !v)}
+            title="Usuários online"
+          >
+            <span className="relative flex h-3 w-3 mr-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <FaUserCircle className="text-xl" />
+            <span className="font-bold">Online</span>
+            <span className="ml-1 bg-white text-green-700 rounded-full px-2 text-xs font-bold">{onlineUsers.length}</span>
+          </button>
+          {showOnline && (
+            <div className="bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto scrollbar-custom animate-fadeIn mt-2">
               <div className="font-bold text-green-400 mb-2 flex items-center gap-2"><FaUserCircle /> Usuários Online</div>
               {onlineUsers.length === 0 ? (
                 <div className="text-gray-400 text-sm">Ninguém online agora.</div>
