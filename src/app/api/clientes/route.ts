@@ -50,9 +50,9 @@ export async function POST(req: Request) {
     await prisma.log.create({
       data: {
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email || '',
         acao: 'CRIAR_CLIENTE',
-        detalhes: `Cliente "${nome}" criado`,
+        detalhes: `Cliente "${novoCliente.nome}" criado`,
       },
     });
 
@@ -90,9 +90,9 @@ export async function PUT(req: Request) {
     await prisma.log.create({
       data: {
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email || '',
         acao: 'EDITAR_CLIENTE',
-        detalhes: `Cliente "${nome}" (ID: ${id}) editado`,
+        detalhes: `Cliente "${clienteAtualizado.nome}" editado`,
       },
     });
 
@@ -129,7 +129,7 @@ export async function DELETE(req: Request) {
       await prisma.log.create({
         data: {
           userId: user.id,
-          userEmail: user.email,
+          userEmail: user.email || '',
           acao: 'REMOVER_CLIENTE',
           detalhes: `Cliente "${cliente.nome}" (ID: ${id}) removido`,
         },
