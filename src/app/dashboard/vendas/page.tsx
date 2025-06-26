@@ -513,7 +513,8 @@ export default function VendasPage() {
         {/* Tabela de Devedores */}
         <div>
           <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
-          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 rounded-lg shadow">
+          {/* Tabela tradicional para desktop */}
+          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 rounded-lg shadow hidden md:block">
             <table className="min-w-full bg-gray-800 text-white">
               <thead>
                 <tr>
@@ -560,29 +561,53 @@ export default function VendasPage() {
               </tbody>
             </table>
           </div>
-          {/* Paginação moderna centralizada para tabela de Devedores */}
-          {totalPagesDevedores > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
-              <button
-                className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-                onClick={() => setPageDevedores(p => Math.max(1, p - 1))}
-                disabled={pageDevedores === 1}
-              >«</button>
-              {Array.from({ length: totalPagesDevedores }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  className={`px-3 py-1 rounded text-sm ${p === pageDevedores ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
-                  onClick={() => setPageDevedores(p)}
-                >{p}</button>
-              ))}
-              <button
-                className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-                onClick={() => setPageDevedores(p => Math.min(totalPagesDevedores, p + 1))}
-                disabled={pageDevedores === totalPagesDevedores}
-              >»</button>
-              <span className="ml-2 text-gray-400 text-sm">Página {pageDevedores} de {totalPagesDevedores}</span>
-            </div>
-          )}
+          {/* Cards responsivos para mobile */}
+          <div className="block md:hidden space-y-6">
+            {devedoresPagina.length === 0 ? (
+              <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
+            ) : (
+              devedoresPagina.map((v, idx) => (
+                <div key={v.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Data</span>
+                    <span className="font-semibold">{new Date(v.data).toLocaleDateString('pt-PT')}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Cliente</span>
+                    <span className="font-bold text-base text-white">{v.cliente?.nome}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Produto</span>
+                    <span className="font-semibold">{v.nomeProduto}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Valor final (€)</span>
+                    <span className="font-semibold">€ {v.valorFinal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Valor pago (€)</span>
+                    <span className="font-semibold">€ {(v.valorPago || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Em dívida (€)</span>
+                    <span className="font-semibold text-yellow-400">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Estado</span>
+                    <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold">Em dívida</span>
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <button
+                      onClick={() => handleOpenEditModal(v)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-xs min-w-[120px] shadow"
+                    >
+                      Adicionar pagamento
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
       {/* Paginação moderna centralizada */}
