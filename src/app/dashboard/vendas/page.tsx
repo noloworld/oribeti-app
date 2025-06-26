@@ -450,6 +450,10 @@ export default function VendasPage() {
                       <span className="text-gray-400">Valor Pago (€)</span>
                       <span className="font-semibold">€{(venda.valorPago || 0).toFixed(2)}</span>
                     </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Status</span>
+                      <span className="font-bold text-green-400">Pago</span>
+                    </div>
                     <div className="flex gap-3 mt-4">
                       <button
                         onClick={() => handleOpenEditModal(venda)}

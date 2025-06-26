@@ -225,7 +225,7 @@ export default function DefinicoesPage() {
                 {carregando ? 'Adicionando...' : 'Adicionar'}
               </button>
             </form>
-            <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96">
+            <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
               <table className="w-full table-auto text-sm">
                 <thead>
                   <tr>
@@ -248,6 +248,31 @@ export default function DefinicoesPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="block md:hidden space-y-8">
+              {usuarios.length === 0 ? (
+                <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum usuário encontrado.</div>
+              ) : (
+                usuarios.map((usuario, idx) => (
+                  <div key={usuario.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Nome</span>
+                      <span className="font-bold text-base text-white">{usuario.nome}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Email</span>
+                      <span className="font-semibold">{usuario.email}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Tipo</span>
+                      <span className="font-semibold">{usuario.tipo}</span>
+                    </div>
+                    <div className="flex gap-3 mt-4">
+                      <button onClick={() => handleRemoverUsuario(usuario.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Remover</button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </section>
         )}

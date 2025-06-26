@@ -240,7 +240,8 @@ export default function ClientesPage() {
           <button onClick={handleAddOpen} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Adicionar cliente</button>
         </div>
       </div>
-      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96">
+      {/* Tabela tradicional para desktop */}
+      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
         <table className="w-full table-auto bg-gray-800 text-white">
           <thead>
             <tr>
@@ -276,6 +277,39 @@ export default function ClientesPage() {
             }
           </tbody>
         </table>
+      </div>
+      {/* Cards responsivos para mobile */}
+      <div className="block md:hidden space-y-8">
+        {paginatedClientes.length === 0 ? (
+          <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente registado.</div>
+        ) : (
+          paginatedClientes.map((cliente, idx) => (
+            <div key={cliente.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Nome</span>
+                <span className="font-bold text-base text-white">{cliente.nome}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Email</span>
+                <span className="font-semibold">{cliente.email}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Telefone</span>
+                <span className="font-semibold">{cliente.telefone}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Morada</span>
+                <span className="font-semibold">{cliente.morada}</span>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Editar</button>
+                <button onClick={() => handleDelete(cliente.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Eliminar</button>
+                <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Ver cliente</button>
+                <button onClick={() => handlePrint(cliente)} className="bg-green-700 hover:bg-green-800 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Imprimir</button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
       {/* Paginação */}
       {totalPages > 1 && (

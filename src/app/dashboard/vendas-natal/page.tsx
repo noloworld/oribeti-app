@@ -83,7 +83,8 @@ export default function VendasNatalPage() {
         <h1 className="text-2xl font-bold">Vendas de Natal</h1>
         <button onClick={handleAddOpen} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Adicionar venda</button>
       </div>
-      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96">
+      {/* Tabela tradicional para desktop */}
+      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
         <table className="min-w-full bg-gray-800 text-white">
           <thead>
             <tr>
@@ -108,6 +109,36 @@ export default function VendasNatalPage() {
             ))}
           </tbody>
         </table>
+      </div>
+      {/* Cards responsivos para mobile */}
+      <div className="block md:hidden space-y-8">
+        {vendas.length === 0 ? (
+          <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhuma venda encontrada.</div>
+        ) : (
+          vendas.map((venda, idx) => (
+            <div key={venda.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Cliente</span>
+                <span className="font-bold text-base text-white">{venda.cliente}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Produto</span>
+                <span className="font-semibold">{venda.produto}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Valor da venda</span>
+                <span className="font-semibold">€{venda.valorVenda}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Data</span>
+                <span className="font-semibold">{venda.data}</span>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => handleEditOpen(venda)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Editar</button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
       {/* Modal de adição */}
       {addModalOpen && (

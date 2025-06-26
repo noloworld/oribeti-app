@@ -218,7 +218,8 @@ export default function DespesasPage() {
           Adicionar nova despesa
         </button>
       </div>
-      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96">
+      {/* Tabela tradicional para desktop */}
+      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
         <table className="min-w-full bg-gray-800 text-white">
           <thead>
             <tr>
@@ -254,6 +255,33 @@ export default function DespesasPage() {
             )}
           </tbody>
         </table>
+      </div>
+      {/* Cards responsivos para mobile */}
+      <div className="block md:hidden space-y-8">
+        {despesas.length === 0 ? (
+          <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhuma despesa encontrada.</div>
+        ) : (
+          despesas.map((despesa, idx) => (
+            <div key={despesa.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Nome</span>
+                <span className="font-bold text-base text-white">{despesa.nome}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Valor</span>
+                <span className="font-semibold">€{Number(despesa.valor).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-400">Data</span>
+                <span className="font-semibold">{despesa.data.slice(0, 10)}</span>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => handleEditOpen(despesa)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Editar</button>
+                <button onClick={() => handleDeleteOpen(despesa)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Eliminar</button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
       {/* Modal de adição */}
       <Transition.Root show={addModalOpen} as={Fragment}>

@@ -115,7 +115,8 @@ export default function DevedoresPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">Clientes Devedores</h1>
-      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96">
+      {/* Tabela tradicional para desktop */}
+      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
         <table className="min-w-full bg-gray-800 text-white">
           <thead>
             <tr>
@@ -191,6 +192,76 @@ export default function DevedoresPage() {
             )}
           </tbody>
         </table>
+      </div>
+      {/* Cards responsivos para mobile */}
+      <div className="block md:hidden space-y-8">
+        {vendas.length === 0 ? (
+          <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
+        ) : (
+          vendas.map((venda, idx) => {
+            const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
+            const historico = pagamentos[venda.id] || [];
+            const valorMaxDevido = Math.max(venda.valorFinal, ...historico.map(p => p.valor));
+            const ultimoPagamento = historico.length > 0 ? historico[0] : null;
+            return (
+              <div key={venda.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400">Cliente</span>
+                  <span className="font-bold text-base text-white">{venda.cliente?.nome}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400">Valor máximo devido</span>
+                  <span className="font-semibold">€{valorMaxDevido.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400">Valor em dívida</span>
+                  <span className="font-semibold text-yellow-400">€{valorEmDivida.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400">Último pagamento</span>
+                  <span className="font-semibold">{ultimoPagamento ? new Date(ultimoPagamento.data).toLocaleDateString() : '-'}</span>
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => {
+                      if (historicoAberto === venda.id) {
+                        setHistoricoAberto(null);
+                      } else {
+                        setHistoricoAberto(venda.id);
+                        if (!pagamentos[venda.id]) fetchPagamentos(venda.id);
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[90px] shadow flex items-center gap-1"
+                  >
+                    <FaHistory /> Histórico
+                  </button>
+                </div>
+                {/* Histórico expandido */}
+                {historicoAberto === venda.id && (
+                  <div className="bg-gray-900 mt-3 rounded-lg p-3">
+                    <div className="mb-2 text-yellow-400 font-semibold">{venda.nomeProduto}</div>
+                    <div className="mb-2 text-yellow-300 text-sm">
+                      Este cliente já pagou {historico.length}x um {venda.nomeProduto} de €{venda.valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{valorEmDivida.toFixed(2)}</span>.
+                    </div>
+                    <div className="space-y-2 overflow-y-auto max-h-[25vh] md:max-h-64 scrollbar-custom">
+                      {historico.length === 0 ? (
+                        <div className="text-gray-400 text-center py-2">Nenhum pagamento registrado.</div>
+                      ) : (
+                        historico.map((p, idx) => (
+                          <div key={p.id || idx} className="flex items-center gap-4 bg-gray-800 rounded-lg px-4 py-2">
+                            <div className="text-green-400 font-bold text-lg">€{p.valor.toFixed(2)}</div>
+                            <div className="text-gray-300 text-sm">{new Date(p.data).toLocaleDateString()}</div>
+                            {p.observacoes && <div className="text-gray-400 text-xs italic">{p.observacoes}</div>}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
       {/* Modal de confirmação de pagamento */}
       {confirmModalOpen && vendaToConfirm && (
