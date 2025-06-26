@@ -513,44 +513,50 @@ export default function VendasPage() {
         {/* Tabela de Devedores */}
         <div>
           <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
-          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96">
-            <table className="min-w-full bg-gray-800 rounded-lg">
+          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 rounded-lg shadow">
+            <table className="min-w-full bg-gray-800 text-white">
               <thead>
                 <tr>
-                  <th className="px-4 py-2 text-left text-gray-300">Data</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Cliente</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Produto</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Valor Final (€)</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Valor Pago (€)</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Em Dívida (€)</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Status</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Ações</th>
+                  <th className="px-4 py-2 text-left">Data</th>
+                  <th className="px-4 py-2 text-left">Cliente</th>
+                  <th className="px-4 py-2 text-left">Produto</th>
+                  <th className="px-4 py-2 text-left">Valor final (€)</th>
+                  <th className="px-4 py-2 text-left">Valor pago (€)</th>
+                  <th className="px-4 py-2 text-left">Em dívida (€)</th>
+                  <th className="px-4 py-2 text-left">Estado</th>
+                  <th className="px-4 py-2 text-left">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {devedoresPagina.map((v) => (
-                  <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
-                    <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
-                    <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
-                    <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
-                    <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
-                    <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
-                    <td className="px-4 py-2 text-gray-200">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
-                    <td className="px-4 py-2">
-                      <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold">
-                        PENDENTE
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 flex gap-2">
-                      <button
-                        onClick={() => handleOpenEditModal(v)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
-                      >
-                        Adicionar Pagamento
-                      </button>
-                    </td>
+                {devedoresPagina.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-gray-400 px-4 py-2 text-center">Nenhum cliente devedor.</td>
                   </tr>
-                ))}
+                ) : (
+                  devedoresPagina.map((v) => (
+                    <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                      <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString('pt-PT')}</td>
+                      <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
+                      <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
+                      <td className="px-4 py-2 text-yellow-400 font-bold">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
+                      <td className="px-4 py-2">
+                        <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold">
+                          Em dívida
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 flex gap-2">
+                        <button
+                          onClick={() => handleOpenEditModal(v)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Adicionar pagamento
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -574,6 +580,7 @@ export default function VendasPage() {
                 onClick={() => setPageDevedores(p => Math.min(totalPagesDevedores, p + 1))}
                 disabled={pageDevedores === totalPagesDevedores}
               >»</button>
+              <span className="ml-2 text-gray-400 text-sm">Página {pageDevedores} de {totalPagesDevedores}</span>
             </div>
           )}
         </div>
