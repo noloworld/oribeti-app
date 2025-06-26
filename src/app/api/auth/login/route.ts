@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { createToken } from '@/lib/auth';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'segredo-super-seguro';
 
 export async function POST(req: Request) {
   try {
@@ -20,7 +19,20 @@ export async function POST(req: Request) {
     if (!senhaOk) {
       return NextResponse.json({ error: 'Usuário ou senha inválidos.' }, { status: 401 });
     }
-    const token = jwt.sign({ id: user.id, tipo: user.tipo }, JWT_SECRET, { expiresIn: '1d' });
+    
+    // Atualizar lastOnline
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastOnline: new Date() }
+    });
+    
+    const token = createToken({ 
+      id: user.id, 
+      email: user.email, 
+      nome: user.nome, 
+      tipo: user.tipo 
+    });
+    
     const res = NextResponse.json({ success: true });
     res.cookies.set('auth-token', token, {
       httpOnly: true,

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { extractUserFromToken } from '@/lib/auth';
-
-const prisma = new PrismaClient();
 
 // Buscar pagamentos de uma venda específica
 export async function GET(req: NextRequest) {
@@ -68,7 +66,10 @@ export async function POST(req: NextRequest) {
     // Buscar a venda para obter o valorFinal
     const venda = await prisma.venda.findUnique({
       where: { id: Number(vendaId) },
-      include: { cliente: true },
+      include: { 
+        cliente: true,
+        produtos: true 
+      },
     });
 
     if (!venda) {
@@ -76,8 +77,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Venda não encontrada.' }, { status: 404 });
     }
 
+    // Calcular valorFinal baseado nos produtos
+    const valorFinal = venda.produtos.reduce((acc, p) => acc + p.valorFinal, 0);
+
     // Atualizar valorPago e status na venda
-    const statusAutomatico = totalPago >= venda.valorFinal ? 'PAGO' : 'PENDENTE';
+    const statusAutomatico = totalPago >= valorFinal ? 'PAGO' : 'PENDENTE';
     console.log('API Pagamentos - Status automático:', statusAutomatico);
     
     await prisma.venda.update({
@@ -89,12 +93,13 @@ export async function POST(req: NextRequest) {
     });
 
     // Gravar log da ação
+    const nomeProduto = venda.produtos[0]?.nomeProduto || 'Produto';
     await prisma.log.create({
       data: {
         userId: user.id,
         userEmail: user.email || '',
         acao: 'CRIAR_PAGAMENTO',
-        detalhes: `Pagamento de €${valor} registado para venda "${venda.nomeProduto}" (Cliente: ${venda.cliente.nome})`,
+        detalhes: `Pagamento de €${valor} registado para venda "${nomeProduto}" (Cliente: ${venda.cliente.nome})`,
       },
     });
 
@@ -126,7 +131,10 @@ export async function DELETE(req: NextRequest) {
       where: { id: Number(id) },
       include: {
         venda: {
-          include: { cliente: true }
+          include: { 
+            cliente: true,
+            produtos: true 
+          }
         }
       }
     });
@@ -146,14 +154,18 @@ export async function DELETE(req: NextRequest) {
     // Buscar a venda para obter o valorFinal
     const venda = await prisma.venda.findUnique({
       where: { id: Number(vendaId) },
+      include: { produtos: true },
     });
 
     if (!venda) {
       return NextResponse.json({ error: 'Venda não encontrada.' }, { status: 404 });
     }
 
+    // Calcular valorFinal baseado nos produtos
+    const valorFinal = venda.produtos.reduce((acc, p) => acc + p.valorFinal, 0);
+
     // Atualizar valorPago e status na venda
-    const statusAutomatico = totalPago >= venda.valorFinal ? 'PAGO' : 'PENDENTE';
+    const statusAutomatico = totalPago >= valorFinal ? 'PAGO' : 'PENDENTE';
     
     await prisma.venda.update({
       where: { id: Number(vendaId) },
@@ -165,12 +177,13 @@ export async function DELETE(req: NextRequest) {
 
     // Gravar log da ação
     if (pagamento) {
+      const nomeProduto = pagamento.venda.produtos[0]?.nomeProduto || 'Produto';
       await prisma.log.create({
         data: {
           userId: user.id,
           userEmail: user.email || '',
           acao: 'REMOVER_PAGAMENTO',
-          detalhes: `Pagamento de €${pagamento.valor} removido da venda "${pagamento.venda.nomeProduto}" (Cliente: ${pagamento.venda.cliente.nome})`,
+          detalhes: `Pagamento de €${pagamento.valor} removido da venda "${nomeProduto}" (Cliente: ${pagamento.venda.cliente.nome})`,
         },
       });
     }

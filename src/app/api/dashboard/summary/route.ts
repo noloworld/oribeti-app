@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
@@ -12,11 +10,23 @@ export async function GET() {
     const totalVendas = await prisma.venda.count();
 
     // Total ganho (somente vendas pagas)
-    const vendasPagas = await prisma.venda.findMany({ where: { status: 'PAGO' } });
-    const totalGanho = vendasPagas.reduce((acc, v) => acc + (v.valorFinal || 0), 0);
+    const vendasPagas = await prisma.venda.findMany({ 
+      where: { status: 'PAGO' },
+      include: { produtos: true }
+    });
+    const totalGanho = vendasPagas.reduce((acc, v) => {
+      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      return acc + valorVenda;
+    }, 0);
 
     // Clientes devedores (clientes com vendas pendentes)
-    const vendasPendentes = await prisma.venda.findMany({ where: { status: 'PENDENTE' }, include: { cliente: true } });
+    const vendasPendentes = await prisma.venda.findMany({ 
+      where: { status: 'PENDENTE' }, 
+      include: { 
+        cliente: true,
+        produtos: true 
+      } 
+    });
     const clientesDevedoresMap = new Map();
     vendasPendentes.forEach(v => {
       if (!clientesDevedoresMap.has(v.clienteId)) {
@@ -28,7 +38,8 @@ export async function GET() {
         });
       }
       const dev = clientesDevedoresMap.get(v.clienteId);
-      dev.valorEmDivida += v.valorFinal || 0;
+      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      dev.valorEmDivida += valorVenda;
       if (new Date(v.data) < new Date(dev.desde)) dev.desde = v.data;
     });
     const clientesDevedores = Array.from(clientesDevedoresMap.values());
@@ -37,26 +48,34 @@ export async function GET() {
     const anoAtual = new Date().getFullYear();
     const vendasAno = await prisma.venda.findMany({
       where: { data: { gte: new Date(`${anoAtual}-01-01`), lte: new Date(`${anoAtual}-12-31`) } },
+      include: { produtos: true },
     });
     const vendasPorMes: { mes: number; total: number }[] = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, total: 0 }));
     vendasAno.forEach(v => {
       const mes = new Date(v.data).getMonth();
-      vendasPorMes[mes].total += v.valorFinal || 0;
+      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      vendasPorMes[mes].total += valorVenda;
     });
 
     // Vendas por ano (últimos 5 anos)
-    const vendasAll = await prisma.venda.findMany();
+    const vendasAll = await prisma.venda.findMany({
+      include: { produtos: true }
+    });
     const vendasPorAnoMap = new Map<number, number>();
     vendasAll.forEach(v => {
       const ano = new Date(v.data).getFullYear();
-      vendasPorAnoMap.set(ano, (vendasPorAnoMap.get(ano) || 0) + (v.valorFinal || 0));
+      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      vendasPorAnoMap.set(ano, (vendasPorAnoMap.get(ano) || 0) + valorVenda);
     });
     const vendasPorAno = Array.from(vendasPorAnoMap.entries()).map(([ano, total]) => ({ ano, total })).sort((a, b) => b.ano - a.ano).slice(0, 5);
 
     // Top 5 clientes (quem mais gastou)
     const vendasComCliente = await prisma.venda.findMany({
       where: { status: 'PAGO' },
-      include: { cliente: true },
+      include: { 
+        cliente: true,
+        produtos: true 
+      },
     });
     const gastoPorCliente = new Map<number, { id: number; nome: string; totalGasto: number }>();
     vendasComCliente.forEach(v => {
@@ -64,7 +83,8 @@ export async function GET() {
       if (!gastoPorCliente.has(v.clienteId)) {
         gastoPorCliente.set(v.clienteId, { id: v.clienteId, nome: v.cliente.nome, totalGasto: 0 });
       }
-      gastoPorCliente.get(v.clienteId)!.totalGasto += v.valorFinal || 0;
+      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      gastoPorCliente.get(v.clienteId)!.totalGasto += valorVenda;
     });
     const top5Clientes = Array.from(gastoPorCliente.values()).sort((a, b) => b.totalGasto - a.totalGasto).slice(0, 5);
 

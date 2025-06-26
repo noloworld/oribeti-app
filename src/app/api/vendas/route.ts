@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { extractUserFromToken } from '@/lib/auth';
-
-const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,6 +13,7 @@ export async function GET(req: NextRequest) {
         include: {
           cliente: { select: { id: true, nome: true } },
           pagamentos: true,
+          produtos: true,
         },
         orderBy: { data: 'desc' },
       });
@@ -39,6 +38,7 @@ export async function GET(req: NextRequest) {
         include: {
           cliente: { select: { id: true, nome: true } },
           pagamentos: true, // pega todos para contar
+          produtos: true,
         },
         orderBy: { data: 'desc' },
         skip,
@@ -139,23 +139,32 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { id, clienteId, nomeProduto, valorRevista, valorFinal, valorPago, observacoes, data, status } = body;
-    if (!id || !clienteId || !nomeProduto || !valorRevista || !valorFinal || !data) {
-      return NextResponse.json({ error: 'Campos obrigatórios: id, clienteId, nomeProduto, valorRevista, valorFinal, data.' }, { status: 400 });
+    const { id, clienteId, valorPago, observacoes, data, status } = body;
+    if (!id || !clienteId || !data) {
+      return NextResponse.json({ error: 'Campos obrigatórios: id, clienteId, data.' }, { status: 400 });
     }
+    
+    // Buscar a venda atual para obter o valorFinal
+    const vendaAtual = await prisma.venda.findUnique({
+      where: { id: Number(id) },
+      include: { produtos: true }
+    });
+    
+    if (!vendaAtual) {
+      return NextResponse.json({ error: 'Venda não encontrada.' }, { status: 404 });
+    }
+    
+    // Calcular valorFinal baseado nos produtos
+    const valorFinal = vendaAtual.produtos.reduce((acc, p) => acc + p.valorFinal, 0);
     
     // Calcular status automaticamente baseado no valor pago
     const valorPagoNum = Number(valorPago || 0);
-    const valorFinalNum = Number(valorFinal);
-    const statusAutomatico = valorPagoNum >= valorFinalNum ? 'PAGO' : 'PENDENTE';
+    const statusAutomatico = valorPagoNum >= valorFinal ? 'PAGO' : 'PENDENTE';
     
     const vendaAtualizada = await prisma.venda.update({
       where: { id: Number(id) },
       data: {
         clienteId: Number(clienteId),
-        nomeProduto,
-        valorRevista: Number(valorRevista),
-        valorFinal: valorFinalNum,
         valorPago: valorPagoNum,
         observacoes: observacoes || null,
         data: new Date(data),
@@ -163,6 +172,7 @@ export async function PUT(req: Request) {
       },
       include: {
         cliente: { select: { id: true, nome: true } },
+        produtos: true,
       },
     });
 
@@ -172,7 +182,7 @@ export async function PUT(req: Request) {
         userId: user.id,
         userEmail: user.email || '',
         acao: 'EDITAR_VENDA',
-        detalhes: `Venda "${nomeProduto}" (ID: ${id}) editada para €${valorFinal}`,
+        detalhes: `Venda (ID: ${id}) editada para €${valorFinal}`,
       }
     });
     return NextResponse.json(vendaAtualizada);
@@ -198,7 +208,7 @@ export async function DELETE(req: Request) {
     // Buscar dados da venda antes de deletar para o log
     const venda = await prisma.venda.findUnique({
       where: { id: Number(id) },
-      include: { cliente: true },
+      include: { cliente: true, produtos: true },
     });
 
     if (!venda) {
@@ -208,12 +218,13 @@ export async function DELETE(req: Request) {
     await prisma.venda.delete({ where: { id: Number(id) } });
 
     // Gravar log da ação
+    const valorTotal = venda.produtos.reduce((acc, p) => acc + p.valorFinal, 0);
     await prisma.log.create({
       data: {
         userId: user.id,
         userEmail: user.email || '',
         acao: 'REMOVER_VENDA',
-        detalhes: `Venda "${venda.nomeProduto}" (ID: ${id}) de €${venda.valorFinal} removida`,
+        detalhes: `Venda (ID: ${id}) de €${valorTotal} removida`,
       }
     });
     return NextResponse.json({ success: true });

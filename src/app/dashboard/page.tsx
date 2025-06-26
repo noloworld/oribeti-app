@@ -13,8 +13,32 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+interface DashboardData {
+  totalClientes: number;
+  totalVendas: number;
+  totalGanho: number;
+  clientesDevedores: Array<{
+    id: number;
+    nome: string;
+    valorEmDivida: number;
+    desde: string;
+  }>;
+  vendasPorMes: Array<{ mes: number; total: number }>;
+  vendasPorAno: Array<{ ano: number; total: number }>;
+  top5Clientes: Array<{
+    id: number;
+    nome: string;
+    totalGasto: number;
+  }>;
+  ultimosClientes: Array<{
+    id: number;
+    nome: string;
+    criadoEm: string;
+  }>;
+}
+
 export default function DashboardPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [tipoGrafico, setTipoGrafico] = useState<'mes' | 'ano'>("mes");
 
@@ -41,17 +65,17 @@ export default function DashboardPage() {
         datasets: [
           {
             label: "Vendas por mês (€)",
-            data: data.vendasPorMes.map((v: any) => v.total),
+            data: data.vendasPorMes.map((v) => v.total),
             backgroundColor: "#2563eb",
           },
         ],
       }
     : {
-        labels: data.vendasPorAno.map((v: any) => v.ano),
+        labels: data.vendasPorAno.map((v) => v.ano.toString()),
         datasets: [
           {
             label: "Vendas por ano (€)",
-            data: data.vendasPorAno.map((v: any) => v.total),
+            data: data.vendasPorAno.map((v) => v.total),
             backgroundColor: "#22c55e",
           },
         ],
@@ -115,7 +139,7 @@ export default function DashboardPage() {
             {data.top5Clientes.length === 0 && (
               <li className="text-gray-400">Nenhum cliente com vendas pagas.</li>
             )}
-            {data.top5Clientes.map((c: any, i: number) => (
+            {data.top5Clientes.map((c, i) => (
               <li key={c.id} className="flex justify-between items-center bg-gray-800 rounded px-4 py-2">
                 <span className="font-semibold text-white">{i + 1}. {c.nome}</span>
                 <span className="text-green-400 font-bold">€ {c.totalGasto.toFixed(2)}</span>
@@ -130,7 +154,7 @@ export default function DashboardPage() {
             {data.ultimosClientes.length === 0 && (
               <li className="text-gray-400">Nenhum cliente cadastrado.</li>
             )}
-            {data.ultimosClientes.map((c: any) => (
+            {data.ultimosClientes.map((c) => (
               <li key={c.id} className="flex justify-between items-center bg-gray-800 rounded px-4 py-2">
                 <span className="font-semibold text-white">{c.nome}</span>
                 <span className="text-gray-400 text-xs">{new Date(c.criadoEm).toLocaleDateString()}</span>
@@ -158,7 +182,7 @@ export default function DashboardPage() {
                   <td colSpan={3} className="text-gray-400 px-4 py-2">Nenhum cliente devedor.</td>
                 </tr>
               ) : (
-                data.clientesDevedores.map((c: any) => (
+                data.clientesDevedores.map((c) => (
                   <tr key={c.id} className="border-b border-gray-800">
                     <td className="px-4 py-2">{c.nome}</td>
                     <td className="px-4 py-2 text-yellow-400 font-bold">€ {c.valorEmDivida.toFixed(2)}</td>

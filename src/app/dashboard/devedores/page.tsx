@@ -5,14 +5,22 @@ import toast from 'react-hot-toast';
 import { Transition } from '@headlessui/react';
 import { useModalAberto } from '../../../components/ModalContext';
 
+interface VendaProduto {
+  id: number;
+  nomeProduto: string;
+  quantidade: number;
+  valorRevista: number;
+  valorFinal: number;
+}
+
 interface Venda {
   id: number;
   cliente: { id: number; nome: string };
-  valorFinal: number;
-  valorPago?: number;
+  valorPago: number;
   data: string;
   status: string;
-  nomeProduto: string;
+  produtos: VendaProduto[];
+  numPagamentos?: number;
 }
 
 interface Pagamento {
@@ -59,13 +67,19 @@ export default function DevedoresPage() {
     }
   };
 
+  // Função para calcular o valor final de uma venda
+  const calcularValorFinal = (venda: Venda): number => {
+    return venda.produtos.reduce((sum, produto) => sum + produto.valorFinal, 0);
+  };
+
   // Função para filtrar devedores
   function filtrarDevedores(vendas: Venda[]) {
     return vendas.filter(venda => {
+      const valorFinal = calcularValorFinal(venda);
       // Pagando às prestações: já pagou algo, mas não tudo
-      if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal) return true;
+      if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < valorFinal) return true;
       // Já pagou tudo parcelado: valorPago >= valorFinal e mais de um pagamento
-      if ((venda.valorPago || 0) >= venda.valorFinal && (venda as any).numPagamentos > 1) return true;
+      if ((venda.valorPago || 0) >= valorFinal && (venda.numPagamentos || 0) > 1) return true;
       return false;
     });
   }
@@ -85,13 +99,14 @@ export default function DevedoresPage() {
     if (!vendaToConfirm) return;
     setLoading(true);
     try {
+      const valorFinal = calcularValorFinal(vendaToConfirm);
       const res = await fetch('/api/vendas', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...vendaToConfirm,
           clienteId: vendaToConfirm.cliente.id,
-          valorPago: vendaToConfirm.valorFinal,
+          valorPago: valorFinal,
           status: 'PAGO',
         }),
       });
@@ -157,11 +172,13 @@ export default function DevedoresPage() {
                 );
               }
               return vendasPaginadas.map(venda => {
-                const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
+                const valorFinal = calcularValorFinal(venda);
+                const valorEmDivida = valorFinal - (venda.valorPago || 0);
                 const historico = pagamentos[venda.id] || [];
-                const valorMaxDevido = Math.max(venda.valorFinal, ...historico.map(p => p.valor));
+                const valorMaxDevido = Math.max(valorFinal, ...historico.map(p => p.valor));
                 const ultimoPagamento = historico.length > 0 ? historico[0] : null;
-                const pagandoPrestacoes = (venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal;
+                const pagandoPrestacoes = (venda.valorPago || 0) > 0 && (venda.valorPago || 0) < valorFinal;
+                const nomeProduto = venda.produtos[0]?.nomeProduto || 'Produto';
                 return (
                   <React.Fragment key={venda.id}>
                     <tr className="border-t border-gray-700">
@@ -194,10 +211,10 @@ export default function DevedoresPage() {
                       <tr>
                         <td colSpan={5} className="bg-gray-900 px-6 py-4">
                           <div className="mb-2 text-yellow-400 font-semibold">
-                            {venda.nomeProduto}
+                            {nomeProduto}
                           </div>
                           <div className="mb-2 text-yellow-300 text-sm">
-                            Este cliente já pagou {(venda as any).numPagamentos}x um {venda.nomeProduto} de €{venda.valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{(venda.valorFinal - (venda.valorPago || 0)).toFixed(2)}</span>.
+                            Este cliente já pagou {(venda.numPagamentos || 0)}x um {nomeProduto} de €{valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{valorEmDivida.toFixed(2)}</span>.
                           </div>
                           <div className="space-y-2 overflow-y-auto max-h-[25vh] md:max-h-64 scrollbar-custom">
                             {historico.length === 0 ? (
@@ -231,11 +248,13 @@ export default function DevedoresPage() {
             );
           }
           return vendasPaginadas.map((venda, idx) => {
-            const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
+            const valorFinal = calcularValorFinal(venda);
+            const valorEmDivida = valorFinal - (venda.valorPago || 0);
             const historico = pagamentos[venda.id] || [];
-            const valorMaxDevido = Math.max(venda.valorFinal, ...historico.map(p => p.valor));
+            const valorMaxDevido = Math.max(valorFinal, ...historico.map(p => p.valor));
             const ultimoPagamento = historico.length > 0 ? historico[0] : null;
-            const pagandoPrestacoes = (venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal;
+            const pagandoPrestacoes = (venda.valorPago || 0) > 0 && (venda.valorPago || 0) < valorFinal;
+            const nomeProduto = venda.produtos[0]?.nomeProduto || 'Produto';
             return (
               <div key={venda.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
                 <div className="flex justify-between items-center text-xs">
@@ -275,9 +294,9 @@ export default function DevedoresPage() {
                 {/* Histórico expandido */}
                 {historicoAberto === venda.id && (
                   <div className="bg-gray-900 mt-3 rounded-lg p-3">
-                    <div className="mb-2 text-yellow-400 font-semibold">{venda.nomeProduto}</div>
+                    <div className="mb-2 text-yellow-400 font-semibold">{nomeProduto}</div>
                     <div className="mb-2 text-yellow-300 text-sm">
-                      Este cliente já pagou {(venda as any).numPagamentos}x um {venda.nomeProduto} de €{venda.valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{valorEmDivida.toFixed(2)}</span>.
+                      Este cliente já pagou {(venda.numPagamentos || 0)}x um {nomeProduto} de €{valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{valorEmDivida.toFixed(2)}</span>.
                     </div>
                     <div className="space-y-2 overflow-y-auto max-h-[25vh] md:max-h-64 scrollbar-custom">
                       {historico.length === 0 ? (
@@ -325,7 +344,7 @@ export default function DevedoresPage() {
             <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
               <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-sm text-center pointer-events-auto" onClick={e => e.stopPropagation()}>
                 <h2 className="text-xl font-bold text-white mb-4">Confirmar Pagamento</h2>
-                <p className="text-gray-300 mb-6">Tem certeza que deseja marcar como <span className="font-semibold text-green-400">PAGO</span> a venda de <span className="font-semibold">{vendaToConfirm.cliente.nome}</span> no valor de <span className="font-semibold">€{(vendaToConfirm.valorFinal - (vendaToConfirm.valorPago || 0)).toFixed(2)}</span>?</p>
+                <p className="text-gray-300 mb-6">Tem certeza que deseja marcar como <span className="font-semibold text-green-400">PAGO</span> a venda de <span className="font-semibold">{vendaToConfirm.cliente.nome}</span> no valor de <span className="font-semibold">€{(calcularValorFinal(vendaToConfirm) - (vendaToConfirm.valorPago || 0)).toFixed(2)}</span>?</p>
                 <div className="flex justify-center gap-4">
                   <button onClick={handleConfirmModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
                   <button onClick={marcarComoPagoConfirmado} className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Confirmar'}</button>

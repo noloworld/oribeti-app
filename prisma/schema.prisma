@@ -8,8 +8,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -48,6 +48,10 @@ model Venda {
   criadoEm     DateTime @default(now())
   pagamentos   Pagamento[]
   produtos     VendaProduto[]
+  // Campos adicionais para compatibilidade com o código existente
+  nomeProduto  String?  // Campo temporário para compatibilidade
+  valorRevista Float?   // Campo temporário para compatibilidade
+  valorFinal   Float?   // Campo temporário para compatibilidade
 }
 
 model VendaProduto {

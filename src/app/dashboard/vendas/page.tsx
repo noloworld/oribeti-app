@@ -126,6 +126,16 @@ export default function VendasPage() {
     setProdutos(produtos.map((p, i) => i === idx ? { ...p, [field]: value } : p));
   }
 
+  // Função para alterar produto na edição
+  function handleEditProdutoChange(idx: number, field: string, value: any) {
+    if (editVenda) {
+      setEditVenda({
+        ...editVenda,
+        produtos: editVenda.produtos.map((p, i) => i === idx ? { ...p, [field]: value } : p)
+      });
+    }
+  }
+
   // Calcular total
   const totalRevista = produtos.reduce((acc, p) => acc + Number(p.valorRevista || 0) * Number(p.quantidade || 1), 0);
   const totalFinal = produtos.reduce((acc, p) => acc + Number(p.valorFinal || 0) * Number(p.quantidade || 1), 0);
@@ -855,7 +865,7 @@ export default function VendasPage() {
                     <input 
                       type="date" 
                       value={editVenda.data.slice(0,10)} 
-                      onChange={e => setEditVenda({ ...editVenda, data: e.target.value })} 
+                      onChange={e => handleEditProdutoChange(0, 'data', e.target.value)} 
                       className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" 
                       disabled={isEditPrestacoes}
                       required 
@@ -871,10 +881,10 @@ export default function VendasPage() {
                     <label className="block text-gray-300 mb-1">Produtos</label>
                     {editVenda.produtos.map((produto, idx) => (
                       <div key={idx} className="flex flex-col md:flex-row gap-2 mb-2 items-end">
-                        <input type="text" placeholder="Nome do produto" className="flex-1 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.nomeProduto} onChange={e => handleProdutoChange(idx, 'nomeProduto', e.target.value)} required />
-                        <input type="number" min="1" placeholder="Qtd" className="w-full md:w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleProdutoChange(idx, 'quantidade', e.target.value)} required />
-                        <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleProdutoChange(idx, 'valorRevista', e.target.value)} required />
-                        <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleProdutoChange(idx, 'valorFinal', e.target.value)} required />
+                        <input type="text" placeholder="Nome do produto" className="flex-1 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.nomeProduto} onChange={e => handleEditProdutoChange(idx, 'nomeProduto', e.target.value)} required />
+                        <input type="number" min="1" placeholder="Qtd" className="w-full md:w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleEditProdutoChange(idx, 'quantidade', e.target.value)} required />
+                        <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleEditProdutoChange(idx, 'valorRevista', e.target.value)} required />
+                        <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleEditProdutoChange(idx, 'valorFinal', e.target.value)} required />
                         {editVenda.produtos.length > 1 && (
                           <button type="button" className="text-red-400 hover:text-red-600 text-lg font-bold px-2" onClick={() => handleRemoveProduto(idx)}>-</button>
                         )}
@@ -888,7 +898,7 @@ export default function VendasPage() {
                   </div>
                   <div>
                     <label className="block text-gray-300 mb-1">Observações</label>
-                    <textarea name="observacoes" value={editVenda.observacoes} onChange={e => setEditVenda({ ...editVenda, observacoes: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
+                    <textarea name="observacoes" value={editVenda.observacoes} onChange={e => handleEditProdutoChange(0, 'observacoes', e.target.value)} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <button
