@@ -12,12 +12,18 @@ interface Cliente {
   nome: string;
 }
 
+interface ProdutoVenda {
+  id: number;
+  nomeProduto: string;
+  quantidade: number;
+  valorRevista: number;
+  valorFinal: number;
+}
+
 interface Venda {
   id: number;
   cliente: { id: number; nome: string };
-  nomeProduto: string;
-  valorRevista: number;
-  valorFinal: number;
+  produtos: ProdutoVenda[];
   valorPago: number;
   observacoes?: string;
   data: string;
@@ -57,7 +63,7 @@ export default function VendasPage() {
   // Estado para paginação mobile
   const [mobilePage, setMobilePage] = useState(1);
   const cardsPorPagina = 3;
-  const vendasEmDiaMobile = vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
+  const vendasEmDiaMobile = vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) - (v.valorPago || 0)) <= 0 && 
     (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
     (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
   );
@@ -203,13 +209,13 @@ export default function VendasPage() {
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
     doc.text('1', 26, y + 6);
-    doc.text(venda.nomeProduto, 40, y + 6);
-    doc.text(`€${venda.valorFinal.toFixed(2)}`, 120, y + 6);
-    doc.text(`€${venda.valorFinal.toFixed(2)}`, 170, y + 6, { align: 'right' });
+    doc.text(venda.produtos[0].nomeProduto, 40, y + 6);
+    doc.text(`€${venda.produtos[0].valorFinal.toFixed(2)}`, 120, y + 6);
+    doc.text(`€${venda.produtos[0].valorFinal.toFixed(2)}`, 170, y + 6, { align: 'right' });
     // Totais
     y += 18;
-    const subtotal = venda.valorFinal / 1.23;
-    const iva = venda.valorFinal - subtotal;
+    const subtotal = venda.produtos[0].valorFinal / 1.23;
+    const iva = venda.produtos[0].valorFinal - subtotal;
     doc.setFontSize(11);
     doc.setTextColor(80, 80, 80);
     doc.text('Subtotal:', 120, y);
@@ -221,7 +227,7 @@ export default function VendasPage() {
     doc.setFontSize(13);
     doc.setTextColor(34, 197, 94);
     doc.text('Total:', 120, y);
-    doc.text(`€${venda.valorFinal.toFixed(2)}`, 170, y, { align: 'right' });
+    doc.text(`€${venda.produtos[0].valorFinal.toFixed(2)}`, 170, y, { align: 'right' });
     // Rodapé
     doc.setFontSize(10);
     doc.setTextColor(120, 120, 120);
@@ -282,10 +288,19 @@ export default function VendasPage() {
   useEffect(() => { setMobilePage(1); }, [statusFiltro, anoFiltro, vendas]);
 
   // Filtro e paginação dos devedores
-  const devedoresFiltrados = todasVendas.filter(v => (v.valorFinal - (v.valorPago || 0)) > 0 &&
+  const devedoresFiltrados = todasVendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) > 0 &&
     (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
     (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
   );
+
+  // Calcular totais das vendas para cards de resumo
+  const totalVendas = vendas.reduce((acc, v) => acc + v.produtos.reduce((pacc, p) => pacc + (p.valorFinal * p.quantidade), 0), 0);
+  const totalRevistaVendas = vendas.reduce((acc, v) => acc + v.produtos.reduce((pacc, p) => pacc + (p.valorRevista * p.quantidade), 0), 0);
+  const lucro = totalVendas - totalRevistaVendas;
+
+  // Corrigir filtro de clientes em dia e devedores
+  const clientesEmDia = vendas.filter(v => v.valorPago >= v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0));
+  const devedores = vendas.filter(v => v.valorPago < v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0));
 
   return (
     <div className="p-6">
@@ -294,11 +309,11 @@ export default function VendasPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-green-700 text-white rounded-lg p-4 shadow">
           <div className="text-lg font-semibold">Total Vendido</div>
-          <div className="text-2xl font-bold mt-2">€ {vendas.reduce((acc, v) => acc + (v.valorFinal || 0), 0).toFixed(2)}</div>
+          <div className="text-2xl font-bold mt-2">€ {totalVendas.toFixed(2)}</div>
         </div>
         <div className="bg-blue-700 text-white rounded-lg p-4 shadow">
           <div className="text-lg font-semibold">Vendas do Mês</div>
-          <div className="text-2xl font-bold mt-2">€ {vendas.filter(v => new Date(v.data).getMonth() === new Date().getMonth()).reduce((acc, v) => acc + (v.valorFinal || 0), 0).toFixed(2)}</div>
+          <div className="text-2xl font-bold mt-2">€ {vendas.filter(v => new Date(v.data).getMonth() === new Date().getMonth()).reduce((acc, v) => acc + (v.produtos.reduce((pacc, p) => pacc + (p.valorFinal * p.quantidade), 0)), 0).toFixed(2)}</div>
         </div>
         <div className="bg-yellow-600 text-white rounded-lg p-4 shadow">
           <div className="text-lg font-semibold">Nº de Vendas</div>
@@ -306,7 +321,7 @@ export default function VendasPage() {
         </div>
         <div className="bg-purple-700 text-white rounded-lg p-4 shadow">
           <div className="text-lg font-semibold">Lucro</div>
-          <div className="text-2xl font-bold mt-2">€ {vendas.reduce((acc, v) => acc + ((v.valorFinal || 0) - (v.valorRevista || 0)), 0).toFixed(2)}</div>
+          <div className="text-2xl font-bold mt-2">€ {lucro.toFixed(2)}</div>
         </div>
       </div>
       {/* Botão adicionar venda */}
@@ -356,13 +371,13 @@ export default function VendasPage() {
             <div className="flex gap-4 mb-2">
               <button
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium"
-                onClick={() => handleEliminarSelecionados(vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
+                onClick={() => handleEliminarSelecionados(vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
               >
                 Eliminar selecionados
               </button>
               <button
                 className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded font-medium"
-                onClick={() => handleImprimirSelecionados(vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
+                onClick={() => handleImprimirSelecionados(vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
               >
                 Imprimir selecionados
               </button>
@@ -376,8 +391,8 @@ export default function VendasPage() {
                   <th className="px-4 py-2 text-left text-gray-300">
                     <input
                       type="checkbox"
-                      checked={vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)).every(v => selecionados.includes(v.id)) && vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)).length > 0}
-                      onChange={() => toggleSelecionarTodos(vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
+                      checked={vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro))).every(v => selecionados.includes(v.id)) && vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro))).length > 0}
+                      onChange={() => toggleSelecionarTodos(vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro))))}
                     />
                   </th>
                   <th className="px-4 py-2 text-left text-gray-300">Data</th>
@@ -391,63 +406,31 @@ export default function VendasPage() {
                 </tr>
               </thead>
               <tbody>
-                {vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
-                  (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
-                  (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
-                ).length === 0 ? (
-                  <tr>
-                    <td className="px-4 py-2 text-gray-400" colSpan={9}>
-                      Nenhum cliente em dia encontrado.
-                    </td>
-                  </tr>
-                ) : (
-                  vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
-                    (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
-                    (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
-                  ).map((v) => (
-                    <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
-                      <td className="px-4 py-2">
-                        <input
-                          type="checkbox"
-                          checked={selecionados.includes(v.id)}
-                          onChange={() => toggleSelecionado(v.id)}
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
-                      <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
-                      <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {v.valorRevista.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
-                      <td className="px-4 py-2">
-                        <span className="inline-block bg-green-600 text-white px-4 py-1 rounded-md font-bold shadow-md text-sm tracking-wide">Pago</span>
-                      </td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <button
-                          onClick={() => handleOpenEditModal(v)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => {
-                            setVendaToDelete(v);
-                            setShowDeleteModal(true);
-                          }}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
-                        >
-                          Eliminar
-                        </button>
-                        <button
-                          onClick={() => handlePrintVenda(v)}
-                          className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm"
-                        >
-                          Imprimir
-                        </button>
-                      </td>
+                {vendas.map((v) => (
+                  v.produtos.map((p, idx) => (
+                    <tr key={v.id + '-' + p.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                      {idx === 0 && (
+                        <>
+                          <td rowSpan={v.produtos.length} className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
+                          <td rowSpan={v.produtos.length} className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
+                        </>
+                      )}
+                      <td className="px-4 py-2 text-gray-200">{p.nomeProduto}</td>
+                      <td className="px-4 py-2 text-gray-200">{p.quantidade}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {p.valorRevista.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {p.valorFinal.toFixed(2)}</td>
+                      {idx === 0 && (
+                        <>
+                          <td rowSpan={v.produtos.length} className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
+                          <td rowSpan={v.produtos.length} className="px-4 py-2">
+                            <span className={`inline-block px-4 py-1 rounded-md font-bold shadow-md text-sm tracking-wide ${v.valorPago >= v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}`}>{v.valorPago >= v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) ? 'Pago' : 'Pendente'}</span>
+                          </td>
+                          <td rowSpan={v.produtos.length} className="px-4 py-2">Ações</td>
+                        </>
+                      )}
                     </tr>
                   ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
@@ -469,15 +452,15 @@ export default function VendasPage() {
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Produto</span>
-                      <span className="font-bold text-base text-green-300">{venda.nomeProduto}</span>
+                      <span className="font-bold text-base text-green-300">{venda.produtos[0].nomeProduto}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Valor Revista (€)</span>
-                      <span className="font-semibold">€{venda.valorRevista.toFixed(2)}</span>
+                      <span className="font-semibold">€{venda.produtos[0].valorRevista.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Valor Final (€)</span>
-                      <span className="font-semibold">€{venda.valorFinal.toFixed(2)}</span>
+                      <span className="font-semibold">€{venda.produtos[0].valorFinal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Valor Pago (€)</span>
@@ -567,10 +550,10 @@ export default function VendasPage() {
                     <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
                       <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString('pt-PT')}</td>
                       <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
-                      <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-gray-200">{v.produtos[0].nomeProduto}</td>
+                      <td className="px-4 py-2 text-gray-200">€ {v.produtos[0].valorFinal.toFixed(2)}</td>
                       <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
-                      <td className="px-4 py-2 text-yellow-400 font-bold">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
+                      <td className="px-4 py-2 text-yellow-400 font-bold">€ {(v.produtos[0].valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
                       <td className="px-4 py-2">
                         <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold">
                           Em dívida
@@ -607,11 +590,11 @@ export default function VendasPage() {
                   </div>
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span className="text-gray-400">Produto</span>
-                    <span className="font-semibold">{v.nomeProduto}</span>
+                    <span className="font-semibold">{v.produtos[0].nomeProduto}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span className="text-gray-400">Valor final (€)</span>
-                    <span className="font-semibold">€ {v.valorFinal.toFixed(2)}</span>
+                    <span className="font-semibold">€ {v.produtos[0].valorFinal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span className="text-gray-400">Valor pago (€)</span>
@@ -619,7 +602,7 @@ export default function VendasPage() {
                   </div>
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span className="text-gray-400">Em dívida (€)</span>
-                    <span className="font-semibold text-yellow-400">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</span>
+                    <span className="font-semibold text-yellow-400">€ {(v.produtos[0].valorFinal - (v.valorPago || 0)).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span className="text-gray-400">Estado</span>
@@ -824,9 +807,7 @@ export default function VendasPage() {
                   const original = vendas.find(v => v.id === editVenda.id);
                   if (
                     original &&
-                    original.nomeProduto === editVenda.nomeProduto &&
-                    original.valorRevista === editVenda.valorRevista &&
-                    original.valorFinal === editVenda.valorFinal &&
+                    original.produtos.every((p, idx) => p.nomeProduto === editVenda.produtos[idx].nomeProduto && p.valorRevista === editVenda.produtos[idx].valorRevista && p.valorFinal === editVenda.produtos[idx].valorFinal && p.quantidade === editVenda.produtos[idx].quantidade) &&
                     original.valorPago === editVenda.valorPago &&
                     original.observacoes === editVenda.observacoes &&
                     original.data.slice(0,10) === editVenda.data.slice(0,10)
@@ -837,7 +818,7 @@ export default function VendasPage() {
                   }
                   try {
                     // Calcular valor pago automaticamente
-                    const valorPago = isEditPrestacoes ? Number(editVenda.valorPago || 0) : Number(editVenda.valorFinal);
+                    const valorPago = isEditPrestacoes ? Number(editVenda.valorPago || 0) : Number(editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0));
                     
                     const res = await fetch('/api/vendas', {
                       method: 'PUT',
@@ -845,7 +826,7 @@ export default function VendasPage() {
                       body: JSON.stringify({
                         id: editVenda.id,
                         clienteId: editVenda.cliente.id,
-                        produtos,
+                        produtos: editVenda.produtos,
                         observacoes: editVenda.observacoes || '',
                         data: editVenda.data,
                         status: 'PENDENTE', // Será calculado automaticamente na API
@@ -887,13 +868,13 @@ export default function VendasPage() {
                   </div>
                   <div>
                     <label className="block text-gray-300 mb-1">Produtos</label>
-                    {produtos.map((produto, idx) => (
+                    {editVenda.produtos.map((produto, idx) => (
                       <div key={idx} className="flex flex-col md:flex-row gap-2 mb-2 items-end">
                         <input type="text" placeholder="Nome do produto" className="flex-1 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.nomeProduto} onChange={e => handleProdutoChange(idx, 'nomeProduto', e.target.value)} required />
                         <input type="number" min="1" placeholder="Qtd" className="w-full md:w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleProdutoChange(idx, 'quantidade', e.target.value)} required />
                         <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleProdutoChange(idx, 'valorRevista', e.target.value)} required />
                         <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleProdutoChange(idx, 'valorFinal', e.target.value)} required />
-                        {produtos.length > 1 && (
+                        {editVenda.produtos.length > 1 && (
                           <button type="button" className="text-red-400 hover:text-red-600 text-lg font-bold px-2" onClick={() => handleRemoveProduto(idx)}>-</button>
                         )}
                       </div>
@@ -912,19 +893,19 @@ export default function VendasPage() {
                     <button
                       type="button"
                       onClick={() => setIsEditPrestacoes(!isEditPrestacoes)}
-                      disabled={(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0}
+                      disabled={(editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) > 0) || (editVenda.valorPago >= editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0))}
                       className={`px-3 py-1 rounded text-sm font-medium transition ${
                         isEditPrestacoes 
                           ? 'bg-yellow-600 text-white' 
                           : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      } ${(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${(editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) > 0 || editVenda.valorPago >= editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0)) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       {isEditPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
                     </button>
                     {!isEditPrestacoes && (
                       <span className="text-green-400 text-sm">Pagamento total à vista</span>
                     )}
-                    {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
+                    {(editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) > 0 &&
                       <span className="text-yellow-400 text-sm">Venda em prestações - use "Adicionar Pagamento"</span>
                     )}
                   </div>
