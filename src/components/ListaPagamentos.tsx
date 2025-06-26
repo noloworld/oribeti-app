@@ -208,7 +208,7 @@ export default function ListaPagamentos({
             Nenhum pagamento registrado ainda.
           </div>
         ) : (
-          <div className="space-y-2 overflow-y-auto max-h-64">
+          <div className="space-y-2 overflow-y-auto max-h-64 scrollbar-custom">
             {pagamentos.map((pagamento) => (
               <div key={pagamento.id} className="bg-gray-800 rounded-lg p-3 flex justify-between items-center">
                 <div className="flex-1">

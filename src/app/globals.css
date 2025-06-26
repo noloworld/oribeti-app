@@ -24,3 +24,17 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Scrollbar moderno para listas de pagamentos */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937; /* thumb, track */
+}
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px;
+  background: #1f2937;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 8px;
+}
