@@ -54,6 +54,15 @@ export default function VendasPage() {
   const [isEditPrestacoes, setIsEditPrestacoes] = useState(false);
   const [selecionados, setSelecionados] = useState<number[]>([]);
   const { setModalAberto } = useModalAberto();
+  // Estado para paginação mobile
+  const [mobilePage, setMobilePage] = useState(1);
+  const cardsPorPagina = 3;
+  const vendasEmDiaMobile = vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
+    (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
+    (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
+  );
+  const totalPaginasMobile = Math.ceil(vendasEmDiaMobile.length / cardsPorPagina);
+  const vendasPaginaMobile = vendasEmDiaMobile.slice((mobilePage - 1) * cardsPorPagina, mobilePage * cardsPorPagina);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -410,67 +419,79 @@ export default function VendasPage() {
             </table>
           </div>
           {/* Cards responsivos para mobile */}
-          <div className="block md:hidden space-y-4">
-            {vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
-              (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
-              (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
-            ).length === 0 ? (
-              <div className="text-gray-400 text-center py-4 bg-gray-800 rounded-lg">Nenhum cliente em dia.</div>
+          <div className="block md:hidden space-y-3">
+            {vendasEmDiaMobile.length === 0 ? (
+              <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente em dia.</div>
             ) : (
-              vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
-                (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
-                (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
-              ).map((venda) => (
-                <div key={venda.id} className="bg-gray-800 rounded-lg p-4 shadow flex flex-col gap-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-400">Data</span>
-                    <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
+              <div>
+                {vendasPaginaMobile.map((venda) => (
+                  <div key={venda.id} className="bg-gray-800 rounded-lg p-2 shadow flex flex-col gap-1 max-w-[95vw] mx-auto">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Data</span>
+                      <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Cliente</span>
+                      <span className="font-semibold">{venda.cliente?.nome}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Produto</span>
+                      <span className="font-semibold">{venda.nomeProduto}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Valor Revista (€)</span>
+                      <span className="font-semibold">€{venda.valorRevista.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Valor Final (€)</span>
+                      <span className="font-semibold">€{venda.valorFinal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Valor Pago (€)</span>
+                      <span className="font-semibold">€{(venda.valorPago || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex gap-1 mt-1">
+                      <button
+                        onClick={() => handleOpenEditModal(venda)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => {
+                          setVendaToDelete(venda);
+                          setShowDeleteModal(true);
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
+                      >
+                        Eliminar
+                      </button>
+                      <button
+                        onClick={() => handlePrintVenda(venda)}
+                        className="bg-green-700 hover:bg-green-800 text-white px-2 py-1 rounded text-xs"
+                      >
+                        Imprimir
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-400">Cliente</span>
-                    <span className="font-semibold">{venda.cliente?.nome}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-400">Produto</span>
-                    <span className="font-semibold">{venda.nomeProduto}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-400">Valor Revista (€)</span>
-                    <span className="font-semibold">€{venda.valorRevista.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-400">Valor Final (€)</span>
-                    <span className="font-semibold">€{venda.valorFinal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-400">Valor Pago (€)</span>
-                    <span className="font-semibold">€{(venda.valorPago || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex gap-2 mt-2">
+                ))}
+                {/* Paginação mobile */}
+                {totalPaginasMobile > 1 && (
+                  <div className="flex justify-center items-center gap-2 mt-2">
                     <button
-                      onClick={() => handleOpenEditModal(venda)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Editar
-                    </button>
+                      className="px-2 py-1 rounded bg-gray-700 text-white text-xs disabled:opacity-50"
+                      onClick={() => setMobilePage(p => Math.max(1, p - 1))}
+                      disabled={mobilePage === 1}
+                    >Anterior</button>
+                    <span className="text-xs text-gray-400">Página {mobilePage} de {totalPaginasMobile}</span>
                     <button
-                      onClick={() => {
-                        setVendaToDelete(venda);
-                        setShowDeleteModal(true);
-                      }}
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Eliminar
-                    </button>
-                    <button
-                      onClick={() => handlePrintVenda(venda)}
-                      className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Imprimir
-                    </button>
+                      className="px-2 py-1 rounded bg-gray-700 text-white text-xs disabled:opacity-50"
+                      onClick={() => setMobilePage(p => Math.min(totalPaginasMobile, p + 1))}
+                      disabled={mobilePage === totalPaginasMobile}
+                    >Próxima</button>
                   </div>
-                </div>
-              ))
+                )}
+              </div>
             )}
           </div>
         </div>
