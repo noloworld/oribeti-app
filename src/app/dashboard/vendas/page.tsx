@@ -385,9 +385,7 @@ export default function VendasPage() {
                       <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
                       <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
                       <td className="px-4 py-2">
-                        <span className="bg-green-600 text-white px-3 py-1 rounded font-semibold">
-                          PAGO
-                        </span>
+                        <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full font-bold shadow text-xs">Pago</span>
                       </td>
                       <td className="px-4 py-2 flex gap-2">
                         <button
@@ -560,40 +558,28 @@ export default function VendasPage() {
           </div>
         </div>
       </div>
-      {/* Componente de paginação */}
-      <div className="flex justify-between items-center mt-4">
-        <div className="text-gray-400 text-sm">
-          Página {page} de {totalPages || 1}
-        </div>
-        <div className="flex gap-2">
+      {/* Paginação moderna centralizada */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
           <button
-            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-          >Anterior</button>
+          >«</button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <button
               key={p}
-              className={`px-3 py-1 rounded ${p === page ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+              className={`px-3 py-1 rounded text-sm ${p === page ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
               onClick={() => setPage(p)}
             >{p}</button>
           ))}
           <button
-            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages || totalPages === 0}
-          >Próxima</button>
-          <select
-            className="ml-4 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700"
-            value={limit}
-            onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}
-          >
-            {[5, 10, 20, 50].map(opt => (
-              <option key={opt} value={opt}>{opt} por página</option>
-            ))}
-          </select>
+            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >»</button>
         </div>
-      </div>
+      )}
 
       {/* Modal de Nova Venda */}
       <Transition.Root show={showModal} as={Fragment}>

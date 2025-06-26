@@ -35,6 +35,8 @@ export default function VendasNatalPage() {
     data: '',
   });
   const { setModalAberto } = useModalAberto();
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
 
   function handleAddOpen() {
     setNovaVenda({ cliente: '', produto: '', valorVenda: '', data: new Date().toISOString().split('T')[0] });
@@ -206,6 +208,28 @@ export default function VendasNatalPage() {
             </form>
             <button onClick={handleModalClose} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
           </div>
+        </div>
+      )}
+      {/* Paginação moderna centralizada */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >«</button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              className={`px-3 py-1 rounded text-sm ${p === page ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+              onClick={() => setPage(p)}
+            >{p}</button>
+          ))}
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >»</button>
         </div>
       )}
     </div>

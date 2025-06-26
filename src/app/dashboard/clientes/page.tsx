@@ -311,14 +311,26 @@ export default function ClientesPage() {
           ))
         )}
       </div>
-      {/* Paginação */}
+      {/* Paginação moderna centralizada */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-4">
-          <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40">«</button>
-          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40">‹</button>
-          <span className="px-3 py-1 rounded bg-gray-800 text-green-400 font-bold">{currentPage} / {totalPages}</span>
-          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40">›</button>
-          <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40">»</button>
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >«</button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              className={`px-3 py-1 rounded text-sm ${p === currentPage ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+              onClick={() => setCurrentPage(p)}
+            >{p}</button>
+          ))}
+          <button
+            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >»</button>
         </div>
       )}
       {/* Modal de adição */}
