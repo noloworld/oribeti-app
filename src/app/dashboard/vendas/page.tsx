@@ -710,11 +710,11 @@ export default function VendasPage() {
                 <div>
                   <label className="block text-gray-300 mb-1">Produtos</label>
                   {produtos.map((produto, idx) => (
-                    <div key={idx} className="flex gap-2 mb-2 items-end">
+                    <div key={idx} className="flex flex-col md:flex-row gap-2 mb-2 items-end">
                       <input type="text" placeholder="Nome do produto" className="flex-1 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.nomeProduto} onChange={e => handleProdutoChange(idx, 'nomeProduto', e.target.value)} required />
-                      <input type="number" min="1" placeholder="Qtd" className="w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleProdutoChange(idx, 'quantidade', e.target.value)} required />
-                      <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleProdutoChange(idx, 'valorRevista', e.target.value)} required />
-                      <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleProdutoChange(idx, 'valorFinal', e.target.value)} required />
+                      <input type="number" min="1" placeholder="Qtd" className="w-full md:w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleProdutoChange(idx, 'quantidade', e.target.value)} required />
+                      <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleProdutoChange(idx, 'valorRevista', e.target.value)} required />
+                      <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleProdutoChange(idx, 'valorFinal', e.target.value)} required />
                       {produtos.length > 1 && (
                         <button type="button" className="text-red-400 hover:text-red-600 text-lg font-bold px-2" onClick={() => handleRemoveProduto(idx)}>-</button>
                       )}
@@ -730,6 +730,35 @@ export default function VendasPage() {
                   <label className="block text-gray-300 mb-1">Observações</label>
                   <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
                 </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsPrestacoes(!isPrestacoes)}
+                    className={`px-3 py-1 rounded text-sm font-medium transition ${
+                      isPrestacoes 
+                        ? 'bg-yellow-600 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    {isPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
+                  </button>
+                  {!isPrestacoes && (
+                    <span className="text-green-400 text-sm">Pagamento total à vista</span>
+                  )}
+                </div>
+                {isPrestacoes && (
+                  <>
+                    <div>
+                      <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
+                      <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
+                    </div>
+                    {totalFinal - Number(form.valorPago || 0) > 0 && (
+                      <div className="bg-yellow-600 text-white p-2 rounded text-sm">
+                        Valor em dívida: €{(totalFinal - Number(form.valorPago || 0)).toFixed(2)}
+                      </div>
+                    )}
+                  </>
+                )}
                 <div className="flex justify-end gap-2 mt-2">
                   <button
                     type="button"
@@ -859,11 +888,11 @@ export default function VendasPage() {
                   <div>
                     <label className="block text-gray-300 mb-1">Produtos</label>
                     {produtos.map((produto, idx) => (
-                      <div key={idx} className="flex gap-2 mb-2 items-end">
+                      <div key={idx} className="flex flex-col md:flex-row gap-2 mb-2 items-end">
                         <input type="text" placeholder="Nome do produto" className="flex-1 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.nomeProduto} onChange={e => handleProdutoChange(idx, 'nomeProduto', e.target.value)} required />
-                        <input type="number" min="1" placeholder="Qtd" className="w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleProdutoChange(idx, 'quantidade', e.target.value)} required />
-                        <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleProdutoChange(idx, 'valorRevista', e.target.value)} required />
-                        <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleProdutoChange(idx, 'valorFinal', e.target.value)} required />
+                        <input type="number" min="1" placeholder="Qtd" className="w-full md:w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleProdutoChange(idx, 'quantidade', e.target.value)} required />
+                        <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleProdutoChange(idx, 'valorRevista', e.target.value)} required />
+                        <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleProdutoChange(idx, 'valorFinal', e.target.value)} required />
                         {produtos.length > 1 && (
                           <button type="button" className="text-red-400 hover:text-red-600 text-lg font-bold px-2" onClick={() => handleRemoveProduto(idx)}>-</button>
                         )}

@@ -112,7 +112,7 @@ export async function POST(req: Request) {
       where: { id: venda.id },
       include: {
         cliente: { select: { id: true, nome: true } },
-        vendaProdutos: true,
+        produtos: true,
       },
     });
     // Gravar log da ação
