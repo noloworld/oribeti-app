@@ -288,7 +288,8 @@ export default function VendasPage() {
   useEffect(() => { setMobilePage(1); }, [statusFiltro, anoFiltro, vendas]);
 
   // Filtro e paginação dos devedores
-  const devedoresFiltrados = todasVendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) > 0 &&
+  const devedoresFiltrados = todasVendas.filter(v => 
+    (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) - (v.valorPago || 0)) > 0 &&
     (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
     (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
   );
