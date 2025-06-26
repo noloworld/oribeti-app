@@ -419,13 +419,13 @@ export default function VendasPage() {
             </table>
           </div>
           {/* Cards responsivos para mobile */}
-          <div className="block md:hidden space-y-3">
+          <div className="block md:hidden space-y-4">
             {vendasEmDiaMobile.length === 0 ? (
               <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente em dia.</div>
             ) : (
               <div>
                 {vendasPaginaMobile.map((venda) => (
-                  <div key={venda.id} className="bg-gray-800 rounded-lg p-2 shadow flex flex-col gap-1 max-w-[95vw] mx-auto">
+                  <div key={venda.id} className="bg-gray-800 rounded-lg p-4 shadow flex flex-col gap-2 max-w-[95vw] mx-auto">
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Data</span>
                       <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
@@ -450,10 +450,10 @@ export default function VendasPage() {
                       <span className="text-gray-400">Valor Pago (€)</span>
                       <span className="font-semibold">€{(venda.valorPago || 0).toFixed(2)}</span>
                     </div>
-                    <div className="flex gap-1 mt-1">
+                    <div className="flex gap-2 mt-3">
                       <button
                         onClick={() => handleOpenEditModal(venda)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[70px]"
                       >
                         Editar
                       </button>
@@ -462,13 +462,13 @@ export default function VendasPage() {
                           setVendaToDelete(venda);
                           setShowDeleteModal(true);
                         }}
-                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs min-w-[70px]"
                       >
                         Eliminar
                       </button>
                       <button
                         onClick={() => handlePrintVenda(venda)}
-                        className="bg-green-700 hover:bg-green-800 text-white px-2 py-1 rounded text-xs"
+                        className="bg-green-700 hover:bg-green-800 text-white px-3 py-2 rounded text-xs min-w-[70px]"
                       >
                         Imprimir
                       </button>
