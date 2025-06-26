@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(pagamentos);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Erro ao buscar pagamentos.' }, { status: 500 });
   }
 }
@@ -176,6 +177,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Erro ao deletar pagamento.' }, { status: 500 });
   }
 } 

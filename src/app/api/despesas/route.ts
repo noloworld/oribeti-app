@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     ]);
     return NextResponse.json({ despesas, total });
   } catch (e) {
+    console.error(e);
     return NextResponse.json({ error: 'Erro ao buscar despesas.' }, { status: 500 });
   }
 }
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(despesa);
   } catch (e) {
+    console.error(e);
     return NextResponse.json({ error: 'Erro ao adicionar despesa.' }, { status: 500 });
   }
 }
@@ -97,6 +99,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json(despesa);
   } catch (e) {
+    console.error(e);
     return NextResponse.json({ error: 'Erro ao editar despesa.' }, { status: 500 });
   }
 }
@@ -136,6 +139,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (e) {
+    console.error(e);
     return NextResponse.json({ error: 'Erro ao eliminar despesa.' }, { status: 500 });
   }
 } 

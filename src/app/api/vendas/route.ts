@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
     }));
     return NextResponse.json({ vendas, total });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Erro ao buscar vendas.' }, { status: 500 });
   }
 }
@@ -117,6 +118,7 @@ export async function POST(req: Request) {
     });
     return NextResponse.json(venda, { status: 201 });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Erro ao registrar venda.' }, { status: 500 });
   }
 }
@@ -167,6 +169,7 @@ export async function PUT(req: Request) {
     });
     return NextResponse.json(vendaAtualizada);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Erro ao editar venda.' }, { status: 500 });
   }
 }
@@ -207,6 +210,7 @@ export async function DELETE(req: Request) {
     });
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Erro ao remover venda.' }, { status: 500 });
   }
 } 

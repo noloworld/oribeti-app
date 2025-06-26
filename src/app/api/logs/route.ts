@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ logs, total, page, limit });
   } catch (error) {
-    console.error('Erro ao buscar logs:', error);
-    return NextResponse.json({ error: 'Erro ao buscar logs de atividades.' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: 'Erro ao buscar logs.' }, { status: 500 });
   }
 } 
