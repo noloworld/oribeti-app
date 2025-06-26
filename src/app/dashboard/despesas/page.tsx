@@ -13,6 +13,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { useModalAberto } from '../../../components/ModalContext';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -30,6 +31,7 @@ export default function DespesasPage() {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const totalPages = Math.ceil(total / limit);
+  const { setModalAberto } = useModalAberto();
 
   // Buscar despesas ao carregar
   useEffect(() => {
@@ -174,13 +176,43 @@ export default function DespesasPage() {
     // eslint-disable-next-line
   }, [page, limit]);
 
+  // Ao abrir modais
+  function handleAddOpen() {
+    setNovaDespesa({ nome: '', valor: '', data: new Date().toISOString().split('T')[0] });
+    setAddModalOpen(true);
+    setModalAberto(true);
+  }
+  function handleEditOpen(despesa: any) {
+    setDespesaEdit({ ...despesa, data: despesa.data.slice(0, 10) });
+    setModalOpen(true);
+    setModalAberto(true);
+  }
+  function handleDeleteOpen(despesa: any) {
+    setDespesaToDelete(despesa);
+    setDeleteModalOpen(true);
+    setModalAberto(true);
+  }
+  // Ao fechar modais
+  function handleAddModalClose() {
+    setAddModalOpen(false);
+    setModalAberto(false);
+  }
+  function handleEditModalClose() {
+    setModalOpen(false);
+    setModalAberto(false);
+  }
+  function handleDeleteModalClose() {
+    setDeleteModalOpen(false);
+    setModalAberto(false);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <Toaster position="top-right" richColors />
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold">Despesas</h1>
         <button
-          onClick={() => setAddModalOpen(true)}
+          onClick={handleAddOpen}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium"
         >
           Adicionar nova despesa
@@ -209,11 +241,11 @@ export default function DespesasPage() {
                   <td className="px-4 py-2">{despesa.data.slice(0, 10)}</td>
                   <td className="px-4 py-2 flex gap-2">
                     <button
-                      onClick={() => { setDespesaEdit({ ...despesa, data: despesa.data.slice(0, 10) }); setModalOpen(true); }}
+                      onClick={() => handleEditOpen(despesa)}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
                     >Editar</button>
                     <button
-                      onClick={() => { setDespesaToDelete(despesa); setDeleteModalOpen(true); }}
+                      onClick={() => handleDeleteOpen(despesa)}
                       className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
                     >Eliminar</button>
                   </td>
@@ -234,7 +266,7 @@ export default function DespesasPage() {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setAddModalOpen(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={handleAddModalClose} />
         </Transition.Child>
         <Transition.Child
           as={Fragment}
@@ -265,11 +297,11 @@ export default function DespesasPage() {
                   <input name="data" type="date" value={novaDespesa.data} onChange={e => setNovaDespesa({ ...novaDespesa, data: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
                 </div>
                 <div className="flex justify-end gap-2 mt-2">
-                  <button type="button" onClick={() => setAddModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                  <button type="button" onClick={handleAddModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
                   <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium">Salvar</button>
                 </div>
               </form>
-              <button onClick={() => setAddModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
+              <button onClick={handleAddModalClose} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
             </div>
           </div>
         </Transition.Child>
@@ -285,7 +317,7 @@ export default function DespesasPage() {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setModalOpen(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={handleEditModalClose} />
         </Transition.Child>
         <Transition.Child
           as={Fragment}
@@ -317,11 +349,11 @@ export default function DespesasPage() {
                     <input name="data" type="date" value={despesaEdit.data} onChange={e => setDespesaEdit({ ...despesaEdit, data: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" />
                   </div>
                   <div className="flex justify-end gap-2 mt-2">
-                    <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                    <button type="button" onClick={handleEditModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
                     <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium">Salvar</button>
                   </div>
                 </form>
-                <button onClick={() => setModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
+                <button onClick={handleEditModalClose} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
               </div>
             ) : null}
           </div>
@@ -338,7 +370,7 @@ export default function DespesasPage() {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setDeleteModalOpen(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={handleDeleteModalClose} />
         </Transition.Child>
         <Transition.Child
           as={Fragment}
@@ -355,10 +387,10 @@ export default function DespesasPage() {
                 <h2 className="text-xl font-bold mb-4 text-red-500">Confirmar Eliminação</h2>
                 <p className="mb-6 text-gray-200">Tem certeza que deseja eliminar a despesa <span className="font-semibold">{despesaToDelete.nome}</span>?</p>
                 <div className="flex justify-end gap-2">
-                  <button onClick={() => setDeleteModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                  <button onClick={handleDeleteModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
                   <button onClick={handleDeleteConfirmed} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-medium">Eliminar</button>
                 </div>
-                <button onClick={() => setDeleteModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
+                <button onClick={handleDeleteModalClose} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>
               </div>
             ) : null}
           </div>

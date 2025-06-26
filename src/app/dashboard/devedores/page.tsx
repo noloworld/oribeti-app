@@ -3,6 +3,7 @@ import React, { useState, useEffect, Fragment } from 'react';
 import { FaEuroSign, FaHistory } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { Transition } from '@headlessui/react';
+import { useModalAberto } from '../../../components/ModalContext';
 
 interface Venda {
   id: number;
@@ -32,6 +33,7 @@ export default function DevedoresPage() {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const totalPages = Math.ceil(total / limit);
+  const { setModalAberto } = useModalAberto();
 
   const fetchVendas = async () => {
     try {
@@ -96,6 +98,18 @@ export default function DevedoresPage() {
       if (nome.startsWith(fem)) return 'uma';
     }
     return 'um';
+  }
+
+  function handleConfirmOpen(venda: Venda) {
+    setVendaToConfirm(venda);
+    setConfirmModalOpen(true);
+    setModalAberto(true);
+  }
+
+  function handleConfirmModalClose() {
+    setConfirmModalOpen(false);
+    setVendaToConfirm(null);
+    setModalAberto(false);
   }
 
   return (
@@ -205,7 +219,7 @@ export default function DevedoresPage() {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setConfirmModalOpen(false)} />
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={handleConfirmModalClose} />
           </Transition.Child>
           <Transition.Child
             as={Fragment}
@@ -221,7 +235,7 @@ export default function DevedoresPage() {
                 <h2 className="text-xl font-bold text-white mb-4">Confirmar Pagamento</h2>
                 <p className="text-gray-300 mb-6">Tem certeza que deseja marcar como <span className="font-semibold text-green-400">PAGO</span> a venda de <span className="font-semibold">{vendaToConfirm.cliente.nome}</span> no valor de <span className="font-semibold">€{(vendaToConfirm.valorFinal - (vendaToConfirm.valorPago || 0)).toFixed(2)}</span>?</p>
                 <div className="flex justify-center gap-4">
-                  <button onClick={() => setConfirmModalOpen(false)} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
+                  <button onClick={handleConfirmModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
                   <button onClick={marcarComoPagoConfirmado} className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Confirmar'}</button>
                 </div>
               </div>

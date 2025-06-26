@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { FaEuroSign } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { useModalAberto } from '../../../components/ModalContext';
 
 const vendasExemplo = [
   {
@@ -33,10 +34,12 @@ export default function VendasNatalPage() {
     valorVenda: '',
     data: '',
   });
+  const { setModalAberto } = useModalAberto();
 
   function handleAddOpen() {
-    setNovaVenda({ cliente: '', produto: '', valorVenda: '', data: '' });
+    setNovaVenda({ cliente: '', produto: '', valorVenda: '', data: new Date().toISOString().split('T')[0] });
     setAddModalOpen(true);
+    setModalAberto(true);
   }
   function handleAddChange(e: React.ChangeEvent<HTMLInputElement>) {
     setNovaVenda({ ...novaVenda, [e.target.name]: e.target.value });
@@ -47,14 +50,17 @@ export default function VendasNatalPage() {
     setVendas([...vendas, { ...novaVenda, id: novoId }]);
     toast.success('Venda de Natal adicionada com sucesso!');
     setAddModalOpen(false);
+    setModalAberto(false);
   }
   function handleAddModalClose() {
     setAddModalOpen(false);
+    setModalAberto(false);
   }
 
   function handleEditOpen(venda: any) {
     setVendaEdit({ ...venda });
     setModalOpen(true);
+    setModalAberto(true);
   }
   function handleEditChange(e: React.ChangeEvent<HTMLInputElement>) {
     setVendaEdit({ ...vendaEdit, [e.target.name]: e.target.value });
@@ -64,9 +70,11 @@ export default function VendasNatalPage() {
     setVendas(vendas.map(v => v.id === vendaEdit.id ? vendaEdit : v));
     toast.success('Venda de Natal editada com sucesso!');
     setModalOpen(false);
+    setModalAberto(false);
   }
   function handleModalClose() {
     setModalOpen(false);
+    setModalAberto(false);
   }
 
   return (

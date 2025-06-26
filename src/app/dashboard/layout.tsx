@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
 import { Transition } from '@headlessui/react';
 import Link from 'next/link';
+import { ModalProvider, useModalAberto } from '../../components/ModalContext';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -16,6 +17,108 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [showMenu, setShowMenu] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
   const [showOnline, setShowOnline] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (!res.ok) return;
+        const data = await res.json();
+        setUserInfo({ nome: data.nome, tipo: data.tipo });
+      } catch {}
+    }
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    async function fetchDevedores() {
+      try {
+        const res = await fetch('/api/vendas');
+        if (!res.ok) return;
+        const data = await res.json();
+        setNumDevedores((data || []).filter((v: any) => v.status === 'PENDENTE').length);
+      } catch {}
+    }
+    fetchDevedores();
+    // Escuta evento customizado para atualizar badge
+    function handleDevedoresUpdate() {
+      fetchDevedores();
+    }
+    window.addEventListener('devedoresUpdate', handleDevedoresUpdate);
+    return () => {
+      window.removeEventListener('devedoresUpdate', handleDevedoresUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    let interval: any;
+    async function fetchOnline() {
+      try {
+        const res = await fetch('/api/usuarios?online=1');
+        if (!res.ok) return;
+        const data = await res.json();
+        setOnlineUsers(data);
+      } catch {}
+    }
+    fetchOnline();
+    interval = setInterval(fetchOnline, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  async function handleLogout() {
+    setLogoutMsg('Logout realizado com sucesso!');
+    setLoggingOut(true);
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setTimeout(() => {
+      router.push('/login');
+    }, 1200);
+  }
+
+  const links = [
+    { href: '/dashboard', label: 'Resumo Geral', icon: <FaChartPie className="text-lg mr-2" /> },
+    { href: '/dashboard/vendas', label: 'Registo Vendas', icon: <FaShoppingCart className="text-lg mr-2" /> },
+    { href: '/dashboard/clientes', label: 'Clientes', icon: <FaUsers className="text-lg mr-2" /> },
+    { href: '/dashboard/devedores', label: 'Devedores', icon: <FaExclamationTriangle className="text-lg mr-2" /> },
+    { href: '/dashboard/despesas', label: 'Despesas', icon: <FaMoneyBillWave className="text-lg mr-2" /> },
+    { href: '/dashboard/definicoes', label: 'Definições', icon: <FaCog className="text-lg mr-2" /> },
+  ];
+
+  function normalizePath(path: string) {
+    return path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
+  }
+
+  function isActive(link: { href: string; label: string }) {
+    const current = normalizePath(pathname);
+    const target = normalizePath(link.href);
+    if (target === '/dashboard') return current === '/dashboard';
+    return current === target || current.startsWith(target + '/');
+  }
+
+  return (
+    <ModalProvider>
+      <DashboardContent>
+        {children}
+      </DashboardContent>
+    </ModalProvider>
+  );
+}
+
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [logoutMsg, setLogoutMsg] = useState('');
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [userInfo, setUserInfo] = useState<{ nome: string; tipo: string } | null>(null);
+  const [numDevedores, setNumDevedores] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [showOnline, setShowOnline] = useState(false);
+  const { modalAberto } = useModalAberto();
 
   useEffect(() => {
     setMounted(true);
@@ -200,42 +303,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </Transition>
       </section>
       {/* Widget de usuários online */}
-      <div className="fixed z-50 bottom-6 right-6 flex flex-col items-end gap-2">
-        <button
-          className="bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition"
-          onClick={() => setShowOnline(v => !v)}
-          title="Usuários online"
-        >
-          <span className="relative flex h-3 w-3 mr-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-          </span>
-          <FaUserCircle className="text-xl" />
-          <span className="font-bold">Online</span>
-          <span className="ml-1 bg-white text-green-700 rounded-full px-2 text-xs font-bold">{onlineUsers.length}</span>
-        </button>
-        {showOnline && (
-          <div className="bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto animate-fadeIn">
-            <div className="font-bold text-green-400 mb-2 flex items-center gap-2"><FaUserCircle /> Usuários Online</div>
-            {onlineUsers.length === 0 ? (
-              <div className="text-gray-400 text-sm">Ninguém online agora.</div>
-            ) : (
-              <ul className="space-y-2">
-                {onlineUsers.map((u) => (
-                  <li key={u.id} className="flex items-center gap-2 p-2 rounded hover:bg-gray-800 transition">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    <span className="font-semibold text-white">{u.nome}</span>
-                    <span className="text-xs px-2 py-0.5 rounded bg-green-800 text-green-200 ml-auto">{u.tipo}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
+      {!modalAberto && (
+        <div className="fixed z-50 bottom-6 right-6 flex flex-col items-end gap-2">
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition"
+            onClick={() => setShowOnline(v => !v)}
+            title="Usuários online"
+          >
+            <span className="relative flex h-3 w-3 mr-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <FaUserCircle className="text-xl" />
+            <span className="font-bold">Online</span>
+            <span className="ml-1 bg-white text-green-700 rounded-full px-2 text-xs font-bold">{onlineUsers.length}</span>
+          </button>
+          {showOnline && (
+            <div className="bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto animate-fadeIn">
+              <div className="font-bold text-green-400 mb-2 flex items-center gap-2"><FaUserCircle /> Usuários Online</div>
+              {onlineUsers.length === 0 ? (
+                <div className="text-gray-400 text-sm">Ninguém online agora.</div>
+              ) : (
+                <ul className="space-y-2">
+                  {onlineUsers.map((u) => (
+                    <li key={u.id} className="flex items-center gap-2 p-2 rounded hover:bg-gray-800 transition">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </span>
+                      <span className="font-semibold text-white">{u.nome}</span>
+                      <span className="text-xs px-2 py-0.5 rounded bg-green-800 text-green-200 ml-auto">{u.tipo}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </main>
   );
 } 

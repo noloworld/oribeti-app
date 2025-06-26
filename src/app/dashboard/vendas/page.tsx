@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import { Transition } from '@headlessui/react';
 import ListaPagamentos from '../../../components/ListaPagamentos';
+import { useModalAberto } from '../../../components/ModalContext';
 
 interface Cliente {
   id: number;
@@ -51,6 +52,8 @@ export default function VendasPage() {
   const totalPages = Math.ceil(total / limit);
   const [isPrestacoes, setIsPrestacoes] = useState(false);
   const [isEditPrestacoes, setIsEditPrestacoes] = useState(false);
+  const [selecionados, setSelecionados] = useState<number[]>([]);
+  const { setModalAberto } = useModalAberto();
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -117,6 +120,7 @@ export default function VendasPage() {
       }
       toast.success('Venda registrada com sucesso!');
       setShowModal(false);
+      setModalAberto(false);
       setForm({ clienteId: '', nomeProduto: '', valorRevista: '', valorFinal: '', valorPago: '', observacoes: '', data: '', status: 'PENDENTE' });
       setIsPrestacoes(false); // Reset do estado de prestações
       fetchVendas();
@@ -190,6 +194,55 @@ export default function VendasPage() {
     doc.save(`fatura_${venda.cliente?.nome?.replace(/\s+/g, '_') || 'cliente'}_${dataAtual}.pdf`);
   }
 
+  function toggleSelecionado(id: number) {
+    setSelecionados((prev) => prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]);
+  }
+  function toggleSelecionarTodos(vendasFiltradas: Venda[]) {
+    const todosIds = vendasFiltradas.map(v => v.id);
+    if (todosIds.every(id => selecionados.includes(id))) {
+      setSelecionados(prev => prev.filter(id => !todosIds.includes(id)));
+    } else {
+      setSelecionados(prev => [...new Set([...prev, ...todosIds])]);
+    }
+  }
+  function handleImprimirSelecionados(vendasFiltradas: Venda[]) {
+    vendasFiltradas.filter(v => selecionados.includes(v.id)).forEach(handlePrintVenda);
+  }
+  async function handleEliminarSelecionados(vendasFiltradas: Venda[]) {
+    const vendasParaExcluir = vendasFiltradas.filter(v => selecionados.includes(v.id));
+    for (const venda of vendasParaExcluir) {
+      await fetch('/api/vendas', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: venda.id }),
+      });
+    }
+    setSelecionados([]);
+    fetchVendas();
+    toast.success('Vendas eliminadas!');
+  }
+
+  // Ao abrir modais
+  function handleOpenModal() {
+    setShowModal(true);
+    setModalAberto(true);
+  }
+  function handleOpenEditModal(venda: Venda) {
+    setEditVenda(venda);
+    setShowEditModal(true);
+    setModalAberto(true);
+  }
+  // Ao fechar modais
+  function handleCloseModal() {
+    setShowModal(false);
+    setModalAberto(false);
+  }
+  function handleCloseEditModal() {
+    setShowEditModal(false);
+    setEditVenda(null);
+    setModalAberto(false);
+  }
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6 text-white">Registo de Vendas</h1>
@@ -216,7 +269,7 @@ export default function VendasPage() {
       <div className="flex justify-end mb-4">
         <button
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium transition"
-          onClick={() => setShowModal(true)}
+          onClick={handleOpenModal}
         >
           + Nova Venda
         </button>
@@ -254,10 +307,34 @@ export default function VendasPage() {
         {/* Tabela de Clientes em Dia */}
         <div>
           <h2 className="text-xl font-bold mb-4 text-green-400">Clientes em Dia</h2>
+          {/* Botões de ação em lote */}
+          {selecionados.length > 0 && (
+            <div className="flex gap-4 mb-2">
+              <button
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium"
+                onClick={() => handleEliminarSelecionados(vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
+              >
+                Eliminar selecionados
+              </button>
+              <button
+                className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded font-medium"
+                onClick={() => handleImprimirSelecionados(vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
+              >
+                Imprimir selecionados
+              </button>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="min-w-full bg-gray-800 rounded-lg">
               <thead>
                 <tr>
+                  <th className="px-4 py-2 text-left text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)).every(v => selecionados.includes(v.id)) && vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)).length > 0}
+                      onChange={() => toggleSelecionarTodos(vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
+                    />
+                  </th>
                   <th className="px-4 py-2 text-left text-gray-300">Data</th>
                   <th className="px-4 py-2 text-left text-gray-300">Cliente</th>
                   <th className="px-4 py-2 text-left text-gray-300">Produto</th>
@@ -274,7 +351,7 @@ export default function VendasPage() {
                   (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
                 ).length === 0 ? (
                   <tr>
-                    <td className="px-4 py-2 text-gray-400" colSpan={8}>
+                    <td className="px-4 py-2 text-gray-400" colSpan={9}>
                       Nenhum cliente em dia encontrado.
                     </td>
                   </tr>
@@ -284,6 +361,13 @@ export default function VendasPage() {
                     (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
                   ).map((v) => (
                     <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                      <td className="px-4 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selecionados.includes(v.id)}
+                          onChange={() => toggleSelecionado(v.id)}
+                        />
+                      </td>
                       <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
                       <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
                       <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
@@ -297,11 +381,7 @@ export default function VendasPage() {
                       </td>
                       <td className="px-4 py-2 flex gap-2">
                         <button
-                          onClick={() => {
-                            setEditVenda(v);
-                            setIsEditPrestacoes(false);
-                            setShowEditModal(true);
-                          }}
+                          onClick={() => handleOpenEditModal(v)}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
                         >
                           Editar
@@ -376,11 +456,7 @@ export default function VendasPage() {
                       </td>
                       <td className="px-4 py-2 flex gap-2">
                         <button
-                          onClick={() => {
-                            setEditVenda(v);
-                            setIsEditPrestacoes(true);
-                            setShowEditModal(true);
-                          }}
+                          onClick={() => handleOpenEditModal(v)}
                           className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
                         >
                           Adicionar Pagamento
@@ -440,7 +516,7 @@ export default function VendasPage() {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setShowModal(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={handleCloseModal} />
         </Transition.Child>
         <Transition.Child
           as={Fragment}
@@ -523,7 +599,7 @@ export default function VendasPage() {
                   <button
                     type="button"
                     className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600"
-                    onClick={() => setShowModal(false)}
+                    onClick={handleCloseModal}
                     disabled={loading}
                   >
                     Cancelar
@@ -552,7 +628,7 @@ export default function VendasPage() {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setShowEditModal(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={handleCloseEditModal} />
         </Transition.Child>
         <Transition.Child
           as={Fragment}
@@ -575,9 +651,7 @@ export default function VendasPage() {
                   
                   // Se for apenas adicionar pagamento, não salvar alterações nos campos
                   if (isEditPrestacoes) {
-                    setShowEditModal(false);
-                    setEditVenda(null);
-                    setIsEditPrestacoes(false);
+                    handleCloseEditModal();
                     setLoading(false);
                     return;
                   }
@@ -593,8 +667,7 @@ export default function VendasPage() {
                     original.observacoes === editVenda.observacoes &&
                     original.data.slice(0,10) === editVenda.data.slice(0,10)
                   ) {
-                    setShowEditModal(false); // Nada mudou, só fecha o modal
-                    setEditVenda(null);
+                    handleCloseEditModal(); // Nada mudou, só fecha o modal
                     setLoading(false);
                     return;
                   }
@@ -624,8 +697,7 @@ export default function VendasPage() {
                       return;
                     }
                     toast.success('Venda editada com sucesso!');
-                    setShowEditModal(false);
-                    setEditVenda(null);
+                    handleCloseEditModal();
                     setIsEditPrestacoes(false); // Reset do estado de prestações
                     fetchVendas();
                     window.dispatchEvent(new Event('devedoresUpdate'));
@@ -760,7 +832,7 @@ export default function VendasPage() {
                   )}
                   
                   <div className="flex justify-end gap-2 mt-2">
-                    <button type="button" className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600" onClick={() => setShowEditModal(false)} disabled={loading}>Cancelar</button>
+                    <button type="button" className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600" onClick={handleCloseEditModal} disabled={loading}>Cancelar</button>
                     {!isEditPrestacoes && (
                       <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
                     )}

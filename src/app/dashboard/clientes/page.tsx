@@ -3,6 +3,7 @@ import React, { useState, useEffect, Fragment } from 'react';
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import { Transition } from '@headlessui/react';
+import { useModalAberto } from '../../../components/ModalContext';
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<any[]>([]);
@@ -24,6 +25,7 @@ export default function ClientesPage() {
   const [compras, setCompras] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 7;
+  const { setModalAberto } = useModalAberto();
 
   // Buscar clientes da API
   const fetchClientes = () => {
@@ -47,6 +49,7 @@ export default function ClientesPage() {
   function handleAddOpen() {
     setNovoCliente({ nome: '', email: '', telefone: '', morada: '' });
     setAddModalOpen(true);
+    setModalAberto(true);
   }
   function handleAddChange(e: React.ChangeEvent<HTMLInputElement>) {
     setNovoCliente({ ...novoCliente, [e.target.name]: e.target.value });
@@ -81,11 +84,13 @@ export default function ClientesPage() {
   }
   function handleAddModalClose() {
     setAddModalOpen(false);
+    setModalAberto(false);
   }
 
   function handleEditOpen(cliente: any) {
     setClienteEdit({ ...cliente });
     setModalOpen(true);
+    setModalAberto(true);
   }
   function handleEditChange(e: React.ChangeEvent<HTMLInputElement>) {
     setClienteEdit({ ...clienteEdit, [e.target.name]: e.target.value });
@@ -138,6 +143,7 @@ export default function ClientesPage() {
   }
   function handleModalClose() {
     setModalOpen(false);
+    setModalAberto(false);
   }
 
   function handleDelete(clienteId: number) {
@@ -173,6 +179,7 @@ export default function ClientesPage() {
   async function handleViewCliente(cliente: any) {
     setClienteView(cliente);
     setShowViewModal(true);
+    setModalAberto(true);
     try {
       const res = await fetch('/api/vendas');
       const data = await res.json();
@@ -212,6 +219,11 @@ export default function ClientesPage() {
   const totalPages = Math.ceil(filteredClientes.length / pageSize);
   const paginatedClientes = filteredClientes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   useEffect(() => { setCurrentPage(1); }, [search]);
+
+  function handleViewModalClose() {
+    setShowViewModal(false);
+    setModalAberto(false);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -426,7 +438,7 @@ export default function ClientesPage() {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setShowViewModal(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={handleViewModalClose} />
         </Transition.Child>
         <Transition.Child
           as={Fragment}
@@ -479,7 +491,7 @@ export default function ClientesPage() {
                   </table>
                 </div>
                 <div className="flex justify-end mt-4">
-                  <button onClick={() => setShowViewModal(false)} className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600">Fechar</button>
+                  <button onClick={handleViewModalClose} className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600">Fechar</button>
                 </div>
               </div>
             ) : null}
