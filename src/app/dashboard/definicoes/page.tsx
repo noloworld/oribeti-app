@@ -1,12 +1,21 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { FaUserEdit, FaUserPlus, FaTrash } from 'react-icons/fa';
+import { FaUserEdit, FaUserPlus, FaTrash, FaHistory } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 const usuariosExemplo = [
   { id: 1, nome: 'Administrador', email: 'admin@email.com', tipo: 'Administrador' },
   { id: 2, nome: 'Revendedor 1', email: 'revendedor1@email.com', tipo: 'Revendedor' },
 ];
+
+interface Log {
+  id: number;
+  userId: number;
+  userEmail: string;
+  acao: string;
+  detalhes: string | null;
+  data: string;
+}
 
 export default function DefinicoesPage() {
   const [usuarios, setUsuarios] = useState(usuariosExemplo);
@@ -15,6 +24,13 @@ export default function DefinicoesPage() {
   const [meuUsuario, setMeuUsuario] = useState<any>(null);
   const [editando, setEditando] = useState(false);
   const [formEdit, setFormEdit] = useState({ nome: '', email: '', senha: '' });
+  
+  // Estados para logs
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [carregandoLogs, setCarregandoLogs] = useState(false);
+  const [paginaLogs, setPaginaLogs] = useState(1);
+  const [totalLogs, setTotalLogs] = useState(0);
+  const [mostrarLogs, setMostrarLogs] = useState(false);
 
   useEffect(() => {
     async function fetchUsuarios() {
@@ -47,6 +63,45 @@ export default function DefinicoesPage() {
     }
     fetchMeuUsuario();
   }, []);
+
+  // Função para buscar logs
+  async function fetchLogs(pagina: number = 1) {
+    if (!meuUsuario || meuUsuario.tipo !== 'ADMIN') return;
+    
+    setCarregandoLogs(true);
+    try {
+      const res = await fetch(`/api/logs?page=${pagina}&limit=20`);
+      if (!res.ok) throw new Error('Erro ao buscar logs');
+      const data = await res.json();
+      setLogs(data.logs);
+      setTotalLogs(data.total);
+      setPaginaLogs(pagina);
+    } catch (err) {
+      toast.error('Erro ao buscar logs de atividades');
+    } finally {
+      setCarregandoLogs(false);
+    }
+  }
+
+  // Função para alternar visibilidade dos logs
+  function toggleLogs() {
+    if (!mostrarLogs) {
+      fetchLogs(1);
+    }
+    setMostrarLogs(!mostrarLogs);
+  }
+
+  // Função para formatar data
+  function formatarData(dataString: string) {
+    const data = new Date(dataString);
+    return data.toLocaleString('pt-PT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
 
   function handleAddChange(e: React.ChangeEvent<HTMLInputElement>) {
     setNovoUsuario({ ...novoUsuario, [e.target.name]: e.target.value });
@@ -142,6 +197,111 @@ export default function DefinicoesPage() {
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-2xl font-bold mb-2">Definições</h1>
+      
+      {/* Seção de Logs para Administradores */}
+      {meuUsuario?.tipo === 'ADMIN' && (
+        <section className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-4 w-full">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FaHistory className="text-lg text-purple-400" />
+              <span className="font-semibold">Logs de Atividades</span>
+            </div>
+            <button
+              onClick={toggleLogs}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-medium"
+            >
+              {mostrarLogs ? 'Ocultar Logs' : 'Ver Logs'}
+            </button>
+          </div>
+          
+          {mostrarLogs && (
+            <div className="space-y-4">
+              {carregandoLogs ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto"></div>
+                  <p className="text-gray-400 mt-2">A carregar logs...</p>
+                </div>
+              ) : logs.length === 0 ? (
+                <div className="text-gray-400 text-center py-8 bg-gray-900 rounded-lg">
+                  Nenhum log de atividade encontrado.
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full table-auto text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          <th className="px-3 py-3 text-left">Data/Hora</th>
+                          <th className="px-3 py-3 text-left">Utilizador</th>
+                          <th className="px-3 py-3 text-left">Ação</th>
+                          <th className="px-3 py-3 text-left">Detalhes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {logs.map(log => (
+                          <tr key={log.id} className="border-b border-gray-700 hover:bg-gray-700/50">
+                            <td className="px-3 py-3 text-xs text-gray-300">
+                              {formatarData(log.data)}
+                            </td>
+                            <td className="px-3 py-3 text-sm">
+                              {log.userEmail}
+                            </td>
+                            <td className="px-3 py-3 text-sm font-medium">
+                              {log.acao}
+                            </td>
+                            <td className="px-3 py-3 text-sm text-gray-300 max-w-md truncate">
+                              {log.detalhes}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="block md:hidden space-y-3">
+                    {logs.map((log, idx) => (
+                      <div key={log.id} className={`bg-gray-${idx % 2 === 0 ? '900' : '800'} rounded-xl p-4 shadow-lg`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-xs text-gray-400">{formatarData(log.data)}</span>
+                          <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded">{log.acao}</span>
+                        </div>
+                        <div className="text-sm font-medium mb-1">{log.userEmail}</div>
+                        <div className="text-sm text-gray-300">{log.detalhes}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Paginação */}
+                  {totalLogs > 20 && (
+                    <div className="flex justify-center items-center gap-2 mt-4">
+                      <button
+                        onClick={() => fetchLogs(paginaLogs - 1)}
+                        disabled={paginaLogs <= 1}
+                        className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 text-white px-3 py-1 rounded text-sm"
+                      >
+                        ← Anterior
+                      </button>
+                      <span className="text-sm text-gray-300">
+                        Página {paginaLogs} de {Math.ceil(totalLogs / 20)}
+                      </span>
+                      <button
+                        onClick={() => fetchLogs(paginaLogs + 1)}
+                        disabled={paginaLogs >= Math.ceil(totalLogs / 20)}
+                        className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Seguinte →
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       <div className="flex flex-col md:flex-row gap-8 justify-center items-start w-full">
         <section className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-4 w-full md:w-1/2 max-w-lg">
           <div className="flex items-center gap-2 mb-2">

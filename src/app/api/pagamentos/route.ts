@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { extractUserFromToken } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -27,6 +28,11 @@ export async function GET(req: NextRequest) {
 // Criar novo pagamento
 export async function POST(req: NextRequest) {
   try {
+    const user = extractUserFromToken(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { vendaId, valor, data, observacoes } = body;
     
@@ -61,6 +67,7 @@ export async function POST(req: NextRequest) {
     // Buscar a venda para obter o valorFinal
     const venda = await prisma.venda.findUnique({
       where: { id: Number(vendaId) },
+      include: { cliente: true },
     });
 
     if (!venda) {
@@ -80,6 +87,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Gravar log da ação
+    await prisma.log.create({
+      data: {
+        userId: user.id,
+        userEmail: user.email,
+        acao: 'CRIAR_PAGAMENTO',
+        detalhes: `Pagamento de €${valor} registado para venda "${venda.nomeProduto}" (Cliente: ${venda.cliente.nome})`,
+      },
+    });
+
     console.log('API Pagamentos - Venda atualizada com sucesso');
     return NextResponse.json(pagamento, { status: 201 });
   } catch (error) {
@@ -91,12 +108,27 @@ export async function POST(req: NextRequest) {
 // Deletar pagamento
 export async function DELETE(req: NextRequest) {
   try {
+    const user = extractUserFromToken(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { id, vendaId } = body;
     
     if (!id || !vendaId) {
       return NextResponse.json({ error: 'id e vendaId são obrigatórios.' }, { status: 400 });
     }
+
+    // Buscar dados do pagamento antes de deletar para o log
+    const pagamento = await prisma.pagamento.findUnique({
+      where: { id: Number(id) },
+      include: {
+        venda: {
+          include: { cliente: true }
+        }
+      }
+    });
 
     // Deletar o pagamento
     await prisma.pagamento.delete({
@@ -129,6 +161,18 @@ export async function DELETE(req: NextRequest) {
         status: statusAutomatico,
       },
     });
+
+    // Gravar log da ação
+    if (pagamento) {
+      await prisma.log.create({
+        data: {
+          userId: user.id,
+          userEmail: user.email,
+          acao: 'REMOVER_PAGAMENTO',
+          detalhes: `Pagamento de €${pagamento.valor} removido da venda "${pagamento.venda.nomeProduto}" (Cliente: ${pagamento.venda.cliente.nome})`,
+        },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

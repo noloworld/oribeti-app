@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { extractUserFromToken } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -60,6 +61,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: Request) {
   try {
+    const user = extractUserFromToken(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { clienteId, nomeProduto, valorRevista, valorFinal, valorPago, observacoes, data, status } = body;
     if (!clienteId || !nomeProduto || !valorRevista || !valorFinal || !data) {
@@ -100,6 +106,15 @@ export async function POST(req: Request) {
       });
     }
 
+    // Gravar log da ação
+    await prisma.log.create({
+      data: {
+        userId: user.id,
+        userEmail: user.email,
+        acao: 'CRIAR_VENDA',
+        detalhes: `Venda "${nomeProduto}" de €${valorFinal} criada para cliente ${venda.cliente?.nome || clienteId}`,
+      }
+    });
     return NextResponse.json(venda, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao registrar venda.' }, { status: 500 });
@@ -108,6 +123,11 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const user = extractUserFromToken(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { id, clienteId, nomeProduto, valorRevista, valorFinal, valorPago, observacoes, data, status } = body;
     if (!id || !clienteId || !nomeProduto || !valorRevista || !valorFinal || !data) {
@@ -135,6 +155,16 @@ export async function PUT(req: Request) {
         cliente: { select: { id: true, nome: true } },
       },
     });
+
+    // Gravar log da ação
+    await prisma.log.create({
+      data: {
+        userId: user.id,
+        userEmail: user.email,
+        acao: 'EDITAR_VENDA',
+        detalhes: `Venda "${nomeProduto}" (ID: ${id}) editada para €${valorFinal}`,
+      }
+    });
     return NextResponse.json(vendaAtualizada);
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao editar venda.' }, { status: 500 });
@@ -143,12 +173,38 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const user = extractUserFromToken(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { id } = body;
     if (!id) {
       return NextResponse.json({ error: 'ID da venda é obrigatório.' }, { status: 400 });
     }
+
+    // Buscar dados da venda antes de deletar para o log
+    const venda = await prisma.venda.findUnique({
+      where: { id: Number(id) },
+      include: { cliente: true },
+    });
+
+    if (!venda) {
+      return NextResponse.json({ error: 'Venda não encontrada.' }, { status: 404 });
+    }
+
     await prisma.venda.delete({ where: { id: Number(id) } });
+
+    // Gravar log da ação
+    await prisma.log.create({
+      data: {
+        userId: user.id,
+        userEmail: user.email,
+        acao: 'REMOVER_VENDA',
+        detalhes: `Venda "${venda.nomeProduto}" (ID: ${id}) de €${venda.valorFinal} removida`,
+      }
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao remover venda.' }, { status: 500 });

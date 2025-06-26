@@ -74,3 +74,12 @@ model Despesa {
   data      DateTime
   criadoEm  DateTime @default(now())
 }
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  userEmail String
+  acao      String
+  detalhes  String?
+  data      DateTime @default(now())
+}
