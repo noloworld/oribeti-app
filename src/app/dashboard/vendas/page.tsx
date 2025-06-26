@@ -539,28 +539,6 @@ export default function VendasPage() {
         {/* Tabela de Devedores */}
         <div>
           <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
-          {/* Paginação padrão do site para devedores - apenas setas e números */}
-          {devedoresPagina.length > 0 && totalPagesDevedores > 1 && devedoresFiltrados.length > 0 && (
-            <div className="flex justify-center items-center gap-2 mb-4">
-              <button
-                className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-                onClick={() => setPageDevedores(p => Math.max(1, p - 1))}
-                disabled={pageDevedores === 1}
-              >«</button>
-              {Array.from({ length: totalPagesDevedores }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  className={`px-3 py-1 rounded text-sm ${p === pageDevedores ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
-                  onClick={() => setPageDevedores(p)}
-                >{p}</button>
-              ))}
-              <button
-                className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-                onClick={() => setPageDevedores(p => Math.min(totalPagesDevedores, p + 1))}
-                disabled={pageDevedores === totalPagesDevedores}
-              >»</button>
-            </div>
-          )}
           {/* Tabela tradicional para desktop */}
           <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 rounded-lg shadow hidden md:block">
             <table className="min-w-full bg-gray-800 text-white">
@@ -577,12 +555,12 @@ export default function VendasPage() {
                 </tr>
               </thead>
               <tbody>
-                {devedoresPagina.length === 0 ? (
+                {devedoresFiltrados.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-gray-400 px-4 py-2 text-center">Nenhum cliente devedor.</td>
                   </tr>
                 ) : (
-                  devedoresPagina.map((v) => (
+                  devedoresFiltrados.map((v) => (
                     <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
                       <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString('pt-PT')}</td>
                       <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
@@ -611,10 +589,10 @@ export default function VendasPage() {
           </div>
           {/* Cards responsivos para mobile */}
           <div className="block md:hidden space-y-6">
-            {devedoresPagina.length === 0 ? (
+            {devedoresFiltrados.length === 0 ? (
               <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
             ) : (
-              devedoresPagina.map((v, idx) => (
+              devedoresFiltrados.map((v, idx) => (
                 <div key={v.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span className="text-gray-400">Data</span>
