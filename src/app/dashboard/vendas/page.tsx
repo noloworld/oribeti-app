@@ -493,16 +493,22 @@ export default function VendasPage() {
                 {totalPaginasMobile > 1 && (
                   <div className="flex justify-center items-center gap-2 mt-2">
                     <button
-                      className="px-2 py-1 rounded bg-gray-700 text-white text-xs disabled:opacity-50"
+                      className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
                       onClick={() => setMobilePage(p => Math.max(1, p - 1))}
                       disabled={mobilePage === 1}
-                    >Anterior</button>
-                    <span className="text-xs text-gray-400">Página {mobilePage} de {totalPaginasMobile}</span>
+                    >«</button>
+                    {Array.from({ length: totalPaginasMobile }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        className={`px-3 py-1 rounded text-sm ${p === mobilePage ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+                        onClick={() => setMobilePage(p)}
+                      >{p}</button>
+                    ))}
                     <button
-                      className="px-2 py-1 rounded bg-gray-700 text-white text-xs disabled:opacity-50"
+                      className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
                       onClick={() => setMobilePage(p => Math.min(totalPaginasMobile, p + 1))}
                       disabled={mobilePage === totalPaginasMobile}
-                    >Próxima</button>
+                    >»</button>
                   </div>
                 )}
               </div>
