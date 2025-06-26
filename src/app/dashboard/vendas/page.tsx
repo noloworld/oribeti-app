@@ -63,6 +63,15 @@ export default function VendasPage() {
   );
   const totalPaginasMobile = Math.ceil(vendasEmDiaMobile.length / cardsPorPagina);
   const vendasPaginaMobile = vendasEmDiaMobile.slice((mobilePage - 1) * cardsPorPagina, mobilePage * cardsPorPagina);
+  // Adicionar estados para paginação dos devedores
+  const [pageDevedores, setPageDevedores] = useState(1);
+  const limitDevedores = 10;
+  const devedoresFiltrados = vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) > 0 && 
+    (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
+    (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
+  );
+  const totalPagesDevedores = Math.ceil(devedoresFiltrados.length / limitDevedores);
+  const devedoresPagina = devedoresFiltrados.slice((pageDevedores - 1) * limitDevedores, pageDevedores * limitDevedores);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -252,6 +261,9 @@ export default function VendasPage() {
     setModalAberto(false);
   }
 
+  // Sempre que mudar o filtro, resetar pageDevedores para 1
+  useEffect(() => { setPageDevedores(1); }, [statusFiltro, anoFiltro, vendas]);
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6 text-white">Registo de Vendas</h1>
@@ -385,7 +397,7 @@ export default function VendasPage() {
                       <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
                       <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
                       <td className="px-4 py-2">
-                        <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full font-bold shadow text-xs">Pago</span>
+                        <span className="inline-block bg-green-600 text-white px-4 py-1 rounded-md font-bold shadow-md text-sm tracking-wide">Pago</span>
                       </td>
                       <td className="px-4 py-2 flex gap-2">
                         <button
@@ -516,46 +528,54 @@ export default function VendasPage() {
                 </tr>
               </thead>
               <tbody>
-                {vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) > 0 && 
-                  (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
-                  (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
-                ).length === 0 ? (
-                  <tr>
-                    <td className="px-4 py-2 text-gray-400" colSpan={8}>
-                      Nenhum devedor encontrado.
+                {devedoresPagina.map((v) => (
+                  <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                    <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
+                    <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
+                    <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
+                    <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
+                    <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
+                    <td className="px-4 py-2 text-gray-200">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
+                    <td className="px-4 py-2">
+                      <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold">
+                        PENDENTE
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 flex gap-2">
+                      <button
+                        onClick={() => handleOpenEditModal(v)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Adicionar Pagamento
+                      </button>
                     </td>
                   </tr>
-                ) : (
-                  vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) > 0 && 
-                    (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
-                    (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
-                  ).map((v) => (
-                    <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
-                      <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
-                      <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
-                      <td className="px-4 py-2 text-gray-200">{v.nomeProduto}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {v.valorFinal.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {(v.valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
-                      <td className="px-4 py-2">
-                        <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold">
-                          PENDENTE
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <button
-                          onClick={() => handleOpenEditModal(v)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
-                        >
-                          Adicionar Pagamento
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
+          {/* Paginação moderna centralizada para tabela de Devedores */}
+          {totalPagesDevedores > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-6">
+              <button
+                className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+                onClick={() => setPageDevedores(p => Math.max(1, p - 1))}
+                disabled={pageDevedores === 1}
+              >«</button>
+              {Array.from({ length: totalPagesDevedores }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  className={`px-3 py-1 rounded text-sm ${p === pageDevedores ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+                  onClick={() => setPageDevedores(p)}
+                >{p}</button>
+              ))}
+              <button
+                className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+                onClick={() => setPageDevedores(p => Math.min(totalPagesDevedores, p + 1))}
+                disabled={pageDevedores === totalPagesDevedores}
+              >»</button>
+            </div>
+          )}
         </div>
       </div>
       {/* Paginação moderna centralizada */}
