@@ -129,14 +129,15 @@ export default function DevedoresPage() {
           </thead>
           <tbody>
             {(() => {
-              // Filtrar vendas: só mostrar quem está pagando às prestações ou já pagou tudo
+              // Filtrar vendas: só mostrar quem está pagando às prestações ou já pagou tudo parcelado
               const vendasFiltradas = vendas.filter(venda => {
                 const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
+                const historico = pagamentos[venda.id] || [];
                 // Pagando às prestações: já pagou algo, mas não tudo
                 if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal) return true;
-                // Já pagou tudo: valorPago >= valorFinal
-                if ((venda.valorPago || 0) >= venda.valorFinal) return true;
-                // Não mostrar quem não pagou nada ainda
+                // Já pagou tudo parcelado: valorPago >= valorFinal e mais de um pagamento
+                if ((venda.valorPago || 0) >= venda.valorFinal && historico.length > 1) return true;
+                // Não mostrar quem não pagou nada ainda ou pagou tudo de uma vez
                 return false;
               });
               if (vendasFiltradas.length === 0) {
@@ -217,8 +218,9 @@ export default function DevedoresPage() {
         {(() => {
           const vendasFiltradas = vendas.filter(venda => {
             const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
+            const historico = pagamentos[venda.id] || [];
             if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal) return true;
-            if ((venda.valorPago || 0) >= venda.valorFinal) return true;
+            if ((venda.valorPago || 0) >= venda.valorFinal && historico.length > 1) return true;
             return false;
           });
           if (vendasFiltradas.length === 0) {
