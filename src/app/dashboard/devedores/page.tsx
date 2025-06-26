@@ -128,22 +128,41 @@ export default function DevedoresPage() {
             </tr>
           </thead>
           <tbody>
-            {vendas.length === 0 ? (
-              <tr>
-                <td className="px-4 py-2 text-gray-400" colSpan={5}>Nenhum cliente devedor.</td>
-              </tr>
-            ) : (
-              vendas.map(venda => {
+            {(() => {
+              // Filtrar vendas: só mostrar quem está pagando às prestações ou já pagou tudo
+              const vendasFiltradas = vendas.filter(venda => {
+                const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
+                // Pagando às prestações: já pagou algo, mas não tudo
+                if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal) return true;
+                // Já pagou tudo: valorPago >= valorFinal
+                if ((venda.valorPago || 0) >= venda.valorFinal) return true;
+                // Não mostrar quem não pagou nada ainda
+                return false;
+              });
+              if (vendasFiltradas.length === 0) {
+                return (
+                  <tr>
+                    <td className="px-4 py-2 text-gray-400" colSpan={5}>Nenhum cliente devedor.</td>
+                  </tr>
+                );
+              }
+              return vendasFiltradas.map(venda => {
                 const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
                 const historico = pagamentos[venda.id] || [];
                 const valorMaxDevido = Math.max(venda.valorFinal, ...historico.map(p => p.valor));
                 const ultimoPagamento = historico.length > 0 ? historico[0] : null;
+                const pagandoPrestacoes = (venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal;
                 return (
                   <React.Fragment key={venda.id}>
                     <tr className="border-t border-gray-700">
-                      <td className="px-4 py-2">{venda.cliente?.nome}</td>
+                      <td className="px-4 py-2">
+                        {venda.cliente?.nome}
+                        {pagandoPrestacoes && (
+                          <div className="text-yellow-400 text-xs font-semibold mt-1">Ainda está a pagar</div>
+                        )}
+                      </td>
                       <td className="px-4 py-2">€{valorMaxDevido.toFixed(2)}</td>
-                      <td className="px-4 py-2">€{valorEmDivida.toFixed(2)}</td>
+                      <td className={`px-4 py-2 ${pagandoPrestacoes ? 'text-yellow-400 font-bold' : ''}`}>€{valorEmDivida.toFixed(2)}</td>
                       <td className="px-4 py-2">{ultimoPagamento ? new Date(ultimoPagamento.data).toLocaleDateString() : '-'}</td>
                       <td className="px-4 py-2 flex gap-2">
                         <button
@@ -188,21 +207,31 @@ export default function DevedoresPage() {
                     )}
                   </React.Fragment>
                 );
-              })
-            )}
+              });
+            })()}
           </tbody>
         </table>
       </div>
       {/* Cards responsivos para mobile */}
       <div className="block md:hidden space-y-8">
-        {vendas.length === 0 ? (
-          <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
-        ) : (
-          vendas.map((venda, idx) => {
+        {(() => {
+          const vendasFiltradas = vendas.filter(venda => {
+            const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
+            if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal) return true;
+            if ((venda.valorPago || 0) >= venda.valorFinal) return true;
+            return false;
+          });
+          if (vendasFiltradas.length === 0) {
+            return (
+              <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
+            );
+          }
+          return vendasFiltradas.map((venda, idx) => {
             const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
             const historico = pagamentos[venda.id] || [];
             const valorMaxDevido = Math.max(venda.valorFinal, ...historico.map(p => p.valor));
             const ultimoPagamento = historico.length > 0 ? historico[0] : null;
+            const pagandoPrestacoes = (venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal;
             return (
               <div key={venda.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
                 <div className="flex justify-between items-center text-xs">
@@ -215,8 +244,11 @@ export default function DevedoresPage() {
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-gray-400">Valor em dívida</span>
-                  <span className="font-semibold text-yellow-400">€{valorEmDivida.toFixed(2)}</span>
+                  <span className={`font-semibold ${pagandoPrestacoes ? 'text-yellow-400' : ''}`}>€{valorEmDivida.toFixed(2)}</span>
                 </div>
+                {pagandoPrestacoes && (
+                  <div className="text-yellow-400 text-xs font-semibold">Ainda está a pagar</div>
+                )}
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-gray-400">Último pagamento</span>
                   <span className="font-semibold">{ultimoPagamento ? new Date(ultimoPagamento.data).toLocaleDateString() : '-'}</span>
@@ -260,8 +292,8 @@ export default function DevedoresPage() {
                 )}
               </div>
             );
-          })
-        )}
+          });
+        })()}
       </div>
       {/* Modal de confirmação de pagamento */}
       {confirmModalOpen && vendaToConfirm && (
