@@ -162,41 +162,26 @@ export default function DevedoresPage() {
                     </tr>
                     {historicoAberto === venda.id && (
                       <tr>
-                        <td colSpan={5} className="bg-gray-900 p-4">
-                          <div className="font-semibold mb-2 text-white">{venda.nomeProduto}</div>
-                          {(() => {
-                            const totalPagamentos = historico.length;
-                            const produto = venda.nomeProduto;
-                            const valorTotal = venda.valorFinal;
-                            const valorEmDivida = valorTotal - (venda.valorPago || 0);
-                            const artigo = artigoProduto(produto);
-                            if (totalPagamentos === 0) {
-                              return <div className="text-gray-400 mb-2">Nenhum pagamento registrado.</div>;
-                            }
-                            if (valorEmDivida <= 0) {
-                              return (
-                                <div className="text-green-400 mb-2 text-sm">
-                                  Este cliente pagou em {totalPagamentos} vez{totalPagamentos > 1 ? 'es' : ''}: {historico.map((p, i) => `${i+1}ª - €${p.valor.toFixed(2)}`).join(', ')} {artigo} {produto} de €{valorTotal.toFixed(2)}.
+                        <td colSpan={5} className="bg-gray-900 px-6 py-4">
+                          <div className="mb-2 text-yellow-400 font-semibold">
+                            {venda.nomeProduto}
+                          </div>
+                          <div className="mb-2 text-yellow-300 text-sm">
+                            Este cliente já pagou {historico.length}x um {venda.nomeProduto} de €{venda.valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{(venda.valorFinal - (venda.valorPago || 0)).toFixed(2)}</span>.
+                          </div>
+                          <div className="space-y-2 overflow-y-auto max-h-[25vh] md:max-h-64 scrollbar-custom">
+                            {historico.length === 0 ? (
+                              <div className="text-gray-400 text-center py-2">Nenhum pagamento registrado.</div>
+                            ) : (
+                              historico.map((p, idx) => (
+                                <div key={p.id || idx} className="flex items-center gap-4 bg-gray-800 rounded-lg px-4 py-2">
+                                  <div className="text-green-400 font-bold text-lg">€{p.valor.toFixed(2)}</div>
+                                  <div className="text-gray-300 text-sm">{new Date(p.data).toLocaleDateString()}</div>
+                                  {p.observacoes && <div className="text-gray-400 text-xs italic">{p.observacoes}</div>}
                                 </div>
-                              );
-                            }
-                            return (
-                              <div className="text-yellow-400 mb-2 text-sm">
-                                Este cliente até ao momento pagou {totalPagamentos} vez{totalPagamentos > 1 ? 'es' : ''} {artigo} {produto} de €{valorTotal.toFixed(2)}, ainda falta pagar €{valorEmDivida.toFixed(2)}.
-                              </div>
-                            );
-                          })()}
-                          {historico.length === 0 ? null : (
-                            <ul className="space-y-1">
-                              {historico.map((p, idx) => (
-                                <li key={p.id} className="flex items-center gap-4 text-sm">
-                                  <span className="text-green-400 font-bold">€{p.valor.toFixed(2)}</span>
-                                  <span className="text-gray-300">{new Date(p.data).toLocaleDateString()}</span>
-                                  {p.observacoes && <span className="text-gray-400 italic">{p.observacoes}</span>}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
+                              ))
+                            )}
+                          </div>
                         </td>
                       </tr>
                     )}

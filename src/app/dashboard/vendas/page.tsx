@@ -528,7 +528,7 @@ export default function VendasPage() {
           leaveTo="opacity-0 scale-95"
         >
           <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto max-h-[90vh] overflow-y-auto">
+            <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto max-h-[90vh] overflow-y-auto scrollbar-custom">
               <h2 className="text-xl font-bold text-white mb-4">Nova Venda</h2>
               <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
                 <div>
@@ -641,7 +641,7 @@ export default function VendasPage() {
         >
           <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
             {editVenda ? (
-              <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto max-h-[90vh] overflow-y-auto">
+              <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto max-h-[90vh] overflow-y-auto scrollbar-custom">
                 <h2 className="text-xl font-bold text-white mb-4">
                   {isEditPrestacoes ? 'Adicionar Pagamento' : 'Editar Venda'}
                 </h2>
