@@ -65,8 +65,6 @@ export default function VendasPage() {
   const vendasPaginaMobile = vendasEmDiaMobile.slice((mobilePage - 1) * cardsPorPagina, mobilePage * cardsPorPagina);
   // Adicionar estados para paginação dos devedores
   const [todasVendas, setTodasVendas] = useState<Venda[]>([]);
-  const [pageDevedores, setPageDevedores] = useState(1);
-  const limitDevedores = 10;
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -264,25 +262,13 @@ export default function VendasPage() {
   }
 
   // Sempre que mudar o filtro, resetar pageDevedores para 1
-  useEffect(() => { setPageDevedores(1); }, [statusFiltro, anoFiltro, vendas]);
+  useEffect(() => { setMobilePage(1); }, [statusFiltro, anoFiltro, vendas]);
 
   // Filtro e paginação dos devedores
   const devedoresFiltrados = todasVendas.filter(v => (v.valorFinal - (v.valorPago || 0)) > 0 &&
     (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
     (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
   );
-  const totalPagesDevedores = Math.ceil(devedoresFiltrados.length / limitDevedores);
-  const devedoresPagina = devedoresFiltrados.slice((pageDevedores - 1) * limitDevedores, pageDevedores * limitDevedores);
-
-  // Debug logs para entender o problema
-  console.log('Debug devedores:', {
-    todasVendasLength: todasVendas.length,
-    devedoresFiltradosLength: devedoresFiltrados.length,
-    totalPagesDevedores,
-    pageDevedores,
-    devedoresPaginaLength: devedoresPagina.length,
-    shouldShowPagination: devedoresFiltrados.length > 0 && totalPagesDevedores > 1
-  });
 
   return (
     <div className="p-6">
