@@ -324,7 +324,8 @@ export default function VendasPage() {
               </button>
             </div>
           )}
-          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96">
+          {/* Tabela tradicional para desktop */}
+          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
             <table className="min-w-full bg-gray-800 rounded-lg">
               <thead>
                 <tr>
@@ -407,6 +408,70 @@ export default function VendasPage() {
                 )}
               </tbody>
             </table>
+          </div>
+          {/* Cards responsivos para mobile */}
+          <div className="block md:hidden space-y-4">
+            {vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
+              (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
+              (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
+            ).length === 0 ? (
+              <div className="text-gray-400 text-center py-4 bg-gray-800 rounded-lg">Nenhum cliente em dia.</div>
+            ) : (
+              vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) <= 0 && 
+                (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
+                (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
+              ).map((venda) => (
+                <div key={venda.id} className="bg-gray-800 rounded-lg p-4 shadow flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-400">Data</span>
+                    <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-400">Cliente</span>
+                    <span className="font-semibold">{venda.cliente?.nome}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-400">Produto</span>
+                    <span className="font-semibold">{venda.nomeProduto}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-400">Valor Revista (€)</span>
+                    <span className="font-semibold">€{venda.valorRevista.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-400">Valor Final (€)</span>
+                    <span className="font-semibold">€{venda.valorFinal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-400">Valor Pago (€)</span>
+                    <span className="font-semibold">€{(venda.valorPago || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => handleOpenEditModal(venda)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setVendaToDelete(venda);
+                        setShowDeleteModal(true);
+                      }}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Eliminar
+                    </button>
+                    <button
+                      onClick={() => handlePrintVenda(venda)}
+                      className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Imprimir
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
