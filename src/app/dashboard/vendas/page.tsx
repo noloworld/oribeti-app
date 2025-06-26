@@ -419,24 +419,24 @@ export default function VendasPage() {
             </table>
           </div>
           {/* Cards responsivos para mobile */}
-          <div className="block md:hidden space-y-4">
+          <div className="block md:hidden space-y-8">
             {vendasEmDiaMobile.length === 0 ? (
               <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente em dia.</div>
             ) : (
               <div>
-                {vendasPaginaMobile.map((venda) => (
-                  <div key={venda.id} className="bg-gray-800 rounded-lg p-4 shadow flex flex-col gap-2 max-w-[95vw] mx-auto">
+                {vendasPaginaMobile.map((venda, idx) => (
+                  <div key={venda.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Data</span>
                       <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Cliente</span>
-                      <span className="font-semibold">{venda.cliente?.nome}</span>
+                      <span className="font-bold text-base text-white">{venda.cliente?.nome}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Produto</span>
-                      <span className="font-semibold">{venda.nomeProduto}</span>
+                      <span className="font-bold text-base text-green-300">{venda.nomeProduto}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Valor Revista (€)</span>
@@ -450,10 +450,10 @@ export default function VendasPage() {
                       <span className="text-gray-400">Valor Pago (€)</span>
                       <span className="font-semibold">€{(venda.valorPago || 0).toFixed(2)}</span>
                     </div>
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex gap-3 mt-4">
                       <button
                         onClick={() => handleOpenEditModal(venda)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[70px]"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow"
                       >
                         Editar
                       </button>
@@ -462,13 +462,13 @@ export default function VendasPage() {
                           setVendaToDelete(venda);
                           setShowDeleteModal(true);
                         }}
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs min-w-[70px]"
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow"
                       >
                         Eliminar
                       </button>
                       <button
                         onClick={() => handlePrintVenda(venda)}
-                        className="bg-green-700 hover:bg-green-800 text-white px-3 py-2 rounded text-xs min-w-[70px]"
+                        className="bg-green-700 hover:bg-green-800 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow"
                       >
                         Imprimir
                       </button>
