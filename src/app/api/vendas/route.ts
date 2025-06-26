@@ -7,6 +7,25 @@ export async function GET(req: NextRequest) {
   try {
     // Paginação
     const { searchParams } = new URL(req.url);
+    const all = searchParams.get('all');
+    if (all === 'true') {
+      // Retorna todas as vendas sem paginação
+      const vendasRaw = await prisma.venda.findMany({
+        include: {
+          cliente: { select: { id: true, nome: true } },
+          pagamentos: true,
+        },
+        orderBy: { data: 'desc' },
+      });
+      const vendas = vendasRaw.map(v => ({
+        ...v,
+        numPagamentos: v.pagamentos.length,
+        pagamentos: v.pagamentos
+          .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+          .slice(0, 1),
+      }));
+      return NextResponse.json({ vendas, total: vendas.length });
+    }
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const skip = (page - 1) * limit;

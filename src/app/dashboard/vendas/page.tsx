@@ -66,12 +66,7 @@ export default function VendasPage() {
   // Adicionar estados para paginação dos devedores
   const [pageDevedores, setPageDevedores] = useState(1);
   const limitDevedores = 10;
-  const devedoresFiltrados = vendas.filter(v => (v.valorFinal - (v.valorPago || 0)) > 0 && 
-    (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
-    (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
-  );
-  const totalPagesDevedores = Math.ceil(devedoresFiltrados.length / limitDevedores);
-  const devedoresPagina = devedoresFiltrados.slice((pageDevedores - 1) * limitDevedores, pageDevedores * limitDevedores);
+  const [todasVendas, setTodasVendas] = useState<Venda[]>([]);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -95,6 +90,13 @@ export default function VendasPage() {
     fetchVendas();
     // eslint-disable-next-line
   }, [page, limit]);
+
+  // Buscar todas as vendas ao carregar a página (ou sempre que necessário)
+  useEffect(() => {
+    fetch('/api/vendas?all=true')
+      .then(res => res.json())
+      .then(data => setTodasVendas(data.vendas || []));
+  }, []);
 
   // Manipulação do formulário
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
@@ -263,6 +265,14 @@ export default function VendasPage() {
 
   // Sempre que mudar o filtro, resetar pageDevedores para 1
   useEffect(() => { setPageDevedores(1); }, [statusFiltro, anoFiltro, vendas]);
+
+  // Para devedores, use todasVendas ao invés de vendas
+  const devedoresFiltrados = todasVendas.filter(v => (v.valorFinal - (v.valorPago || 0)) > 0 && 
+    (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) &&
+    (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
+  );
+  const totalPagesDevedores = Math.ceil(devedoresFiltrados.length / limitDevedores);
+  const devedoresPagina = devedoresFiltrados.slice((pageDevedores - 1) * limitDevedores, pageDevedores * limitDevedores);
 
   return (
     <div className="p-6">
