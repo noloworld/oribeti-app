@@ -462,7 +462,7 @@ export default function VendasPage() {
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400">Status</span>
-                      <span className="font-bold text-green-400">Pago</span>
+                      <span className="inline-block bg-green-600 text-white px-4 py-1 rounded-md font-bold shadow-md text-sm tracking-wide">Pago</span>
                     </div>
                     <div className="flex gap-3 mt-4">
                       <button
