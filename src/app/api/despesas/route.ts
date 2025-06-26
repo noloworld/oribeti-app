@@ -52,9 +52,9 @@ export async function POST(req: NextRequest) {
     await prisma.log.create({
       data: {
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email || '',
         acao: 'CRIAR_DESPESA',
-        detalhes: `Despesa "${nome}" de €${valor} registada`,
+        detalhes: `Despesa "${despesa.nome}" de €${despesa.valor} criada`,
       },
     });
 
@@ -91,9 +91,9 @@ export async function PUT(req: NextRequest) {
     await prisma.log.create({
       data: {
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email || '',
         acao: 'EDITAR_DESPESA',
-        detalhes: `Despesa "${nome}" (ID: ${id}) editada para €${valor}`,
+        detalhes: `Despesa "${despesa.nome}" (ID: ${id}) editada para €${despesa.valor}`,
       },
     });
 
@@ -130,7 +130,7 @@ export async function DELETE(req: NextRequest) {
       await prisma.log.create({
         data: {
           userId: user.id,
-          userEmail: user.email,
+          userEmail: user.email || '',
           acao: 'REMOVER_DESPESA',
           detalhes: `Despesa "${despesa.nome}" (ID: ${id}) de €${despesa.valor} removida`,
         },

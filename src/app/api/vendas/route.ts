@@ -111,7 +111,7 @@ export async function POST(req: Request) {
     await prisma.log.create({
       data: {
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email || '',
         acao: 'CRIAR_VENDA',
         detalhes: `Venda "${nomeProduto}" de €${valorFinal} criada para cliente ${venda.cliente?.nome || clienteId}`,
       }
@@ -162,7 +162,7 @@ export async function PUT(req: Request) {
     await prisma.log.create({
       data: {
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email || '',
         acao: 'EDITAR_VENDA',
         detalhes: `Venda "${nomeProduto}" (ID: ${id}) editada para €${valorFinal}`,
       }
@@ -203,7 +203,7 @@ export async function DELETE(req: Request) {
     await prisma.log.create({
       data: {
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email || '',
         acao: 'REMOVER_VENDA',
         detalhes: `Venda "${venda.nomeProduto}" (ID: ${id}) de €${venda.valorFinal} removida`,
       }

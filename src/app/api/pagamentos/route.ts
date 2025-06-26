@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     await prisma.log.create({
       data: {
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email || '',
         acao: 'CRIAR_PAGAMENTO',
         detalhes: `Pagamento de €${valor} registado para venda "${venda.nomeProduto}" (Cliente: ${venda.cliente.nome})`,
       },
@@ -168,7 +168,7 @@ export async function DELETE(req: NextRequest) {
       await prisma.log.create({
         data: {
           userId: user.id,
-          userEmail: user.email,
+          userEmail: user.email || '',
           acao: 'REMOVER_PAGAMENTO',
           detalhes: `Pagamento de €${pagamento.valor} removido da venda "${pagamento.venda.nomeProduto}" (Cliente: ${pagamento.venda.cliente.nome})`,
         },
