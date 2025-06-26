@@ -35,6 +35,9 @@ export default function DevedoresPage() {
   const totalPages = Math.ceil(total / limit);
   const { setModalAberto } = useModalAberto();
 
+  // Novo estado para vendas filtradas (devedores)
+  const [vendasFiltradas, setVendasFiltradas] = useState<Venda[]>([]);
+
   const fetchVendas = async () => {
     try {
       const res = await fetch(`/api/vendas?page=${page}&limit=${limit}`);
@@ -56,10 +59,27 @@ export default function DevedoresPage() {
     }
   };
 
+  // Função para filtrar devedores
+  function filtrarDevedores(vendas: Venda[]) {
+    return vendas.filter(venda => {
+      // Pagando às prestações: já pagou algo, mas não tudo
+      if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal) return true;
+      // Já pagou tudo parcelado: valorPago >= valorFinal e mais de um pagamento
+      if ((venda.valorPago || 0) >= venda.valorFinal && (venda as any).numPagamentos > 1) return true;
+      return false;
+    });
+  }
+
+  // Atualizar vendas filtradas sempre que vendas mudarem
   useEffect(() => {
-    fetchVendas();
-    // eslint-disable-next-line
-  }, [page, limit]);
+    const filtradas = filtrarDevedores(vendas);
+    setTotal(filtradas.length);
+    setVendasFiltradas(filtradas);
+    setPage(1); // Sempre volta para a primeira página ao filtrar
+  }, [vendas]);
+
+  // Paginação sobre vendasFiltradas
+  const vendasPaginadas = vendasFiltradas.slice((page - 1) * limit, page * limit);
 
   async function marcarComoPagoConfirmado() {
     if (!vendaToConfirm) return;
@@ -129,25 +149,14 @@ export default function DevedoresPage() {
           </thead>
           <tbody>
             {(() => {
-              // Filtrar vendas: só mostrar quem está pagando às prestações ou já pagou tudo parcelado
-              const vendasFiltradas = vendas.filter(venda => {
-                const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
-                const historico = pagamentos[venda.id] || [];
-                // Pagando às prestações: já pagou algo, mas não tudo
-                if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal) return true;
-                // Já pagou tudo parcelado: valorPago >= valorFinal e mais de um pagamento
-                if ((venda.valorPago || 0) >= venda.valorFinal && historico.length > 1) return true;
-                // Não mostrar quem não pagou nada ainda ou pagou tudo de uma vez
-                return false;
-              });
-              if (vendasFiltradas.length === 0) {
+              if (vendasPaginadas.length === 0) {
                 return (
                   <tr>
                     <td className="px-4 py-2 text-gray-400" colSpan={5}>Nenhum cliente devedor.</td>
                   </tr>
                 );
               }
-              return vendasFiltradas.map(venda => {
+              return vendasPaginadas.map(venda => {
                 const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
                 const historico = pagamentos[venda.id] || [];
                 const valorMaxDevido = Math.max(venda.valorFinal, ...historico.map(p => p.valor));
@@ -188,7 +197,7 @@ export default function DevedoresPage() {
                             {venda.nomeProduto}
                           </div>
                           <div className="mb-2 text-yellow-300 text-sm">
-                            Este cliente já pagou {historico.length}x um {venda.nomeProduto} de €{venda.valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{(venda.valorFinal - (venda.valorPago || 0)).toFixed(2)}</span>.
+                            Este cliente já pagou {(venda as any).numPagamentos}x um {venda.nomeProduto} de €{venda.valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{(venda.valorFinal - (venda.valorPago || 0)).toFixed(2)}</span>.
                           </div>
                           <div className="space-y-2 overflow-y-auto max-h-[25vh] md:max-h-64 scrollbar-custom">
                             {historico.length === 0 ? (
@@ -216,19 +225,12 @@ export default function DevedoresPage() {
       {/* Cards responsivos para mobile */}
       <div className="block md:hidden space-y-8">
         {(() => {
-          const vendasFiltradas = vendas.filter(venda => {
-            const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
-            const historico = pagamentos[venda.id] || [];
-            if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < venda.valorFinal) return true;
-            if ((venda.valorPago || 0) >= venda.valorFinal && historico.length > 1) return true;
-            return false;
-          });
-          if (vendasFiltradas.length === 0) {
+          if (vendasPaginadas.length === 0) {
             return (
               <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
             );
           }
-          return vendasFiltradas.map((venda, idx) => {
+          return vendasPaginadas.map((venda, idx) => {
             const valorEmDivida = venda.valorFinal - (venda.valorPago || 0);
             const historico = pagamentos[venda.id] || [];
             const valorMaxDevido = Math.max(venda.valorFinal, ...historico.map(p => p.valor));
@@ -275,7 +277,7 @@ export default function DevedoresPage() {
                   <div className="bg-gray-900 mt-3 rounded-lg p-3">
                     <div className="mb-2 text-yellow-400 font-semibold">{venda.nomeProduto}</div>
                     <div className="mb-2 text-yellow-300 text-sm">
-                      Este cliente já pagou {historico.length}x um {venda.nomeProduto} de €{venda.valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{valorEmDivida.toFixed(2)}</span>.
+                      Este cliente já pagou {(venda as any).numPagamentos}x um {venda.nomeProduto} de €{venda.valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{valorEmDivida.toFixed(2)}</span>.
                     </div>
                     <div className="space-y-2 overflow-y-auto max-h-[25vh] md:max-h-64 scrollbar-custom">
                       {historico.length === 0 ? (

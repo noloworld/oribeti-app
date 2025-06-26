@@ -13,21 +13,26 @@ export async function GET(req: NextRequest) {
 
     // Filtros e busca podem ser adicionados aqui se necessário
 
-    const [total, vendas] = await Promise.all([
+    const [total, vendasRaw] = await Promise.all([
       prisma.venda.count(),
       prisma.venda.findMany({
         include: {
           cliente: { select: { id: true, nome: true } },
-          pagamentos: {
-            orderBy: { data: 'desc' },
-            take: 1, // Apenas o pagamento mais recente
-          },
+          pagamentos: true, // pega todos para contar
         },
         orderBy: { data: 'desc' },
         skip,
         take: limit,
       })
     ]);
+    // Para cada venda, manter apenas o pagamento mais recente em pagamentos, mas adicionar numPagamentos
+    const vendas = vendasRaw.map(v => ({
+      ...v,
+      numPagamentos: v.pagamentos.length,
+      pagamentos: v.pagamentos
+        .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+        .slice(0, 1),
+    }));
     return NextResponse.json({ vendas, total });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao buscar vendas.' }, { status: 500 });
