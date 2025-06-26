@@ -65,6 +65,9 @@ export default function VendasPage() {
   const vendasPaginaMobile = vendasEmDiaMobile.slice((mobilePage - 1) * cardsPorPagina, mobilePage * cardsPorPagina);
   // Adicionar estados para paginação dos devedores
   const [todasVendas, setTodasVendas] = useState<Venda[]>([]);
+  const [produtos, setProdutos] = useState([
+    { nomeProduto: '', quantidade: 1, valorRevista: '', valorFinal: '' }
+  ]);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -104,10 +107,27 @@ export default function VendasPage() {
   // ADICIONAR CÁLCULO AUTOMÁTICO DO VALOR EM DÍVIDA
   const valorEmDivida = Number(form.valorFinal) - Number(form.valorPago || 0);
 
+  // Função para adicionar produto
+  function handleAddProduto() {
+    setProdutos([...produtos, { nomeProduto: '', quantidade: 1, valorRevista: '', valorFinal: '' }]);
+  }
+  // Função para remover produto
+  function handleRemoveProduto(idx: number) {
+    setProdutos(produtos.filter((_, i) => i !== idx));
+  }
+  // Função para alterar produto
+  function handleProdutoChange(idx: number, field: string, value: any) {
+    setProdutos(produtos.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  }
+
+  // Calcular total
+  const totalRevista = produtos.reduce((acc, p) => acc + Number(p.valorRevista || 0) * Number(p.quantidade || 1), 0);
+  const totalFinal = produtos.reduce((acc, p) => acc + Number(p.valorFinal || 0) * Number(p.quantidade || 1), 0);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // Validação simples
-    if (!form.clienteId || !form.nomeProduto || !form.valorRevista || !form.valorFinal || !form.data) {
+    if (!form.clienteId || !form.data) {
       toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
@@ -121,13 +141,10 @@ export default function VendasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clienteId: form.clienteId,
-          nomeProduto: form.nomeProduto,
-          valorRevista: form.valorRevista,
-          valorFinal: form.valorFinal,
-          valorPago: valorPago,
+          produtos,
           observacoes: form.observacoes,
           data: form.data,
-          status: 'PENDENTE', // Será calculado automaticamente na API
+          status: 'PENDENTE',
         }),
       });
       const data = await res.json();
@@ -691,50 +708,28 @@ export default function VendasPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-1">Produto</label>
-                  <input type="text" name="nomeProduto" value={form.nomeProduto} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Nome do produto" required />
+                  <label className="block text-gray-300 mb-1">Produtos</label>
+                  {produtos.map((produto, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2 items-end">
+                      <input type="text" placeholder="Nome do produto" className="flex-1 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.nomeProduto} onChange={e => handleProdutoChange(idx, 'nomeProduto', e.target.value)} required />
+                      <input type="number" min="1" placeholder="Qtd" className="w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleProdutoChange(idx, 'quantidade', e.target.value)} required />
+                      <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleProdutoChange(idx, 'valorRevista', e.target.value)} required />
+                      <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleProdutoChange(idx, 'valorFinal', e.target.value)} required />
+                      {produtos.length > 1 && (
+                        <button type="button" className="text-red-400 hover:text-red-600 text-lg font-bold px-2" onClick={() => handleRemoveProduto(idx)}>-</button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" className="mt-1 px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800 text-sm" onClick={handleAddProduto}>+ Adicionar produto</button>
+                </div>
+                <div className="flex gap-4 mt-2">
+                  <div className="text-gray-300">Total Revista: <span className="font-bold">€ {totalRevista.toFixed(2)}</span></div>
+                  <div className="text-gray-300">Total Final: <span className="font-bold">€ {totalFinal.toFixed(2)}</span></div>
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-1">Valor Revista (€)</label>
-                  <input type="number" name="valorRevista" min="0" step="0.01" value={form.valorRevista} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" required />
+                  <label className="block text-gray-300 mb-1">Observações</label>
+                  <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
                 </div>
-                <div>
-                  <label className="block text-gray-300 mb-1">Valor Final (€)</label>
-                  <input type="number" name="valorFinal" min="0" step="0.01" value={form.valorFinal} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" required />
-                </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsPrestacoes(!isPrestacoes)}
-                    className={`px-3 py-1 rounded text-sm font-medium transition ${
-                      isPrestacoes 
-                        ? 'bg-yellow-600 text-white' 
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                  >
-                    {isPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
-                  </button>
-                  {!isPrestacoes && (
-                    <span className="text-green-400 text-sm">Pagamento total à vista</span>
-                  )}
-                </div>
-                {isPrestacoes && (
-                  <>
-                    <div>
-                      <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
-                      <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
-                    </div>
-                    {valorEmDivida > 0 && (
-                      <div className="bg-yellow-600 text-white p-2 rounded text-sm">
-                        Valor em dívida: €{valorEmDivida.toFixed(2)}
-                      </div>
-                    )}
-                    <div>
-                      <label className="block text-gray-300 mb-1">Observações</label>
-                      <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
-                    </div>
-                  </>
-                )}
                 <div className="flex justify-end gap-2 mt-2">
                   <button
                     type="button"
@@ -821,10 +816,7 @@ export default function VendasPage() {
                       body: JSON.stringify({
                         id: editVenda.id,
                         clienteId: editVenda.cliente.id,
-                        nomeProduto: editVenda.nomeProduto,
-                        valorRevista: editVenda.valorRevista,
-                        valorFinal: editVenda.valorFinal,
-                        valorPago: valorPago,
+                        produtos,
                         observacoes: editVenda.observacoes || '',
                         data: editVenda.data,
                         status: 'PENDENTE', // Será calculado automaticamente na API
@@ -865,112 +857,48 @@ export default function VendasPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-gray-300 mb-1">Produto</label>
-                    <input 
-                      type="text" 
-                      value={editVenda.nomeProduto} 
-                      onChange={e => setEditVenda({ ...editVenda, nomeProduto: e.target.value })} 
-                      className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" 
-                      disabled={isEditPrestacoes}
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-300 mb-1">Valor Revista (€)</label>
-                    <input 
-                      type="number" 
-                      min="0" 
-                      step="0.01" 
-                      value={editVenda.valorRevista} 
-                      onChange={e => setEditVenda({ ...editVenda, valorRevista: Number(e.target.value) })} 
-                      className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" 
-                      disabled={isEditPrestacoes}
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-300 mb-1">Valor Final (€)</label>
-                    <input 
-                      type="number" 
-                      min="0" 
-                      step="0.01" 
-                      value={editVenda.valorFinal} 
-                      onChange={e => setEditVenda({ ...editVenda, valorFinal: Number(e.target.value) })} 
-                      className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" 
-                      disabled={isEditPrestacoes}
-                      required 
-                    />
-                  </div>
-                  
-                  {isEditPrestacoes && (
-                    <>
-                      <div className="bg-yellow-600 text-white p-3 rounded text-sm">
-                        <div className="font-semibold mb-1">Venda em Prestações</div>
-                        <div>Valor em dívida: €{(editVenda.valorFinal - (editVenda.valorPago || 0)).toFixed(2)}</div>
-                        <div>Use o componente abaixo para adicionar pagamentos.</div>
-                      </div>
-                      <ListaPagamentos
-                        vendaId={editVenda.id}
-                        valorFinal={editVenda.valorFinal}
-                        valorPago={editVenda.valorPago || 0}
-                        onPagamentoAdded={() => {
-                          fetchVendas();
-                          // Atualizar o editVenda com os novos valores
-                          fetch(`/api/vendas`)
-                            .then((res) => res.json())
-                            .then((data) => {
-                              const vendaAtualizada = data.vendas.find((v: any) => v.id === editVenda.id);
-                              if (vendaAtualizada) {
-                                setEditVenda(vendaAtualizada);
-                              }
-                            });
-                        }}
-                      />
-                    </>
-                  )}
-                  
-                  {!isEditPrestacoes && (
-                    <>
-                      <div className="flex items-center gap-2 mb-2">
-                        <button
-                          type="button"
-                          onClick={() => setIsEditPrestacoes(!isEditPrestacoes)}
-                          disabled={(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0}
-                          className={`px-3 py-1 rounded text-sm font-medium transition ${
-                            isEditPrestacoes 
-                              ? 'bg-yellow-600 text-white' 
-                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                          } ${(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          {isEditPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
-                        </button>
-                        {!isEditPrestacoes && (
-                          <span className="text-green-400 text-sm">Pagamento total à vista</span>
-                        )}
-                        {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
-                          <span className="text-yellow-400 text-sm">Venda em prestações - use "Adicionar Pagamento"</span>
+                    <label className="block text-gray-300 mb-1">Produtos</label>
+                    {produtos.map((produto, idx) => (
+                      <div key={idx} className="flex gap-2 mb-2 items-end">
+                        <input type="text" placeholder="Nome do produto" className="flex-1 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.nomeProduto} onChange={e => handleProdutoChange(idx, 'nomeProduto', e.target.value)} required />
+                        <input type="number" min="1" placeholder="Qtd" className="w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleProdutoChange(idx, 'quantidade', e.target.value)} required />
+                        <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleProdutoChange(idx, 'valorRevista', e.target.value)} required />
+                        <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleProdutoChange(idx, 'valorFinal', e.target.value)} required />
+                        {produtos.length > 1 && (
+                          <button type="button" className="text-red-400 hover:text-red-600 text-lg font-bold px-2" onClick={() => handleRemoveProduto(idx)}>-</button>
                         )}
                       </div>
-                      <ListaPagamentos
-                        vendaId={editVenda.id}
-                        valorFinal={editVenda.valorFinal}
-                        valorPago={editVenda.valorPago || 0}
-                        onPagamentoAdded={() => {
-                          fetchVendas();
-                          // Atualizar o editVenda com os novos valores
-                          fetch(`/api/vendas`)
-                            .then((res) => res.json())
-                            .then((data) => {
-                              const vendaAtualizada = data.vendas.find((v: any) => v.id === editVenda.id);
-                              if (vendaAtualizada) {
-                                setEditVenda(vendaAtualizada);
-                              }
-                            });
-                        }}
-                      />
-                    </>
-                  )}
-                  
+                    ))}
+                    <button type="button" className="mt-1 px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800 text-sm" onClick={handleAddProduto}>+ Adicionar produto</button>
+                  </div>
+                  <div className="flex gap-4 mt-2">
+                    <div className="text-gray-300">Total Revista: <span className="font-bold">€ {totalRevista.toFixed(2)}</span></div>
+                    <div className="text-gray-300">Total Final: <span className="font-bold">€ {totalFinal.toFixed(2)}</span></div>
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Observações</label>
+                    <textarea name="observacoes" value={editVenda.observacoes} onChange={e => setEditVenda({ ...editVenda, observacoes: e.target.value })} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditPrestacoes(!isEditPrestacoes)}
+                      disabled={(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0}
+                      className={`px-3 py-1 rounded text-sm font-medium transition ${
+                        isEditPrestacoes 
+                          ? 'bg-yellow-600 text-white' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      } ${(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {isEditPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
+                    </button>
+                    {!isEditPrestacoes && (
+                      <span className="text-green-400 text-sm">Pagamento total à vista</span>
+                    )}
+                    {(editVenda.valorFinal - (editVenda.valorPago || 0)) > 0 && (
+                      <span className="text-yellow-400 text-sm">Venda em prestações - use "Adicionar Pagamento"</span>
+                    )}
+                  </div>
                   <div className="flex justify-end gap-2 mt-2">
                     <button type="button" className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600" onClick={handleCloseEditModal} disabled={loading}>Cancelar</button>
                     {!isEditPrestacoes && (

@@ -41,15 +41,23 @@ model Venda {
   id           Int      @id @default(autoincrement())
   clienteId    Int
   cliente      Cliente  @relation(fields: [clienteId], references: [id])
-  nomeProduto  String
-  valorRevista Float
-  valorFinal   Float
   valorPago    Float    @default(0)
   observacoes  String?
   data         DateTime
   status       VendaStatus @default(PENDENTE)
   criadoEm     DateTime @default(now())
   pagamentos   Pagamento[]
+  produtos     VendaProduto[]
+}
+
+model VendaProduto {
+  id           Int      @id @default(autoincrement())
+  vendaId      Int
+  venda        Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  nomeProduto  String
+  quantidade   Int      @default(1)
+  valorRevista Float
+  valorFinal   Float
 }
 
 model Pagamento {

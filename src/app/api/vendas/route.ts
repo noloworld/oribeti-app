@@ -68,55 +68,63 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { clienteId, nomeProduto, valorRevista, valorFinal, valorPago, observacoes, data, status } = body;
-    if (!clienteId || !nomeProduto || !valorRevista || !valorFinal || !data) {
-      return NextResponse.json({ error: 'Campos obrigatórios: clienteId, nomeProduto, valorRevista, valorFinal, data.' }, { status: 400 });
+    const { clienteId, produtos, observacoes, data, status } = body;
+    if (!clienteId || !produtos || !Array.isArray(produtos) || produtos.length === 0 || !data) {
+      return NextResponse.json({ error: 'Campos obrigatórios: clienteId, produtos (array), data.' }, { status: 400 });
     }
-    
-    // Calcular status automaticamente baseado no valor pago
-    const valorPagoNum = Number(valorPago || 0);
-    const valorFinalNum = Number(valorFinal);
+    // Validação dos produtos
+    for (const p of produtos) {
+      if (!p.nomeProduto || !p.quantidade || !p.valorRevista || !p.valorFinal) {
+        return NextResponse.json({ error: 'Cada produto precisa de nomeProduto, quantidade, valorRevista e valorFinal.' }, { status: 400 });
+      }
+    }
+    // Calcular totais
+    const totalRevista = produtos.reduce((acc, p) => acc + Number(p.valorRevista) * Number(p.quantidade), 0);
+    const totalFinal = produtos.reduce((acc, p) => acc + Number(p.valorFinal) * Number(p.quantidade), 0);
+    // Calcular status automaticamente baseado no valor pago (aqui, valorPago = totalFinal, pois não há prestações no momento)
+    const valorPagoNum = totalFinal;
+    const valorFinalNum = totalFinal;
     const statusAutomatico = valorPagoNum >= valorFinalNum ? 'PAGO' : 'PENDENTE';
-    
+    // Criar venda
     const venda = await prisma.venda.create({
       data: {
         clienteId: Number(clienteId),
-        nomeProduto,
-        valorRevista: Number(valorRevista),
-        valorFinal: valorFinalNum,
         valorPago: valorPagoNum,
         observacoes: observacoes || null,
         data: new Date(data),
         status: statusAutomatico,
       },
-      include: {
-        cliente: { select: { id: true, nome: true } },
-        pagamentos: true,
-      },
     });
-
-    // Se há valor pago, criar o primeiro pagamento
-    if (valorPagoNum > 0) {
-      await prisma.pagamento.create({
+    // Criar produtos associados
+    for (const p of produtos) {
+      await prisma.vendaProduto.create({
         data: {
           vendaId: venda.id,
-          valor: valorPagoNum,
-          data: new Date(data),
-          observacoes: observacoes || null,
+          nomeProduto: p.nomeProduto,
+          quantidade: Number(p.quantidade),
+          valorRevista: Number(p.valorRevista),
+          valorFinal: Number(p.valorFinal),
         },
       });
     }
-
+    // Buscar venda completa para retornar
+    const vendaCompleta = await prisma.venda.findUnique({
+      where: { id: venda.id },
+      include: {
+        cliente: { select: { id: true, nome: true } },
+        vendaProdutos: true,
+      },
+    });
     // Gravar log da ação
     await prisma.log.create({
       data: {
         userId: user.id,
         userEmail: user.email || '',
         acao: 'CRIAR_VENDA',
-        detalhes: `Venda "${nomeProduto}" de €${valorFinal} criada para cliente ${venda.cliente?.nome || clienteId}`,
+        detalhes: `Venda criada para cliente ${vendaCompleta?.cliente?.nome || clienteId} com ${produtos.length} produto(s)`,
       }
     });
-    return NextResponse.json(venda, { status: 201 });
+    return NextResponse.json(vendaCompleta, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Erro ao registrar venda.' }, { status: 500 });
