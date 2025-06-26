@@ -520,7 +520,7 @@ export default function VendasPage() {
         <div>
           <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
           {/* Paginação padrão do site para devedores - apenas setas e números */}
-          {totalPagesDevedores > 1 && (
+          {devedoresPagina.length > 0 && totalPagesDevedores > 1 && (
             <div className="flex justify-center items-center gap-2 mb-4">
               <button
                 className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
