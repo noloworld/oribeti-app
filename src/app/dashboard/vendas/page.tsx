@@ -34,12 +34,23 @@ export default function VendasPage() {
   const [showModal, setShowModal] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [vendas, setVendas] = useState<Venda[]>([]);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    clienteId: string;
+    nomeProduto: string;
+    quantidade: number;
+    valorRevista: number;
+    valorFinal: number;
+    valorPago: number;
+    observacoes: string;
+    data: string;
+    status: string;
+  }>({
     clienteId: '',
     nomeProduto: '',
-    valorRevista: '',
-    valorFinal: '',
-    valorPago: '',
+    quantidade: 1,
+    valorRevista: 0,
+    valorFinal: 0,
+    valorPago: 0,
     observacoes: '',
     data: '',
     status: 'PENDENTE',
@@ -172,7 +183,7 @@ export default function VendasPage() {
       toast.success('Venda registrada com sucesso!');
       setShowModal(false);
       setModalAberto(false);
-      setForm({ clienteId: '', nomeProduto: '', valorRevista: '', valorFinal: '', valorPago: '', observacoes: '', data: '', status: 'PENDENTE' });
+      setForm({ clienteId: '', nomeProduto: '', quantidade: 1, valorRevista: 0, valorFinal: 0, valorPago: 0, observacoes: '', data: '', status: 'PENDENTE' });
       setIsPrestacoes(false); // Reset do estado de prestações
       fetchVendas();
     } catch {
@@ -315,623 +326,283 @@ export default function VendasPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-white">Registo de Vendas</h1>
-      {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-green-700 text-white rounded-lg p-4 shadow">
-          <div className="text-lg font-semibold">Total Vendido</div>
-          <div className="text-2xl font-bold mt-2">€ {totalVendas.toFixed(2)}</div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Vendas</h1>
+        <p className="text-gray-600">Gerencie suas vendas e produtos</p>
+      </div>
+
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total de Vendas</p>
+              <p className="text-2xl font-semibold text-gray-900">{vendas.length}</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-blue-700 text-white rounded-lg p-4 shadow">
-          <div className="text-lg font-semibold">Vendas do Mês</div>
-          <div className="text-2xl font-bold mt-2">€ {vendas.filter(v => new Date(v.data).getMonth() === new Date().getMonth()).reduce((acc, v) => acc + (v.produtos.reduce((pacc, p) => pacc + (p.valorFinal * p.quantidade), 0)), 0).toFixed(2)}</div>
+
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Valor Total</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVendas)}
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="bg-yellow-600 text-white rounded-lg p-4 shadow">
-          <div className="text-lg font-semibold">Nº de Vendas</div>
-          <div className="text-2xl font-bold mt-2">{vendas.length}</div>
+
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-yellow-100 rounded-lg">
+              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Pago</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVendas - totalRevistaVendas)}
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="bg-purple-700 text-white rounded-lg p-4 shadow">
-          <div className="text-lg font-semibold">Lucro</div>
-          <div className="text-2xl font-bold mt-2">€ {lucro.toFixed(2)}</div>
+
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Pendente</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalRevistaVendas)}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-      {/* Botão adicionar venda */}
-      <div className="flex justify-end mb-4">
+
+      {/* Botão Adicionar Venda */}
+      <div className="mb-6">
         <button
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium transition"
-          onClick={handleOpenModal}
+          onClick={() => setShowModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
         >
-          + Nova Venda
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Adicionar Venda
         </button>
       </div>
-      {/* Filtros */}
-      <div className="flex items-center gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <label className="text-gray-300 font-medium">Filtrar por status:</label>
-          <select
-            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none"
-            value={statusFiltro}
-            onChange={e => setStatusFiltro(e.target.value as 'TODOS' | 'PAGO' | 'PENDENTE')}
-          >
-            <option value="TODOS">Todos</option>
-            <option value="PAGO">Pago</option>
-            <option value="PENDENTE">Pendente</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-gray-300 font-medium">Filtrar por ano:</label>
-          <select
-            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none"
-            value={anoFiltro}
-            onChange={e => setAnoFiltro(e.target.value)}
-          >
-            <option value="TODOS">Todos</option>
-            {anosDisponiveis.map(ano => (
-              <option key={ano} value={ano}>{ano}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-      {/* Tabelas separadas */}
-      <div className="space-y-8">
-        {/* Tabela de Clientes em Dia */}
-        <div>
-          <h2 className="text-xl font-bold mb-4 text-green-400">Clientes em Dia</h2>
-          {/* Botões de ação em lote */}
-          {selecionados.length > 0 && (
-            <div className="flex gap-4 mb-2">
-              <button
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium"
-                onClick={() => handleEliminarSelecionados(vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
-              >
-                Eliminar selecionados
-              </button>
-              <button
-                className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded font-medium"
-                onClick={() => handleImprimirSelecionados(vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)))}
-              >
-                Imprimir selecionados
-              </button>
-            </div>
-          )}
-          {/* Tabela tradicional para desktop */}
-          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
-            <table className="min-w-full bg-gray-800 rounded-lg">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 text-left text-gray-300">
-                    <input
-                      type="checkbox"
-                      checked={vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro))).every(v => selecionados.includes(v.id)) && vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro))).length > 0}
-                      onChange={() => toggleSelecionarTodos(vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) <= 0 && (statusFiltro === 'TODOS' ? true : v.status === statusFiltro) && (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro))))}
-                    />
-                  </th>
-                  <th className="px-4 py-2 text-left text-gray-300">Data</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Cliente</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Produto</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Valor Revista (€)</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Valor Final (€)</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Valor Pago (€)</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Status</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vendas.map((v) => (
-                  v.produtos.map((p, idx) => (
-                    <tr key={v.id + '-' + p.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
-                      {idx === 0 && (
-                        <>
-                          <td rowSpan={v.produtos.length} className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString()}</td>
-                          <td rowSpan={v.produtos.length} className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
-                        </>
-                      )}
-                      <td className="px-4 py-2 text-gray-200">{p.nomeProduto}</td>
-                      <td className="px-4 py-2 text-gray-200">{p.quantidade}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {p.valorRevista.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {p.valorFinal.toFixed(2)}</td>
-                      {idx === 0 && (
-                        <>
-                          <td rowSpan={v.produtos.length} className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
-                          <td rowSpan={v.produtos.length} className="px-4 py-2">
-                            <span className={`inline-block px-4 py-1 rounded-md font-bold shadow-md text-sm tracking-wide ${v.valorPago >= v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}`}>{v.valorPago >= v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) ? 'Pago' : 'Pendente'}</span>
-                          </td>
-                          <td rowSpan={v.produtos.length} className="px-4 py-2">Ações</td>
-                        </>
-                      )}
-                    </tr>
-                  ))
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* Cards responsivos para mobile */}
-          <div className="block md:hidden space-y-8">
-            {vendasEmDiaMobile.length === 0 ? (
-              <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente em dia.</div>
-            ) : (
-              <div>
-                {vendasPaginaMobile.map((venda, idx) => (
-                  <div key={venda.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-400">Data</span>
-                      <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-400">Cliente</span>
-                      <span className="font-bold text-base text-white">{venda.cliente?.nome}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-400">Produto</span>
-                      <span className="font-bold text-base text-green-300">{venda.produtos[0].nomeProduto}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-400">Valor Revista (€)</span>
-                      <span className="font-semibold">€{venda.produtos[0].valorRevista.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-400">Valor Final (€)</span>
-                      <span className="font-semibold">€{venda.produtos[0].valorFinal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-400">Valor Pago (€)</span>
-                      <span className="font-semibold">€{(venda.valorPago || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-400">Status</span>
-                      <span className="inline-block bg-green-600 text-white px-4 py-1 rounded-md font-bold shadow-md text-sm tracking-wide">Pago</span>
-                    </div>
-                    <div className="flex gap-3 mt-4">
-                      <button
-                        onClick={() => handleOpenEditModal(venda)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => {
-                          setVendaToDelete(venda);
-                          setShowDeleteModal(true);
-                        }}
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow"
-                      >
-                        Eliminar
-                      </button>
-                      <button
-                        onClick={() => handlePrintVenda(venda)}
-                        className="bg-green-700 hover:bg-green-800 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow"
-                      >
-                        Imprimir
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {/* Paginação mobile */}
-                {totalPaginasMobile > 1 && (
-                  <div className="flex justify-center items-center gap-2 mt-2">
-                    <button
-                      className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-                      onClick={() => setMobilePage(p => Math.max(1, p - 1))}
-                      disabled={mobilePage === 1}
-                    >«</button>
-                    {Array.from({ length: totalPaginasMobile }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        className={`px-3 py-1 rounded text-sm ${p === mobilePage ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
-                        onClick={() => setMobilePage(p)}
-                      >{p}</button>
-                    ))}
-                    <button
-                      className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-                      onClick={() => setMobilePage(p => Math.min(totalPaginasMobile, p + 1))}
-                      disabled={mobilePage === totalPaginasMobile}
-                    >»</button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Tabela de Devedores */}
-        <div>
-          <h2 className="text-xl font-bold mb-4 text-yellow-400">Devedores</h2>
-          {/* Tabela tradicional para desktop */}
-          <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 rounded-lg shadow hidden md:block">
-            <table className="min-w-full bg-gray-800 text-white">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 text-left">Data</th>
-                  <th className="px-4 py-2 text-left">Cliente</th>
-                  <th className="px-4 py-2 text-left">Produto</th>
-                  <th className="px-4 py-2 text-left">Valor final (€)</th>
-                  <th className="px-4 py-2 text-left">Valor pago (€)</th>
-                  <th className="px-4 py-2 text-left">Em dívida (€)</th>
-                  <th className="px-4 py-2 text-left">Estado</th>
-                  <th className="px-4 py-2 text-left">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {devedoresFiltrados.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="text-gray-400 px-4 py-2 text-center">Nenhum cliente devedor.</td>
-                  </tr>
-                ) : (
-                  devedoresFiltrados.map((v) => (
-                    <tr key={v.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition">
-                      <td className="px-4 py-2 text-gray-200">{new Date(v.data).toLocaleDateString('pt-PT')}</td>
-                      <td className="px-4 py-2 text-gray-200">{v.cliente?.nome}</td>
-                      <td className="px-4 py-2 text-gray-200">{v.produtos[0].nomeProduto}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {v.produtos[0].valorFinal.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-gray-200">€ {(v.valorPago || 0).toFixed(2)}</td>
-                      <td className="px-4 py-2 text-yellow-400 font-bold">€ {(v.produtos[0].valorFinal - (v.valorPago || 0)).toFixed(2)}</td>
-                      <td className="px-4 py-2">
-                        <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold">
-                          Em dívida
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <button
-                          onClick={() => handleOpenEditModal(v)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
-                        >
-                          Adicionar pagamento
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {/* Cards responsivos para mobile */}
-          <div className="block md:hidden space-y-6">
-            {devedoresFiltrados.length === 0 ? (
-              <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
-            ) : (
-              devedoresFiltrados.map((v, idx) => (
-                <div key={v.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Data</span>
-                    <span className="font-semibold">{new Date(v.data).toLocaleDateString('pt-PT')}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Cliente</span>
-                    <span className="font-bold text-base text-white">{v.cliente?.nome}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Produto</span>
-                    <span className="font-semibold">{v.produtos[0].nomeProduto}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Valor final (€)</span>
-                    <span className="font-semibold">€ {v.produtos[0].valorFinal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Valor pago (€)</span>
-                    <span className="font-semibold">€ {(v.valorPago || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Em dívida (€)</span>
-                    <span className="font-semibold text-yellow-400">€ {(v.produtos[0].valorFinal - (v.valorPago || 0)).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Estado</span>
-                    <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded font-semibold">Em dívida</span>
-                  </div>
-                  <div className="flex gap-3 mt-2">
+      {/* Tabela de Vendas */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Cliente
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Produto
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Quantidade
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Preço Unit.
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Data
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {vendas.map((venda) => (
+                <tr key={venda.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{venda.cliente?.nome || 'N/A'}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{venda.produtos[0].nomeProduto}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{venda.produtos[0].quantidade}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(venda.produtos[0].valorRevista)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(venda.produtos[0].valorFinal)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {new Date(venda.data).toLocaleDateString('pt-BR')}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      venda.valorPago >= venda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {venda.valorPago >= venda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) ? 'Pago' : 'Pendente'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => handleOpenEditModal(v)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-xs min-w-[120px] shadow"
+                      onClick={() => handleOpenEditModal(venda)}
+                      className="text-blue-600 hover:text-blue-900 mr-3"
                     >
-                      Adicionar pagamento
+                      Editar
                     </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                    <button
+                      onClick={() => {
+                        setVendaToDelete(venda);
+                        setShowDeleteModal(true);
+                      }}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Excluir
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-      {/* Paginação moderna centralizada */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
-          <button
-            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >«</button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              className={`px-3 py-1 rounded text-sm ${p === page ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
-              onClick={() => setPage(p)}
-            >{p}</button>
-          ))}
-          <button
-            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >»</button>
-        </div>
-      )}
 
-      {/* Modal de Nova Venda */}
-      <Transition.Root show={showModal} as={Fragment}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={handleCloseModal} />
-        </Transition.Child>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0 scale-95"
-          enterTo="opacity-100 scale-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100 scale-100"
-          leaveTo="opacity-0 scale-95"
-        >
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto max-h-[90vh] overflow-y-auto scrollbar-custom">
-              <h2 className="text-xl font-bold text-white mb-4">Nova Venda</h2>
-              <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      {/* Modal de Venda */}
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                {editVenda ? 'Editar Venda' : 'Nova Venda'}
+              </h3>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-gray-300 mb-1">Data</label>
-                  <input type="date" name="data" value={form.data} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" required />
-                </div>
-                <div>
-                  <label className="block text-gray-300 mb-1">Cliente</label>
+                  <label className="block text-sm font-medium text-gray-700">Cliente</label>
                   <select
-                    name="clienteId"
-                    className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none"
-                    value={form.clienteId}
-                    onChange={handleChange}
+                    value={form.clienteId || ''}
+                    onChange={(e) => setForm({ ...form, clienteId: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     required
                   >
                     <option value="">Selecione um cliente</option>
-                    {clientes.map((c) => (
-                      <option key={c.id} value={c.id}>{c.nome}</option>
+                    {clientes.map((cliente) => (
+                      <option key={cliente.id} value={cliente.id}>
+                        {cliente.nome}
+                      </option>
                     ))}
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-gray-300 mb-1">Produtos</label>
-                  {produtos.map((produto, idx) => (
-                    <div key={idx} className="flex flex-col md:flex-row gap-2 mb-2 items-end">
-                      <input type="text" placeholder="Nome do produto" className="flex-1 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.nomeProduto} onChange={e => handleProdutoChange(idx, 'nomeProduto', e.target.value)} required />
-                      <input type="number" min="1" placeholder="Qtd" className="w-full md:w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleProdutoChange(idx, 'quantidade', e.target.value)} required />
-                      <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleProdutoChange(idx, 'valorRevista', e.target.value)} required />
-                      <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleProdutoChange(idx, 'valorFinal', e.target.value)} required />
-                      {produtos.length > 1 && (
-                        <button type="button" className="text-red-400 hover:text-red-600 text-lg font-bold px-2" onClick={() => handleRemoveProduto(idx)}>-</button>
-                      )}
-                    </div>
-                  ))}
-                  <button type="button" className="mt-1 px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800 text-sm" onClick={handleAddProduto}>+ Adicionar produto</button>
+                  <label className="block text-sm font-medium text-gray-700">Produto</label>
+                  <input
+                    type="text"
+                    value={form.nomeProduto}
+                    onChange={(e) => setForm({ ...form, nomeProduto: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
                 </div>
-                <div className="flex gap-4 mt-2">
-                  <div className="text-gray-300">Total Revista: <span className="font-bold">€ {totalRevista.toFixed(2)}</span></div>
-                  <div className="text-gray-300">Total Final: <span className="font-bold">€ {totalFinal.toFixed(2)}</span></div>
-                </div>
+
                 <div>
-                  <label className="block text-gray-300 mb-1">Observações</label>
-                  <textarea name="observacoes" value={form.observacoes} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
+                  <label className="block text-sm font-medium text-gray-700">Quantidade</label>
+                  <input
+                    type="number"
+                    value={form.quantidade}
+                    onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                    min="1"
+                  />
                 </div>
-                <div className="flex items-center gap-2 mb-2">
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Preço Unitário</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={form.valorRevista}
+                    onChange={(e) => setForm({ ...form, valorRevista: Number(e.target.value) })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                    min="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Data</label>
+                  <input
+                    type="date"
+                    value={form.data}
+                    onChange={(e) => setForm({ ...form, data: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={form.status === 'PAGO'}
+                    onChange={(e) => setForm({ ...form, status: e.target.checked ? 'PAGO' : 'PENDENTE' })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 block text-sm text-gray-900">Pago</label>
+                </div>
+
+                <div className="flex justify-end space-x-3">
                   <button
                     type="button"
-                    onClick={() => setIsPrestacoes(!isPrestacoes)}
-                    className={`px-3 py-1 rounded text-sm font-medium transition ${
-                      isPrestacoes 
-                        ? 'bg-yellow-600 text-white' 
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                  >
-                    {isPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
-                  </button>
-                  {!isPrestacoes && (
-                    <span className="text-green-400 text-sm">Pagamento total à vista</span>
-                  )}
-                </div>
-                {isPrestacoes && (
-                  <>
-                    <div>
-                      <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
-                      <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
-                    </div>
-                    {totalFinal - Number(form.valorPago || 0) > 0 && (
-                      <div className="bg-yellow-600 text-white p-2 rounded text-sm">
-                        Valor em dívida: €{(totalFinal - Number(form.valorPago || 0)).toFixed(2)}
-                      </div>
-                    )}
-                  </>
-                )}
-                <div className="flex justify-end gap-2 mt-2">
-                  <button
-                    type="button"
-                    className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600"
-                    onClick={handleCloseModal}
-                    disabled={loading}
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium"
-                    disabled={loading}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
-                    {loading ? 'Salvando...' : 'Salvar'}
+                    {editVenda ? 'Atualizar' : 'Criar'}
                   </button>
                 </div>
               </form>
             </div>
           </div>
-        </Transition.Child>
-      </Transition.Root>
-      {/* Modal de Editar Venda */}
-      <Transition.Root show={showEditModal && !!editVenda} as={Fragment}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={handleCloseEditModal} />
-        </Transition.Child>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0 scale-95"
-          enterTo="opacity-100 scale-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100 scale-100"
-          leaveTo="opacity-0 scale-95"
-        >
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            {editVenda ? (
-              <div className="bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md relative pointer-events-auto max-h-[90vh] overflow-y-auto scrollbar-custom">
-                <h2 className="text-xl font-bold text-white mb-4">
-                  {isEditPrestacoes ? 'Adicionar Pagamento' : 'Editar Venda'}
-                </h2>
-                <form className="flex flex-col gap-4" onSubmit={async (e) => {
-                  e.preventDefault();
-                  setLoading(true);
-                  
-                  // Se for apenas adicionar pagamento, não salvar alterações nos campos
-                  if (isEditPrestacoes) {
-                    handleCloseEditModal();
-                    setLoading(false);
-                    return;
-                  }
-                  
-                  // Verificar se houve alteração real
-                  const original = vendas.find(v => v.id === editVenda.id);
-                  if (
-                    original &&
-                    original.produtos.every((p, idx) => p.nomeProduto === editVenda.produtos[idx].nomeProduto && p.valorRevista === editVenda.produtos[idx].valorRevista && p.valorFinal === editVenda.produtos[idx].valorFinal && p.quantidade === editVenda.produtos[idx].quantidade) &&
-                    original.valorPago === editVenda.valorPago &&
-                    original.observacoes === editVenda.observacoes &&
-                    original.data.slice(0,10) === editVenda.data.slice(0,10)
-                  ) {
-                    handleCloseEditModal(); // Nada mudou, só fecha o modal
-                    setLoading(false);
-                    return;
-                  }
-                  try {
-                    // Calcular valor pago automaticamente
-                    const valorPago = isEditPrestacoes ? Number(editVenda.valorPago || 0) : Number(editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0));
-                    
-                    const res = await fetch('/api/vendas', {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        id: editVenda.id,
-                        clienteId: editVenda.cliente.id,
-                        produtos: editVenda.produtos,
-                        observacoes: editVenda.observacoes || '',
-                        data: editVenda.data,
-                        status: 'PENDENTE', // Será calculado automaticamente na API
-                      }),
-                    });
-                    const data = await res.json();
-                    if (!res.ok) {
-                      toast.error(data.error || 'Erro ao editar venda.');
-                      setLoading(false);
-                      return;
-                    }
-                    toast.success('Venda editada com sucesso!');
-                    handleCloseEditModal();
-                    setIsEditPrestacoes(false); // Reset do estado de prestações
-                    fetchVendas();
-                    window.dispatchEvent(new Event('devedoresUpdate'));
-                  } catch {
-                    toast.error('Erro ao editar venda.');
-                  } finally {
-                    setLoading(false);
-                  }
-                }}>
-                  <div>
-                    <label className="block text-gray-300 mb-1">Data</label>
-                    <input 
-                      type="date" 
-                      value={editVenda.data.slice(0,10)} 
-                      onChange={e => handleEditProdutoChange(0, 'data', e.target.value)} 
-                      className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" 
-                      disabled={isEditPrestacoes}
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-300 mb-1">Cliente</label>
-                    <div className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700">
-                      {editVenda.cliente.nome}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-gray-300 mb-1">Produtos</label>
-                    {editVenda.produtos.map((produto, idx) => (
-                      <div key={idx} className="flex flex-col md:flex-row gap-2 mb-2 items-end">
-                        <input type="text" placeholder="Nome do produto" className="flex-1 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.nomeProduto} onChange={e => handleEditProdutoChange(idx, 'nomeProduto', e.target.value)} required />
-                        <input type="number" min="1" placeholder="Qtd" className="w-full md:w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.quantidade} onChange={e => handleEditProdutoChange(idx, 'quantidade', e.target.value)} required />
-                        <input type="number" min="0" step="0.01" placeholder="Valor Revista (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorRevista} onChange={e => handleEditProdutoChange(idx, 'valorRevista', e.target.value)} required />
-                        <input type="number" min="0" step="0.01" placeholder="Valor Final (€)" className="w-full md:w-28 px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" value={produto.valorFinal} onChange={e => handleEditProdutoChange(idx, 'valorFinal', e.target.value)} required />
-                        {editVenda.produtos.length > 1 && (
-                          <button type="button" className="text-red-400 hover:text-red-600 text-lg font-bold px-2" onClick={() => handleRemoveProduto(idx)}>-</button>
-                        )}
-                      </div>
-                    ))}
-                    <button type="button" className="mt-1 px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800 text-sm" onClick={handleAddProduto}>+ Adicionar produto</button>
-                  </div>
-                  <div className="flex gap-4 mt-2">
-                    <div className="text-gray-300">Total Revista: <span className="font-bold">€ {totalRevista.toFixed(2)}</span></div>
-                    <div className="text-gray-300">Total Final: <span className="font-bold">€ {totalFinal.toFixed(2)}</span></div>
-                  </div>
-                  <div>
-                    <label className="block text-gray-300 mb-1">Observações</label>
-                    <textarea name="observacoes" value={editVenda.observacoes} onChange={e => handleEditProdutoChange(0, 'observacoes', e.target.value)} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="Ex: vai pagar o resto no próximo mês" rows={3} />
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsEditPrestacoes(!isEditPrestacoes)}
-                      disabled={(editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) > 0) || (editVenda.valorPago >= editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0))}
-                      className={`px-3 py-1 rounded text-sm font-medium transition ${
-                        isEditPrestacoes 
-                          ? 'bg-yellow-600 text-white' 
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      } ${(editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) > 0 || editVenda.valorPago >= editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0)) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      {isEditPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
-                    </button>
-                    {!isEditPrestacoes && (
-                      <span className="text-green-400 text-sm">Pagamento total à vista</span>
-                    )}
-                    {(editVenda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) > 0 &&
-                      <span className="text-yellow-400 text-sm">Venda em prestações - use "Adicionar Pagamento"</span>
-                    )}
-                  </div>
-                  <div className="flex justify-end gap-2 mt-2">
-                    <button type="button" className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600" onClick={handleCloseEditModal} disabled={loading}>Cancelar</button>
-                    {!isEditPrestacoes && (
-                      <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
-                    )}
-                  </div>
-                </form>
-              </div>
-            ) : null}
-          </div>
-        </Transition.Child>
-      </Transition.Root>
+        </div>
+      )}
+
       {/* Modal de Eliminar Venda */}
       <Transition.Root show={showDeleteModal && !!vendaToDelete} as={Fragment}>
         <Transition.Child
