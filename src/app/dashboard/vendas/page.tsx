@@ -559,6 +559,13 @@ export default function VendasPage() {
                     required
                     min="0"
                   />
+                  <button
+                    type="button"
+                    onClick={handleAddProduto}
+                    className="mt-2 px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm"
+                  >
+                    + Adicionar Produto
+                  </button>
                 </div>
 
                 <div>
@@ -599,7 +606,7 @@ export default function VendasPage() {
                       min="0"
                     />
                     <div className="text-sm text-yellow-700 mt-1">
-                      Valor em dívida: R$ {(Number(form.valorFinal) - Number(form.valorPago || 0)).toFixed(2)}
+                      Valor em dívida: € {(Number(form.valorFinal) - Number(form.valorPago || 0)).toFixed(2)}
                     </div>
                   </div>
                 )}
