@@ -15,7 +15,7 @@ export async function GET() {
       include: { produtos: true }
     });
     const totalGanho = vendasPagas.reduce((acc, v) => {
-      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      const valorVenda = v.produtos.reduce((sum, p) => sum + (p.valorFinal * (p.quantidade || 1)), 0);
       return acc + valorVenda;
     }, 0);
 
@@ -38,7 +38,7 @@ export async function GET() {
           vendas: [],
         });
       }
-      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      const valorVenda = v.produtos.reduce((sum, p) => sum + (p.valorFinal * (p.quantidade || 1)), 0);
       const valorPago = v.pagamentos.reduce((sum, p) => sum + p.valor, 0);
       const valorDivida = valorVenda - valorPago;
       if (valorDivida > 0) {
@@ -63,7 +63,7 @@ export async function GET() {
     const vendasPorMes: { mes: number; total: number }[] = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, total: 0 }));
     vendasAno.forEach(v => {
       const mes = new Date(v.data).getMonth();
-      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      const valorVenda = v.produtos.reduce((sum, p) => sum + (p.valorFinal * (p.quantidade || 1)), 0);
       vendasPorMes[mes].total += valorVenda;
     });
 
@@ -74,7 +74,7 @@ export async function GET() {
     const vendasPorAnoMap = new Map<number, number>();
     vendasAll.forEach(v => {
       const ano = new Date(v.data).getFullYear();
-      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      const valorVenda = v.produtos.reduce((sum, p) => sum + (p.valorFinal * (p.quantidade || 1)), 0);
       vendasPorAnoMap.set(ano, (vendasPorAnoMap.get(ano) || 0) + valorVenda);
     });
     const vendasPorAno = Array.from(vendasPorAnoMap.entries()).map(([ano, total]) => ({ ano, total })).sort((a, b) => b.ano - a.ano).slice(0, 5);
@@ -93,7 +93,7 @@ export async function GET() {
       if (!gastoPorCliente.has(v.clienteId)) {
         gastoPorCliente.set(v.clienteId, { id: v.clienteId, nome: v.cliente.nome, totalGasto: 0 });
       }
-      const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
+      const valorVenda = v.produtos.reduce((sum, p) => sum + (p.valorFinal * (p.quantidade || 1)), 0);
       gastoPorCliente.get(v.clienteId)!.totalGasto += valorVenda;
     });
     const top5Clientes = Array.from(gastoPorCliente.values()).sort((a, b) => b.totalGasto - a.totalGasto).slice(0, 5);
