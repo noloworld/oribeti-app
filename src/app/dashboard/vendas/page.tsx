@@ -537,50 +537,54 @@ export default function VendasPage() {
                   {/* Campos dinâmicos para múltiplos produtos */}
                   {produtos.map((produto, idx) => (
                     <div key={idx} className="border rounded-md p-2 mb-2 bg-gray-50 flex flex-col gap-2 relative">
-                      <div className="flex gap-2">
-                        <div className="flex-1">
+                      <div className="flex gap-2 flex-wrap">
+                        <div className="flex-1 min-w-0">
                           <label className="block text-sm font-medium text-gray-700">Produto</label>
                           <input
                             type="text"
                             value={produto.nomeProduto}
                             onChange={e => handleProdutoChange(idx, 'nomeProduto', e.target.value)}
-                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
                             required
+                            placeholder="Nome do produto"
                           />
                         </div>
-                        <div className="w-24">
+                        <div className="w-20">
                           <label className="block text-sm font-medium text-gray-700">Quantidade</label>
                           <input
                             type="number"
                             value={produto.quantidade}
                             onChange={e => handleProdutoChange(idx, 'quantidade', Number(e.target.value))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
                             required
                             min="1"
+                            placeholder="1"
                           />
                         </div>
-                        <div className="w-32">
+                        <div className="w-28">
                           <label className="block text-sm font-medium text-gray-700">Preço Revista (€)</label>
                           <input
                             type="number"
                             step="0.01"
                             value={produto.valorRevista}
                             onChange={e => handleProdutoChange(idx, 'valorRevista', Number(e.target.value))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
                             required
                             min="0"
+                            placeholder="0,00"
                           />
                         </div>
-                        <div className="w-32">
+                        <div className="w-28">
                           <label className="block text-sm font-medium text-gray-700">Preço Final (€)</label>
                           <input
                             type="number"
                             step="0.01"
                             value={produto.valorFinal}
                             onChange={e => handleProdutoChange(idx, 'valorFinal', Number(e.target.value))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
                             required
                             min="0"
+                            placeholder="0,00"
                           />
                         </div>
                         {produtos.length > 1 && (
