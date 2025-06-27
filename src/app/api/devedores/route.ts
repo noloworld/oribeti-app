@@ -58,7 +58,7 @@ export async function GET() {
       // Calcular estatísticas do cliente
       const totalVendas = vendasProcessadas.length;
       const vendasEmAberto = vendasProcessadas.filter(v => v.status === 'PENDENTE').length;
-      const vendasPagasParcelado = vendasProcessadas.filter(v => v.status === 'PAGO' && v.numPagamentos > 1).length;
+      const vendasPagasParcelado = vendasProcessadas.reduce((sum, v) => sum + v.numPagamentos, 0);
       const totalDevido = vendasProcessadas.reduce((sum, v) => sum + (v.valorEmDivida > 0 ? v.valorEmDivida : 0), 0);
       const valorMaxDevido = Math.max(...vendasProcessadas.map(v => v.valorFinal), 0);
       const ultimaVenda = vendasProcessadas[0];
