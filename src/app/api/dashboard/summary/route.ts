@@ -102,6 +102,16 @@ export async function GET() {
       ultimosClientes,
     });
   } catch (error) {
-    return NextResponse.json({ error: 'Erro ao buscar resumo do dashboard.' }, { status: 500 });
+    return NextResponse.json({
+      totalClientes: 0,
+      totalVendas: 0,
+      totalGanho: 0,
+      clientesDevedores: [],
+      vendasPorMes: [],
+      vendasPorAno: [],
+      top5Clientes: [],
+      ultimosClientes: [],
+      error: 'Erro ao buscar resumo do dashboard.'
+    }, { status: 200 });
   }
 } 

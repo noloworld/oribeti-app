@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ vendas, total });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Erro ao buscar vendas.' }, { status: 500 });
+    return NextResponse.json({ vendas: [], total: 0, error: 'Erro ao buscar vendas.' }, { status: 200 });
   }
 }
 
