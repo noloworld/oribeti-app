@@ -725,12 +725,12 @@ export default function VendasPage() {
       {/* Modais no final do componente */}
       {showVisualizarModal && vendaSelecionada && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
-          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900">
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={handleFecharVisualizar}>&times;</button>
-            <h2 className="text-xl font-bold mb-4">Detalhes da Venda</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Detalhes da Venda</h2>
             <div className="space-y-3">
-              <div><b>Cliente:</b> {vendaSelecionada.cliente?.nome}</div>
-              <div><b>Data:</b> {new Date(vendaSelecionada.data).toLocaleDateString('pt-PT')}</div>
+              <div><b>Cliente:</b> <span className="text-gray-900">{vendaSelecionada.cliente?.nome}</span></div>
+              <div><b>Data:</b> <span className="text-gray-900">{new Date(vendaSelecionada.data).toLocaleDateString('pt-PT')}</span></div>
               <div><b>Status:</b> 
                 <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
                   vendaSelecionada.status === 'PAGO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
@@ -741,22 +741,24 @@ export default function VendasPage() {
               <div><b>Produtos:</b>
                 <ul className="list-disc ml-6 mt-1">
                   {vendaSelecionada.produtos.map((p, i) => (
-                    <li key={i} className="text-sm">
+                    <li key={i} className="text-sm text-gray-900">
                       {p.nomeProduto} (x{p.quantidade}) - €{p.valorFinal.toFixed(2)}
                     </li>
                   ))}
                 </ul>
               </div>
-              <div><b>Valor Pago:</b> €{vendaSelecionada.valorPago.toFixed(2)}</div>
-              <div><b>Observações:</b> {vendaSelecionada.observacoes || '-'}</div>
+              <div><b>Valor Pago:</b> <span className="text-gray-900">€{vendaSelecionada.valorPago.toFixed(2)}</span></div>
+              <div><b>Observações:</b> <span className="text-gray-900">{vendaSelecionada.observacoes || '-'}</span></div>
             </div>
             <div className="mt-6">
-              <ListaPagamentos
-                vendaId={vendaSelecionada.id}
-                valorFinal={vendaSelecionada.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0)}
-                valorPago={vendaSelecionada.valorPago}
-                onPagamentoAdded={fetchVendas}
-              />
+              <div className="text-gray-900">
+                <ListaPagamentos
+                  vendaId={vendaSelecionada.id}
+                  valorFinal={vendaSelecionada.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0)}
+                  valorPago={vendaSelecionada.valorPago}
+                  onPagamentoAdded={fetchVendas}
+                />
+              </div>
             </div>
           </div>
         </div>
