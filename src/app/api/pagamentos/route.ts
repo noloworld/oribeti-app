@@ -82,8 +82,7 @@ export async function POST(req: NextRequest) {
 
     // Atualizar valorPago e status na venda
     const statusAutomatico = totalPago >= valorFinal ? 'PAGO' : 'PENDENTE';
-    console.log('API Pagamentos - Status automático:', statusAutomatico);
-    
+    // Nunca marcar como PAGO se ainda houver dívida
     await prisma.venda.update({
       where: { id: Number(vendaId) },
       data: {
