@@ -232,6 +232,7 @@ export default function DashboardPage() {
             <div className="mb-2"><b>Valor Total:</b> €{vendaSelecionada.valorTotal.toFixed(2)}</div>
             <div className="mb-2"><b>Valor Pago:</b> €{vendaSelecionada.valorPago.toFixed(2)}</div>
             <div className="mb-2"><b>Em Dívida:</b> <span className="text-yellow-600 font-bold">€{vendaSelecionada.valorEmDivida.toFixed(2)}</span></div>
+            <div className="mb-2"><b>Observações:</b> <span className="text-gray-900 font-medium">{vendaSelecionada.observacoes || '-'}</span></div>
             <div className="mt-4">
               <ListaPagamentos
                 vendaId={vendaSelecionada.vendaId}
