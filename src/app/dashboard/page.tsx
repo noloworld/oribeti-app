@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import ListaPagamentos from '../../components/ListaPagamentos';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -20,8 +21,14 @@ interface DashboardData {
   clientesDevedores: Array<{
     id: number;
     nome: string;
-    valorEmDivida: number;
-    desde: string;
+    vendas: Array<{
+      vendaId: number;
+      data: string;
+      valorTotal: number;
+      valorPago: number;
+      valorEmDivida: number;
+      pagamentos: any[];
+    }>;
   }>;
   vendasPorMes: Array<{ mes: number; total: number }>;
   vendasPorAno: Array<{ ano: number; total: number }>;
@@ -41,6 +48,8 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [tipoGrafico, setTipoGrafico] = useState<'mes' | 'ano'>("mes");
+  const [vendaSelecionada, setVendaSelecionada] = useState<any | null>(null);
+  const [showVendaModal, setShowVendaModal] = useState(false);
 
   useEffect(() => {
     fetch("/api/dashboard/summary")
@@ -172,28 +181,68 @@ export default function DashboardPage() {
             <thead>
               <tr>
                 <th className="px-4 py-2 text-left">Nome</th>
-                <th className="px-4 py-2 text-left">Valor em dívida</th>
-                <th className="px-4 py-2 text-left">Desde</th>
+                <th className="px-4 py-2 text-left">Venda</th>
+                <th className="px-4 py-2 text-left">Data</th>
+                <th className="px-4 py-2 text-left">Valor Total</th>
+                <th className="px-4 py-2 text-left">Valor Pago</th>
+                <th className="px-4 py-2 text-left">Em Dívida</th>
+                <th className="px-4 py-2 text-left">Ações</th>
               </tr>
             </thead>
             <tbody>
               {data.clientesDevedores.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="text-gray-400 px-4 py-2">Nenhum cliente devedor.</td>
+                  <td colSpan={7} className="text-gray-400 px-4 py-2">Nenhum cliente devedor.</td>
                 </tr>
               ) : (
-                data.clientesDevedores.map((c) => (
-                  <tr key={c.id} className="border-b border-gray-800">
-                    <td className="px-4 py-2">{c.nome}</td>
-                    <td className="px-4 py-2 text-yellow-400 font-bold">€ {c.valorEmDivida.toFixed(2)}</td>
-                    <td className="px-4 py-2">{new Date(c.desde).toLocaleDateString()}</td>
-                  </tr>
-                ))
+                data.clientesDevedores.flatMap((c) =>
+                  c.vendas.map((v, idx) => (
+                    <tr key={c.id + '-' + v.vendaId} className="border-b border-gray-800">
+                      <td className="px-4 py-2">{c.nome}</td>
+                      <td className="px-4 py-2">#{v.vendaId}</td>
+                      <td className="px-4 py-2">{new Date(v.data).toLocaleDateString()}</td>
+                      <td className="px-4 py-2">€ {v.valorTotal.toFixed(2)}</td>
+                      <td className="px-4 py-2">€ {v.valorPago.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-yellow-400 font-bold">€ {v.valorEmDivida.toFixed(2)}</td>
+                      <td className="px-4 py-2">
+                        <button
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                          onClick={() => { setVendaSelecionada({ ...v, cliente: c.nome }); setShowVendaModal(true); }}
+                        >
+                          Mais informações
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {showVendaModal && vendaSelecionada && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900">
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={() => setShowVendaModal(false)}>&times;</button>
+            <h2 className="text-xl font-bold mb-4 text-blue-900">Detalhes da Venda</h2>
+            <div className="mb-2"><b>Cliente:</b> {vendaSelecionada.cliente}</div>
+            <div className="mb-2"><b>Venda:</b> #{vendaSelecionada.vendaId}</div>
+            <div className="mb-2"><b>Data:</b> {new Date(vendaSelecionada.data).toLocaleDateString()}</div>
+            <div className="mb-2"><b>Valor Total:</b> €{vendaSelecionada.valorTotal.toFixed(2)}</div>
+            <div className="mb-2"><b>Valor Pago:</b> €{vendaSelecionada.valorPago.toFixed(2)}</div>
+            <div className="mb-2"><b>Em Dívida:</b> <span className="text-yellow-600 font-bold">€{vendaSelecionada.valorEmDivida.toFixed(2)}</span></div>
+            <div className="mt-4">
+              <ListaPagamentos
+                vendaId={vendaSelecionada.vendaId}
+                valorFinal={vendaSelecionada.valorTotal}
+                valorPago={vendaSelecionada.valorPago}
+                onPagamentoAdded={() => setShowVendaModal(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

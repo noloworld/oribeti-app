@@ -28,24 +28,31 @@ export async function GET() {
         pagamentos: true
       } 
     });
+    // Agrupar por cliente, mas listar cada venda separada
     const clientesDevedoresMap = new Map();
     vendasPendentes.forEach(v => {
       if (!clientesDevedoresMap.has(v.clienteId)) {
         clientesDevedoresMap.set(v.clienteId, {
           id: v.clienteId,
           nome: v.cliente?.nome,
-          valorEmDivida: 0,
-          desde: v.data,
+          vendas: [],
         });
       }
-      const dev = clientesDevedoresMap.get(v.clienteId);
       const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
       const valorPago = v.pagamentos.reduce((sum, p) => sum + p.valor, 0);
       const valorDivida = valorVenda - valorPago;
-      dev.valorEmDivida += valorDivida;
-      if (new Date(v.data) < new Date(dev.desde)) dev.desde = v.data;
+      if (valorDivida > 0) {
+        clientesDevedoresMap.get(v.clienteId).vendas.push({
+          vendaId: v.id,
+          data: v.data,
+          valorTotal: valorVenda,
+          valorPago,
+          valorEmDivida: valorDivida,
+          pagamentos: v.pagamentos,
+        });
+      }
     });
-    const clientesDevedores = Array.from(clientesDevedoresMap.values());
+    const clientesDevedores = Array.from(clientesDevedoresMap.values()).filter(c => c.vendas.length > 0);
 
     // Vendas por mês (do ano atual)
     const anoAtual = new Date().getFullYear();
