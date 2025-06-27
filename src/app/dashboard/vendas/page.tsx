@@ -526,39 +526,55 @@ export default function VendasPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Produto</label>
-                  <input
-                    type="text"
-                    value={form.nomeProduto}
-                    onChange={(e) => setForm({ ...form, nomeProduto: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Quantidade</label>
-                  <input
-                    type="number"
-                    value={form.quantidade}
-                    onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    required
-                    min="1"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Preço Unitário</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={form.valorRevista}
-                    onChange={(e) => setForm({ ...form, valorRevista: Number(e.target.value) })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    required
-                    min="0"
-                  />
+                  {/* Campos dinâmicos para múltiplos produtos */}
+                  {produtos.map((produto, idx) => (
+                    <div key={idx} className="border rounded-md p-2 mb-2 bg-gray-50 flex flex-col gap-2 relative">
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <label className="block text-sm font-medium text-gray-700">Produto</label>
+                          <input
+                            type="text"
+                            value={produto.nomeProduto}
+                            onChange={e => handleProdutoChange(idx, 'nomeProduto', e.target.value)}
+                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                            required
+                          />
+                        </div>
+                        <div className="w-24">
+                          <label className="block text-sm font-medium text-gray-700">Quantidade</label>
+                          <input
+                            type="number"
+                            value={produto.quantidade}
+                            onChange={e => handleProdutoChange(idx, 'quantidade', Number(e.target.value))}
+                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                            required
+                            min="1"
+                          />
+                        </div>
+                        <div className="w-32">
+                          <label className="block text-sm font-medium text-gray-700">Preço Unitário</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={produto.valorRevista}
+                            onChange={e => handleProdutoChange(idx, 'valorRevista', Number(e.target.value))}
+                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                            required
+                            min="0"
+                          />
+                        </div>
+                        {produtos.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveProduto(idx)}
+                            className="self-end mb-1 ml-2 px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600 text-xs"
+                          >
+                            Remover
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                   <button
                     type="button"
                     onClick={handleAddProduto}
