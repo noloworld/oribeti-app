@@ -513,7 +513,7 @@ export default function VendasPage() {
                   <select
                     value={form.clienteId || ''}
                     onChange={(e) => setForm({ ...form, clienteId: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
                   >
                     <option value="">Selecione um cliente</option>
@@ -531,7 +531,7 @@ export default function VendasPage() {
                     type="text"
                     value={form.nomeProduto}
                     onChange={(e) => setForm({ ...form, nomeProduto: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
@@ -542,7 +542,7 @@ export default function VendasPage() {
                     type="number"
                     value={form.quantidade}
                     onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
                     min="1"
                   />
@@ -555,7 +555,7 @@ export default function VendasPage() {
                     step="0.01"
                     value={form.valorRevista}
                     onChange={(e) => setForm({ ...form, valorRevista: Number(e.target.value) })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
                     min="0"
                   />
@@ -567,20 +567,42 @@ export default function VendasPage() {
                     type="date"
                     value={form.data}
                     onChange={(e) => setForm({ ...form, data: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center gap-4">
                   <input
                     type="checkbox"
                     checked={form.status === 'PAGO'}
                     onChange={(e) => setForm({ ...form, status: e.target.checked ? 'PAGO' : 'PENDENTE' })}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <label className="ml-2 block text-sm text-gray-900">Pago</label>
+                  <label className="block text-sm text-gray-900">Pago</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsPrestacoes((v) => !v)}
+                    className={`px-3 py-1 rounded text-sm font-medium transition ${isPrestacoes ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
+                  >
+                    {isPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
+                  </button>
                 </div>
+                {isPrestacoes && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Valor Pago</label>
+                    <input
+                      type="number"
+                      value={form.valorPago}
+                      onChange={(e) => setForm({ ...form, valorPago: Number(e.target.value) })}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                      min="0"
+                    />
+                    <div className="text-sm text-yellow-700 mt-1">
+                      Valor em dívida: R$ {(Number(form.valorFinal) - Number(form.valorPago || 0)).toFixed(2)}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-end space-x-3">
                   <button
