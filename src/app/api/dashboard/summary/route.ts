@@ -24,7 +24,8 @@ export async function GET() {
       where: { status: 'PENDENTE' }, 
       include: { 
         cliente: true,
-        produtos: true 
+        produtos: true,
+        pagamentos: true
       } 
     });
     const clientesDevedoresMap = new Map();
@@ -39,7 +40,9 @@ export async function GET() {
       }
       const dev = clientesDevedoresMap.get(v.clienteId);
       const valorVenda = v.produtos.reduce((sum, p) => sum + p.valorFinal, 0);
-      dev.valorEmDivida += valorVenda;
+      const valorPago = v.pagamentos.reduce((sum, p) => sum + p.valor, 0);
+      const valorDivida = valorVenda - valorPago;
+      dev.valorEmDivida += valorDivida;
       if (new Date(v.data) < new Date(dev.desde)) dev.desde = v.data;
     });
     const clientesDevedores = Array.from(clientesDevedoresMap.values());

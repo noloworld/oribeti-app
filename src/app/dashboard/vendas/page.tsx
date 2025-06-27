@@ -727,28 +727,51 @@ export default function VendasPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
           <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900">
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={handleFecharVisualizar}>&times;</button>
-            <h2 className="text-xl font-bold mb-4 text-gray-900">Detalhes da Venda</h2>
-            <div className="space-y-3">
-              <div><b>Cliente:</b> <span className="text-gray-900">{vendaSelecionada.cliente?.nome}</span></div>
-              <div><b>Data:</b> <span className="text-gray-900">{new Date(vendaSelecionada.data).toLocaleDateString('pt-PT')}</span></div>
-              <div><b>Status:</b> 
-                <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
-                  vendaSelecionada.status === 'PAGO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {vendaSelecionada.status}
-                </span>
+            <div className="mb-5">
+              <h2 className="text-2xl font-extrabold text-blue-900 mb-1 flex items-center gap-2">Detalhes da Venda</h2>
+              <div className="border-b border-gray-200 mb-4"></div>
+              <div className="space-y-3">
+                <div className="flex gap-2 items-center">
+                  <span className="font-semibold text-gray-600">Cliente:</span>
+                  <span className="text-gray-900 font-medium">{vendaSelecionada.cliente?.nome}</span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-semibold text-gray-600">Data:</span>
+                  <span className="text-gray-900 font-medium">{new Date(vendaSelecionada.data).toLocaleDateString('pt-PT')}</span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-semibold text-gray-600">Status:</span>
+                  {vendaSelecionada.status === 'PAGO' ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      Pago
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      Pendente
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-600">Produtos:</span>
+                  <ul className="list-disc ml-6 mt-1">
+                    {vendaSelecionada.produtos.map((p, i) => (
+                      <li key={i} className="text-sm text-gray-900">
+                        {p.nomeProduto} (x{p.quantidade}) - €{p.valorFinal.toFixed(2)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-semibold text-gray-600">Valor Pago:</span>
+                  <span className="text-gray-900 font-medium">€{vendaSelecionada.valorPago.toFixed(2)}</span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-semibold text-gray-600">Observações:</span>
+                  <span className="text-gray-900 font-medium">{vendaSelecionada.observacoes || '-'}</span>
+                </div>
               </div>
-              <div><b>Produtos:</b>
-                <ul className="list-disc ml-6 mt-1">
-                  {vendaSelecionada.produtos.map((p, i) => (
-                    <li key={i} className="text-sm text-gray-900">
-                      {p.nomeProduto} (x{p.quantidade}) - €{p.valorFinal.toFixed(2)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div><b>Valor Pago:</b> <span className="text-gray-900">€{vendaSelecionada.valorPago.toFixed(2)}</span></div>
-              <div><b>Observações:</b> <span className="text-gray-900">{vendaSelecionada.observacoes || '-'}</span></div>
             </div>
             <div className="mt-6">
               <div className="text-gray-900">
