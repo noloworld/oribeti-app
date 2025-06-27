@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import { Transition } from '@headlessui/react';
 import ListaPagamentos from '../../../components/ListaPagamentos';
 import { useModalAberto } from '../../../components/ModalContext';
+import PagamentoModal from '../../../components/PagamentoModal';
 
 interface Cliente {
   id: number;
@@ -85,6 +86,10 @@ export default function VendasPage() {
   const [produtos, setProdutos] = useState([
     { nomeProduto: '', quantidade: 1, valorRevista: '', valorFinal: '' }
   ]);
+  // Estados para modais de ações
+  const [vendaSelecionada, setVendaSelecionada] = useState<Venda | null>(null);
+  const [showVisualizarModal, setShowVisualizarModal] = useState(false);
+  const [showPagamentoModal, setShowPagamentoModal] = useState(false);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -324,6 +329,24 @@ export default function VendasPage() {
   const clientesEmDia = vendas.filter(v => v.valorPago >= v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0));
   const devedores = vendas.filter(v => v.valorPago < v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0));
 
+  // Handlers para abrir/fechar modais
+  function handleVisualizarVenda(venda: Venda) {
+    setVendaSelecionada(venda);
+    setShowVisualizarModal(true);
+  }
+  function handleFecharVisualizar() {
+    setShowVisualizarModal(false);
+    setVendaSelecionada(null);
+  }
+  function handleAbrirPagamento(venda: Venda) {
+    setVendaSelecionada(venda);
+    setShowPagamentoModal(true);
+  }
+  function handleFecharPagamento() {
+    setShowPagamentoModal(false);
+    setVendaSelecionada(null);
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -332,67 +355,39 @@ export default function VendasPage() {
       </div>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total de Vendas</p>
-              <p className="text-2xl font-semibold text-gray-900">{vendas.length}</p>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {/* Total de Vendas */}
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+          <span className="text-sm font-medium text-gray-600">Total de Vendas</span>
+          <span className="text-xl sm:text-2xl font-bold text-blue-700">{vendas.length}</span>
         </div>
-
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Valor Total</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVendas)}
-              </p>
-            </div>
-          </div>
+        {/* Valor Total de Vendas */}
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+          <span className="text-sm font-medium text-gray-600">Valor Total</span>
+          <span className="text-xl sm:text-2xl font-bold text-green-700">
+            {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(totalVendas)}
+          </span>
         </div>
-
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pago</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVendas - totalRevistaVendas)}
-              </p>
-            </div>
-          </div>
+        {/* Lucro */}
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+          <span className="text-sm font-medium text-gray-600">Lucro</span>
+          <span className="text-xl sm:text-2xl font-bold text-yellow-600">
+            {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(lucro)}
+          </span>
         </div>
-
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pendente</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalRevistaVendas)}
-              </p>
-            </div>
-          </div>
+        {/* Número de Devedores */}
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+          <span className="text-sm font-medium text-gray-600">Devedores</span>
+          <span className="text-xl sm:text-2xl font-bold text-red-600">{devedores.length}</span>
+        </div>
+        {/* Valor Total Devedores */}
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+          <span className="text-sm font-medium text-gray-600">Valor Devedores</span>
+          <span className="text-xl sm:text-2xl font-bold text-red-700">
+            {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(
+              devedores.reduce((acc, v) => acc + (v.produtos.reduce((pacc, p) => pacc + (p.valorFinal * p.quantidade), 0) - (v.valorPago || 0)), 0)
+            )}
+          </span>
         </div>
       </div>
 
@@ -409,93 +404,106 @@ export default function VendasPage() {
         </button>
       </div>
 
-      {/* Tabela de Vendas */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cliente
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Produto
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Quantidade
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Preço Unit.
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {vendas.map((venda) => (
-                <tr key={venda.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{venda.cliente?.nome || 'N/A'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{venda.produtos[0].nomeProduto}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{venda.produtos[0].quantidade}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(venda.produtos[0].valorRevista)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(venda.produtos[0].valorFinal)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(venda.data).toLocaleDateString('pt-BR')}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      venda.valorPago >= venda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {venda.valorPago >= venda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) ? 'Pago' : 'Pendente'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleOpenEditModal(venda)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVendaToDelete(venda);
-                        setShowDeleteModal(true);
-                      }}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Tabelas de Clientes em Dia e Devedores */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+        {/* Clientes em Dia */}
+        <div>
+          <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+            Clientes em Dia
+          </h2>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Produtos</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Pago</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Data</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {clientesEmDia.length === 0 && (
+                    <tr><td colSpan={5} className="text-center text-gray-400 py-4">Nenhum cliente em dia</td></tr>
+                  )}
+                  {clientesEmDia.map((venda) => (
+                    <tr key={venda.id} className="hover:bg-gray-50">
+                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{venda.cliente?.nome || 'N/A'}</td>
+                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden sm:table-cell">
+                        {venda.produtos.map(p => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}
+                      </td>
+                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-green-700 font-bold">
+                        {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorPago)}
+                      </td>
+                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">
+                        {new Date(venda.data).toLocaleDateString('pt-PT')}
+                      </td>
+                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap flex gap-1 sm:gap-2">
+                        {/* Botões de ação: visualizar, imprimir, eliminar */}
+                        <button className="text-blue-600 hover:text-blue-900" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                        <button className="text-green-600 hover:text-green-900" title="Imprimir" onClick={() => handlePrintVenda(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
+                        <button className="text-red-600 hover:text-red-900" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {/* Clientes Devedores */}
+        <div>
+          <h2 className="text-xl font-bold text-red-700 mb-4 flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+            Clientes Devedores
+          </h2>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Produtos</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Em Dívida</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Data</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {devedores.length === 0 && (
+                    <tr><td colSpan={5} className="text-center text-gray-400 py-4">Nenhum devedor</td></tr>
+                  )}
+                  {devedores.map((venda) => {
+                    const valorTotal = venda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0);
+                    const valorEmDivida = valorTotal - (venda.valorPago || 0);
+                    return (
+                      <tr key={venda.id} className="hover:bg-gray-50">
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{venda.cliente?.nome || 'N/A'}</td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden sm:table-cell">
+                          {venda.produtos.map(p => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}
+                        </td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-red-700 font-bold">
+                          {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(valorEmDivida)}
+                        </td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">
+                          {new Date(venda.data).toLocaleDateString('pt-PT')}
+                        </td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap flex gap-1 sm:gap-2">
+                          {/* Botões de ação: visualizar, imprimir, eliminar, adicionar pagamento */}
+                          <button className="text-blue-600 hover:text-blue-900" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                          <button className="text-green-600 hover:text-green-900" title="Imprimir" onClick={() => handlePrintVenda(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
+                          <button className="text-yellow-600 hover:text-yellow-900" title="Adicionar Pagamento" onClick={() => handleAbrirPagamento(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg></button>
+                          <button className="text-red-600 hover:text-red-900" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -552,12 +560,24 @@ export default function VendasPage() {
                           />
                         </div>
                         <div className="w-32">
-                          <label className="block text-sm font-medium text-gray-700">Preço Unitário</label>
+                          <label className="block text-sm font-medium text-gray-700">Preço Revista (€)</label>
                           <input
                             type="number"
                             step="0.01"
                             value={produto.valorRevista}
                             onChange={e => handleProdutoChange(idx, 'valorRevista', Number(e.target.value))}
+                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                            required
+                            min="0"
+                          />
+                        </div>
+                        <div className="w-32">
+                          <label className="block text-sm font-medium text-gray-700">Preço Final (€)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={produto.valorFinal}
+                            onChange={e => handleProdutoChange(idx, 'valorFinal', Number(e.target.value))}
                             className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                             required
                             min="0"
@@ -583,7 +603,6 @@ export default function VendasPage() {
                     + Adicionar Produto
                   </button>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Data</label>
                   <input
@@ -594,15 +613,7 @@ export default function VendasPage() {
                     required
                   />
                 </div>
-
                 <div className="flex items-center gap-4">
-                  <input
-                    type="checkbox"
-                    checked={form.status === 'PAGO'}
-                    onChange={(e) => setForm({ ...form, status: e.target.checked ? 'PAGO' : 'PENDENTE' })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label className="block text-sm text-gray-900">Pago</label>
                   <button
                     type="button"
                     onClick={() => setIsPrestacoes((v) => !v)}
@@ -613,7 +624,7 @@ export default function VendasPage() {
                 </div>
                 {isPrestacoes && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Valor Pago</label>
+                    <label className="block text-sm font-medium text-gray-700">Valor Pago (€)</label>
                     <input
                       type="number"
                       value={form.valorPago}
@@ -622,11 +633,10 @@ export default function VendasPage() {
                       min="0"
                     />
                     <div className="text-sm text-yellow-700 mt-1">
-                      Valor em dívida: € {(Number(form.valorFinal) - Number(form.valorPago || 0)).toFixed(2)}
+                      Valor em dívida: € {(produtos.reduce((acc, p) => acc + Number(p.valorFinal || 0) * Number(p.quantidade || 1), 0) - Number(form.valorPago || 0)).toFixed(2)}
                     </div>
                   </div>
                 )}
-
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
@@ -707,6 +717,56 @@ export default function VendasPage() {
           </div>
         </Transition.Child>
       </Transition.Root>
+
+      {/* Modais no final do componente */}
+      {showVisualizarModal && vendaSelecionada && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={handleFecharVisualizar}>&times;</button>
+            <h2 className="text-xl font-bold mb-4">Detalhes da Venda</h2>
+            <div className="space-y-3">
+              <div><b>Cliente:</b> {vendaSelecionada.cliente?.nome}</div>
+              <div><b>Data:</b> {new Date(vendaSelecionada.data).toLocaleDateString('pt-PT')}</div>
+              <div><b>Status:</b> 
+                <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
+                  vendaSelecionada.status === 'PAGO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {vendaSelecionada.status}
+                </span>
+              </div>
+              <div><b>Produtos:</b>
+                <ul className="list-disc ml-6 mt-1">
+                  {vendaSelecionada.produtos.map((p, i) => (
+                    <li key={i} className="text-sm">
+                      {p.nomeProduto} (x{p.quantidade}) - €{p.valorFinal.toFixed(2)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div><b>Valor Pago:</b> €{vendaSelecionada.valorPago.toFixed(2)}</div>
+              <div><b>Observações:</b> {vendaSelecionada.observacoes || '-'}</div>
+            </div>
+            <div className="mt-6">
+              <ListaPagamentos
+                vendaId={vendaSelecionada.id}
+                valorFinal={vendaSelecionada.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0)}
+                valorPago={vendaSelecionada.valorPago}
+                onPagamentoAdded={fetchVendas}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      {showPagamentoModal && vendaSelecionada && (
+        <PagamentoModal
+          isOpen={showPagamentoModal}
+          onClose={handleFecharPagamento}
+          vendaId={vendaSelecionada.id}
+          valorFinal={vendaSelecionada.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0)}
+          valorPago={vendaSelecionada.valorPago}
+          onPagamentoAdded={() => { fetchVendas(); handleFecharPagamento(); }}
+        />
+      )}
     </div>
   );
 } 

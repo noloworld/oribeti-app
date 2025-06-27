@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { clienteId, produtos, observacoes, data, status } = body;
+    const { clienteId, produtos, observacoes, data, status, valorPago } = body;
     if (!clienteId || !produtos || !Array.isArray(produtos) || produtos.length === 0 || !data) {
       return NextResponse.json({ error: 'Campos obrigatórios: clienteId, produtos (array), data.' }, { status: 400 });
     }
@@ -81,10 +81,8 @@ export async function POST(req: Request) {
     // Calcular totais
     const totalRevista = produtos.reduce((acc, p) => acc + Number(p.valorRevista) * Number(p.quantidade), 0);
     const totalFinal = produtos.reduce((acc, p) => acc + Number(p.valorFinal) * Number(p.quantidade), 0);
-    // Calcular status automaticamente baseado no valor pago (aqui, valorPago = totalFinal, pois não há prestações no momento)
-    const valorPagoNum = totalFinal;
-    const valorFinalNum = totalFinal;
-    const statusAutomatico = valorPagoNum >= valorFinalNum ? 'PAGO' : 'PENDENTE';
+    const valorPagoNum = Number(valorPago || 0);
+    const statusAutomatico = valorPagoNum >= totalFinal ? 'PAGO' : 'PENDENTE';
     // Criar venda
     const venda = await prisma.venda.create({
       data: {
@@ -107,12 +105,24 @@ export async function POST(req: Request) {
         },
       });
     }
+    // Criar primeiro pagamento se valorPago > 0
+    if (valorPagoNum > 0) {
+      await prisma.pagamento.create({
+        data: {
+          vendaId: venda.id,
+          valor: valorPagoNum,
+          data: new Date(data),
+          observacoes: 'Primeira prestação',
+        },
+      });
+    }
     // Buscar venda completa para retornar
     const vendaCompleta = await prisma.venda.findUnique({
       where: { id: venda.id },
       include: {
         cliente: { select: { id: true, nome: true } },
         produtos: true,
+        pagamentos: true,
       },
     });
     // Gravar log da ação
