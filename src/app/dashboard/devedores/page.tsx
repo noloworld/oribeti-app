@@ -1,9 +1,7 @@
 'use client';
-import React, { useState, useEffect, Fragment } from 'react';
-import { FaEuroSign, FaHistory } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaEuroSign, FaHistory, FaUser, FaCalendar, FaCheckCircle, FaClock } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { Transition } from '@headlessui/react';
-import { useModalAberto } from '../../../components/ModalContext';
 
 interface VendaProduto {
   id: number;
@@ -13,16 +11,6 @@ interface VendaProduto {
   valorFinal: number;
 }
 
-interface Venda {
-  id: number;
-  cliente: { id: number; nome: string };
-  valorPago: number;
-  data: string;
-  status: string;
-  produtos: VendaProduto[];
-  numPagamentos?: number;
-}
-
 interface Pagamento {
   id: number;
   valor: number;
@@ -30,350 +18,256 @@ interface Pagamento {
   observacoes?: string;
 }
 
+interface Venda {
+  id: number;
+  valorPago: number;
+  data: string;
+  status: string;
+  observacoes?: string;
+  produtos: VendaProduto[];
+  pagamentos: Pagamento[];
+  valorFinal: number;
+  valorEmDivida: number;
+  numPagamentos: number;
+  foiDevedor: boolean;
+}
+
+interface EstatisticasCliente {
+  totalVendas: number;
+  vendasEmAberto: number;
+  vendasPagasParcelado: number;
+  totalDevido: number;
+  valorMaxDevido: number;
+  ultimaVenda: string | null;
+  ultimoPagamento: string | null;
+}
+
+interface Cliente {
+  id: number;
+  nome: string;
+  email?: string;
+  telefone?: string;
+  morada?: string;
+  vendas: Venda[];
+  estatisticas: EstatisticasCliente;
+}
+
 export default function DevedoresPage() {
-  const [vendas, setVendas] = useState<Venda[]>([]);
-  const [historicoAberto, setHistoricoAberto] = useState<number | null>(null);
-  const [pagamentos, setPagamentos] = useState<Record<number, Pagamento[]>>({});
-  const [loading, setLoading] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [vendaToConfirm, setVendaToConfirm] = useState<Venda | null>(null);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [total, setTotal] = useState(0);
-  const totalPages = Math.ceil(total / limit);
-  const { setModalAberto } = useModalAberto();
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [clienteExpandido, setClienteExpandido] = useState<number | null>(null);
 
-  // Novo estado para vendas filtradas (devedores)
-  const [vendasFiltradas, setVendasFiltradas] = useState<Venda[]>([]);
-
-  const fetchVendas = async () => {
+  const fetchClientes = async () => {
     try {
-      const res = await fetch(`/api/vendas?page=${page}&limit=${limit}`);
+      setLoading(true);
+      const res = await fetch('/api/devedores');
       const data = await res.json();
-      setVendas(data.vendas || []);
-      setTotal(data.total ? data.total : 0);
-    } catch {
-      toast.error('Erro ao buscar vendas.');
-    }
-  };
-
-  const fetchPagamentos = async (vendaId: number) => {
-    try {
-      const res = await fetch(`/api/pagamentos?vendaId=${vendaId}`);
-      const data = await res.json();
-      setPagamentos(prev => ({ ...prev, [vendaId]: data || [] }));
-    } catch {
-      toast.error('Erro ao buscar histórico de pagamentos.');
-    }
-  };
-
-  // Função para calcular o valor final de uma venda
-  const calcularValorFinal = (venda: Venda): number => {
-    return venda.produtos.reduce((sum, produto) => sum + produto.valorFinal, 0);
-  };
-
-  // Função para filtrar devedores
-  function filtrarDevedores(vendas: Venda[]) {
-    return vendas.filter(venda => {
-      const valorFinal = calcularValorFinal(venda);
-      // Pagando às prestações: já pagou algo, mas não tudo
-      if ((venda.valorPago || 0) > 0 && (venda.valorPago || 0) < valorFinal) return true;
-      // Já pagou tudo parcelado: valorPago >= valorFinal e mais de um pagamento
-      if ((venda.valorPago || 0) >= valorFinal && (venda.numPagamentos || 0) > 1) return true;
-      return false;
-    });
-  }
-
-  // Atualizar vendas filtradas sempre que vendas mudarem
-  useEffect(() => {
-    const filtradas = filtrarDevedores(vendas);
-    setTotal(filtradas.length);
-    setVendasFiltradas(filtradas);
-    setPage(1); // Sempre volta para a primeira página ao filtrar
-  }, [vendas]);
-
-  // Paginação sobre vendasFiltradas
-  const vendasPaginadas = vendasFiltradas.slice((page - 1) * limit, page * limit);
-
-  async function marcarComoPagoConfirmado() {
-    if (!vendaToConfirm) return;
-    setLoading(true);
-    try {
-      const valorFinal = calcularValorFinal(vendaToConfirm);
-      const res = await fetch('/api/vendas', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...vendaToConfirm,
-          clienteId: vendaToConfirm.cliente.id,
-          valorPago: valorFinal,
-          status: 'PAGO',
-        }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success('Status alterado para PAGO!');
-      fetchVendas();
-      window.dispatchEvent(new Event('devedoresUpdate'));
-      setConfirmModalOpen(false);
-      setVendaToConfirm(null);
-    } catch {
-      toast.error('Erro ao atualizar status.');
+      setClientes(data.clientes || []);
+    } catch (error) {
+      toast.error('Erro ao buscar clientes devedores.');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  // Função para determinar o artigo correto (um/uma) para o produto
-  function artigoProduto(nomeProduto: string) {
-    const femininos = [
-      'argola', 'pulseira', 'corrente', 'caneta', 'anel', 'camiseta', 'blusa', 'bolsa', 'corrente', 'moeda', 'pulseira', 'colher', 'cesta', 'caixa', 'camisa', 'carteira', 'jaqueta', 'roupa', 'sandália', 'meia', 'joia', 'joia', 'joias', 'joalheria', 'prata', 'corrente', 'aliança', 'gargantilha', 'corrente', 'correntes', 'alianças', 'gargantilhas', 'pulseiras', 'argolas', 'blusas', 'camisas', 'bolsas', 'carteiras', 'moedas', 'caixas', 'roupas', 'sandálias', 'meias', 'joias', 'joalherias', 'pratas', 'colheres', 'cestas', 'canetas', 'camisetas', 'jaquetas'
-    ];
-    const nome = nomeProduto.trim().toLowerCase();
-    for (const fem of femininos) {
-      if (nome.startsWith(fem)) return 'uma';
+  useEffect(() => {
+    fetchClientes();
+  }, []);
+
+  const toggleCliente = (clienteId: number) => {
+    setClienteExpandido(clienteId === clienteExpandido ? null : clienteId);
+  };
+
+  const getStatusBadge = (venda: Venda) => {
+    if (venda.status === 'PAGO') {
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <FaCheckCircle className="w-3 h-3 mr-1" />
+          Pago
+        </span>
+      );
     }
-    return 'um';
-  }
+    return (
+      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        <FaClock className="w-3 h-3 mr-1" />
+        Pendente
+      </span>
+    );
+  };
 
-  function handleConfirmOpen(venda: Venda) {
-    setVendaToConfirm(venda);
-    setConfirmModalOpen(true);
-    setModalAberto(true);
-  }
+  const formatarData = (data: string) => {
+    return new Date(data).toLocaleDateString('pt-PT');
+  };
 
-  function handleConfirmModalClose() {
-    setConfirmModalOpen(false);
-    setVendaToConfirm(null);
-    setModalAberto(false);
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-bold">Histórico de Devedores</h1>
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Clientes Devedores</h1>
-      {/* Tabela tradicional para desktop */}
-      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
-        <table className="min-w-full bg-gray-800 text-white">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 text-left">Nome</th>
-              <th className="px-4 py-2 text-left">Valor máximo devido</th>
-              <th className="px-4 py-2 text-left">Valor em dívida</th>
-              <th className="px-4 py-2 text-left">Último pagamento</th>
-              <th className="px-4 py-2 text-left">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(() => {
-              if (vendasPaginadas.length === 0) {
-                return (
-                  <tr>
-                    <td className="px-4 py-2 text-gray-400" colSpan={5}>Nenhum cliente devedor.</td>
-                  </tr>
-                );
-              }
-              return vendasPaginadas.map(venda => {
-                const valorFinal = calcularValorFinal(venda);
-                const valorEmDivida = valorFinal - (venda.valorPago || 0);
-                const historico = pagamentos[venda.id] || [];
-                const valorMaxDevido = Math.max(valorFinal, ...historico.map(p => p.valor));
-                const ultimoPagamento = historico.length > 0 ? historico[0] : null;
-                const pagandoPrestacoes = (venda.valorPago || 0) > 0 && (venda.valorPago || 0) < valorFinal;
-                const nomeProduto = venda.produtos[0]?.nomeProduto || 'Produto';
-                return (
-                  <React.Fragment key={venda.id}>
-                    <tr className="border-t border-gray-700">
-                      <td className="px-4 py-2">
-                        {venda.cliente?.nome}
-                        {pagandoPrestacoes && (
-                          <div className="text-yellow-400 text-xs font-semibold mt-1">Ainda está a pagar</div>
-                        )}
-                      </td>
-                      <td className="px-4 py-2">€{valorMaxDevido.toFixed(2)}</td>
-                      <td className={`px-4 py-2 ${pagandoPrestacoes ? 'text-yellow-400 font-bold' : ''}`}>€{valorEmDivida.toFixed(2)}</td>
-                      <td className="px-4 py-2">{ultimoPagamento ? new Date(ultimoPagamento.data).toLocaleDateString() : '-'}</td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <button
-                          onClick={() => {
-                            if (historicoAberto === venda.id) {
-                              setHistoricoAberto(null);
-                            } else {
-                              setHistoricoAberto(venda.id);
-                              if (!pagamentos[venda.id]) fetchPagamentos(venda.id);
-                            }
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1"
-                        >
-                          <FaHistory /> Histórico
-                        </button>
-                      </td>
-                    </tr>
-                    {historicoAberto === venda.id && (
-                      <tr>
-                        <td colSpan={5} className="bg-gray-900 px-6 py-4">
-                          <div className="mb-2 text-yellow-400 font-semibold">
-                            {nomeProduto}
-                          </div>
-                          <div className="mb-2 text-yellow-300 text-sm">
-                            Este cliente já pagou {(venda.numPagamentos || 0)}x um {nomeProduto} de €{valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{valorEmDivida.toFixed(2)}</span>.
-                          </div>
-                          <div className="space-y-2 overflow-y-auto max-h-[25vh] md:max-h-64 scrollbar-custom">
-                            {historico.length === 0 ? (
-                              <div className="text-gray-400 text-center py-2">Nenhum pagamento registrado.</div>
-                            ) : (
-                              historico.map((p, idx) => (
-                                <div key={p.id || idx} className="flex items-center gap-4 bg-gray-800 rounded-lg px-4 py-2">
-                                  <div className="text-green-400 font-bold text-lg">€{p.valor.toFixed(2)}</div>
-                                  <div className="text-gray-300 text-sm">{new Date(p.data).toLocaleDateString()}</div>
-                                  {p.observacoes && <div className="text-gray-400 text-xs italic">{p.observacoes}</div>}
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              });
-            })()}
-          </tbody>
-        </table>
-      </div>
-      {/* Cards responsivos para mobile */}
-      <div className="block md:hidden space-y-8">
-        {(() => {
-          if (vendasPaginadas.length === 0) {
-            return (
-              <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
-            );
-          }
-          return vendasPaginadas.map((venda, idx) => {
-            const valorFinal = calcularValorFinal(venda);
-            const valorEmDivida = valorFinal - (venda.valorPago || 0);
-            const historico = pagamentos[venda.id] || [];
-            const valorMaxDevido = Math.max(valorFinal, ...historico.map(p => p.valor));
-            const ultimoPagamento = historico.length > 0 ? historico[0] : null;
-            const pagandoPrestacoes = (venda.valorPago || 0) > 0 && (venda.valorPago || 0) < valorFinal;
-            const nomeProduto = venda.produtos[0]?.nomeProduto || 'Produto';
-            return (
-              <div key={venda.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400">Cliente</span>
-                  <span className="font-bold text-base text-white">{venda.cliente?.nome}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400">Valor máximo devido</span>
-                  <span className="font-semibold">€{valorMaxDevido.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400">Valor em dívida</span>
-                  <span className={`font-semibold ${pagandoPrestacoes ? 'text-yellow-400' : ''}`}>€{valorEmDivida.toFixed(2)}</span>
-                </div>
-                {pagandoPrestacoes && (
-                  <div className="text-yellow-400 text-xs font-semibold">Ainda está a pagar</div>
-                )}
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400">Último pagamento</span>
-                  <span className="font-semibold">{ultimoPagamento ? new Date(ultimoPagamento.data).toLocaleDateString() : '-'}</span>
-                </div>
-                <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={() => {
-                      if (historicoAberto === venda.id) {
-                        setHistoricoAberto(null);
-                      } else {
-                        setHistoricoAberto(venda.id);
-                        if (!pagamentos[venda.id]) fetchPagamentos(venda.id);
-                      }
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[90px] shadow flex items-center gap-1"
-                  >
-                    <FaHistory /> Histórico
-                  </button>
-                </div>
-                {/* Histórico expandido */}
-                {historicoAberto === venda.id && (
-                  <div className="bg-gray-900 mt-3 rounded-lg p-3">
-                    <div className="mb-2 text-yellow-400 font-semibold">{nomeProduto}</div>
-                    <div className="mb-2 text-yellow-300 text-sm">
-                      Este cliente já pagou {(venda.numPagamentos || 0)}x um {nomeProduto} de €{valorFinal.toFixed(2)}, ainda falta pagar <span className="font-bold text-orange-400">€{valorEmDivida.toFixed(2)}</span>.
+      <h1 className="text-2xl font-bold">Histórico de Devedores</h1>
+      
+      {clientes.length === 0 ? (
+        <div className="text-center py-12 bg-gray-800 rounded-lg">
+          <FaUser className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-300 mb-2">Nenhum cliente encontrado</h3>
+          <p className="text-gray-400">Não há clientes que tenham sido devedores no sistema.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {clientes.map((cliente) => (
+            <div key={cliente.id} className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+              {/* Cabeçalho do Cliente */}
+              <div 
+                className="p-6 cursor-pointer hover:bg-gray-700 transition-colors"
+                onClick={() => toggleCliente(cliente.id)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                        <FaUser className="w-6 h-6 text-white" />
+                      </div>
                     </div>
-                    <div className="space-y-2 overflow-y-auto max-h-[25vh] md:max-h-64 scrollbar-custom">
-                      {historico.length === 0 ? (
-                        <div className="text-gray-400 text-center py-2">Nenhum pagamento registrado.</div>
-                      ) : (
-                        historico.map((p, idx) => (
-                          <div key={p.id || idx} className="flex items-center gap-4 bg-gray-800 rounded-lg px-4 py-2">
-                            <div className="text-green-400 font-bold text-lg">€{p.valor.toFixed(2)}</div>
-                            <div className="text-gray-300 text-sm">{new Date(p.data).toLocaleDateString()}</div>
-                            {p.observacoes && <div className="text-gray-400 text-xs italic">{p.observacoes}</div>}
-                          </div>
-                        ))
-                      )}
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{cliente.nome}</h3>
+                      <div className="flex items-center space-x-4 text-sm text-gray-300 mt-1">
+                        <span>Total de vendas: {cliente.estatisticas.totalVendas}</span>
+                        <span>•</span>
+                        <span>Em aberto: {cliente.estatisticas.vendasEmAberto}</span>
+                        <span>•</span>
+                        <span>Pagas parcelado: {cliente.estatisticas.vendasPagasParcelado}</span>
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
-            );
-          });
-        })()}
-      </div>
-      {/* Modal de confirmação de pagamento */}
-      {confirmModalOpen && vendaToConfirm && (
-        <Transition.Root show={confirmModalOpen} as={Fragment}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-200"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-150"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={handleConfirmModalClose} />
-          </Transition.Child>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-200"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-150"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-              <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-sm text-center pointer-events-auto" onClick={e => e.stopPropagation()}>
-                <h2 className="text-xl font-bold text-white mb-4">Confirmar Pagamento</h2>
-                <p className="text-gray-300 mb-6">Tem certeza que deseja marcar como <span className="font-semibold text-green-400">PAGO</span> a venda de <span className="font-semibold">{vendaToConfirm.cliente.nome}</span> no valor de <span className="font-semibold">€{(calcularValorFinal(vendaToConfirm) - (vendaToConfirm.valorPago || 0)).toFixed(2)}</span>?</p>
-                <div className="flex justify-center gap-4">
-                  <button onClick={handleConfirmModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
-                  <button onClick={marcarComoPagoConfirmado} className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Confirmar'}</button>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-white">
+                      €{cliente.estatisticas.totalDevido.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-400">Total em dívida</div>
+                    <div className="flex items-center justify-end mt-2">
+                      <FaHistory className="w-4 h-4 text-blue-400 mr-1" />
+                      <span className="text-sm text-blue-400">Ver histórico</span>
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              {/* Histórico Expandido */}
+              {clienteExpandido === cliente.id && (
+                <div className="border-t border-gray-700 bg-gray-900">
+                  <div className="p-6">
+                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                      <FaHistory className="w-5 h-5 mr-2 text-blue-400" />
+                      Histórico de Vendas
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      {cliente.vendas.map((venda) => (
+                        <div key={venda.id} className="bg-gray-800 rounded-lg p-4">
+                          {/* Cabeçalho da Venda */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <FaCalendar className="w-4 h-4 text-gray-400" />
+                              <span className="text-white font-medium">
+                                {formatarData(venda.data)}
+                              </span>
+                              {getStatusBadge(venda)}
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-white">
+                                €{venda.valorFinal.toFixed(2)}
+                              </div>
+                              <div className="text-sm text-gray-400">Valor total</div>
+                            </div>
+                          </div>
+
+                          {/* Produtos */}
+                          <div className="mb-3">
+                            <h5 className="text-sm font-medium text-gray-300 mb-2">Produtos:</h5>
+                            <div className="space-y-2">
+                              {venda.produtos.map((produto) => (
+                                <div key={produto.id} className="flex justify-between items-center bg-gray-700 rounded px-3 py-2">
+                                  <div>
+                                    <span className="text-white font-medium">{produto.nomeProduto}</span>
+                                    <span className="text-gray-400 ml-2">x{produto.quantidade}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-white">€{produto.valorFinal.toFixed(2)}</div>
+                                    <div className="text-xs text-gray-400">€{produto.valorRevista.toFixed(2)} revista</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Resumo de Pagamento */}
+                          <div className="grid grid-cols-2 gap-4 mb-3">
+                            <div className="bg-gray-700 rounded p-3">
+                              <div className="text-sm text-gray-400">Valor pago</div>
+                              <div className="text-lg font-bold text-green-400">
+                                €{venda.valorPago.toFixed(2)}
+                              </div>
+                            </div>
+                            <div className="bg-gray-700 rounded p-3">
+                              <div className="text-sm text-gray-400">Em dívida</div>
+                              <div className={`text-lg font-bold ${venda.valorEmDivida > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                €{venda.valorEmDivida.toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Histórico de Pagamentos */}
+                          {venda.pagamentos.length > 0 && (
+                            <div>
+                              <h5 className="text-sm font-medium text-gray-300 mb-2">
+                                Pagamentos ({venda.numPagamentos}):
+                              </h5>
+                              <div className="space-y-2 max-h-32 overflow-y-auto">
+                                {venda.pagamentos.map((pagamento) => (
+                                  <div key={pagamento.id} className="flex items-center justify-between bg-gray-700 rounded px-3 py-2">
+                                    <div className="flex items-center space-x-3">
+                                      <FaEuroSign className="w-4 h-4 text-green-400" />
+                                      <span className="text-white font-medium">
+                                        €{pagamento.valor.toFixed(2)}
+                                      </span>
+                                      <span className="text-gray-400 text-sm">
+                                        {formatarData(pagamento.data)}
+                                      </span>
+                                    </div>
+                                    {pagamento.observacoes && (
+                                      <span className="text-gray-400 text-sm italic">
+                                        {pagamento.observacoes}
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Observações */}
+                          {venda.observacoes && (
+                            <div className="mt-3 p-3 bg-gray-700 rounded">
+                              <div className="text-sm text-gray-400 mb-1">Observações:</div>
+                              <div className="text-white text-sm">{venda.observacoes}</div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </Transition.Child>
-        </Transition.Root>
-      )}
-      {/* Paginação moderna centralizada */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
-          <button
-            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >«</button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              className={`px-3 py-1 rounded text-sm ${p === page ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
-              onClick={() => setPage(p)}
-            >{p}</button>
           ))}
-          <button
-            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >»</button>
         </div>
       )}
     </div>
