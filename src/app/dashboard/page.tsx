@@ -176,7 +176,8 @@ export default function DashboardPage() {
       {/* Lista de clientes devedores */}
       <div className="bg-gray-900 rounded-lg p-6 shadow">
         <h2 className="text-lg font-bold text-white mb-4">Clientes Devedores</h2>
-        <div className="overflow-x-auto">
+        {/* Tabela tradicional para desktop */}
+        <div className="overflow-x-auto hidden md:block">
           <table className="min-w-full text-white">
             <thead>
               <tr>
@@ -218,6 +219,45 @@ export default function DashboardPage() {
               )}
             </tbody>
           </table>
+        </div>
+        {/* Cards responsivos para mobile */}
+        <div className="block md:hidden space-y-4">
+          {data.clientesDevedores.length === 0 ? (
+            <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
+          ) : (
+            data.clientesDevedores.flatMap((c) =>
+              c.vendas.map((v, idx) => (
+                <div key={c.id + '-' + v.vendaId} className="bg-gray-800 rounded-xl p-4 shadow flex flex-col gap-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-white text-base">{c.nome}</span>
+                    <span className="text-xs text-gray-400">#{v.vendaId}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Data</span>
+                    <span className="text-white">{new Date(v.data).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Valor Total</span>
+                    <span className="text-white font-semibold">€ {v.valorTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Valor Pago</span>
+                    <span className="text-green-400 font-semibold">€ {v.valorPago.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="text-gray-400">Em Dívida</span>
+                    <span className="text-yellow-400 font-bold">€ {v.valorEmDivida.toFixed(2)}</span>
+                  </div>
+                  <button
+                    className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs shadow w-full"
+                    onClick={() => { setVendaSelecionada({ ...v, cliente: c.nome }); setShowVendaModal(true); }}
+                  >
+                    Mais informações
+                  </button>
+                </div>
+              ))
+            )
+          )}
         </div>
       </div>
 
