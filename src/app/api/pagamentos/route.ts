@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Calcular valorFinal baseado nos produtos
-    const valorFinal = venda.produtos.reduce((acc, p) => acc + p.valorFinal, 0);
+    const valorFinal = venda.produtos.reduce((acc, p) => acc + (p.valorFinal * (p.quantidade || 1)), 0);
 
     // Atualizar valorPago e status na venda
     const statusAutomatico = totalPago >= valorFinal ? 'PAGO' : 'PENDENTE';
@@ -162,7 +162,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Calcular valorFinal baseado nos produtos
-    const valorFinal = venda.produtos.reduce((acc, p) => acc + p.valorFinal, 0);
+    const valorFinal = venda.produtos.reduce((acc, p) => acc + (p.valorFinal * (p.quantidade || 1)), 0);
 
     // Atualizar valorPago e status na venda
     const statusAutomatico = totalPago >= valorFinal ? 'PAGO' : 'PENDENTE';
