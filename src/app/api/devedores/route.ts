@@ -41,7 +41,7 @@ export async function GET() {
     // Processar os dados para incluir informações calculadas
     const clientesProcessados = clientesDevedores.map(cliente => {
       const vendasProcessadas = cliente.vendas.map(venda => {
-        const valorFinal = venda.produtos.reduce((sum, produto) => sum + produto.valorFinal, 0);
+        const valorFinal = venda.produtos.reduce((sum, produto) => sum + (produto.valorFinal * produto.quantidade), 0);
         const valorEmDivida = valorFinal - (venda.valorPago || 0);
         const numPagamentos = venda.pagamentos.length;
         const foiDevedor = venda.status === 'PENDENTE' || (venda.status === 'PAGO' && numPagamentos > 1);
@@ -59,7 +59,7 @@ export async function GET() {
       const totalVendas = vendasProcessadas.length;
       const vendasEmAberto = vendasProcessadas.filter(v => v.status === 'PENDENTE').length;
       const vendasPagasParcelado = vendasProcessadas.filter(v => v.status === 'PAGO' && v.numPagamentos > 1).length;
-      const totalDevido = vendasProcessadas.reduce((sum, v) => sum + v.valorEmDivida, 0);
+      const totalDevido = vendasProcessadas.reduce((sum, v) => sum + (v.valorEmDivida > 0 ? v.valorEmDivida : 0), 0);
       const valorMaxDevido = Math.max(...vendasProcessadas.map(v => v.valorFinal), 0);
       const ultimaVenda = vendasProcessadas[0];
       const ultimoPagamento = ultimaVenda?.pagamentos[0];
