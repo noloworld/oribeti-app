@@ -193,6 +193,18 @@ const SorteiosPage = () => {
     }
   };
 
+  // Função para remover sorteio arquivado
+  const handleRemoverSorteio = async (sorteioId: number) => {
+    if (!window.confirm('Tem certeza que deseja remover este sorteio arquivado? Essa ação não pode ser desfeita.')) return;
+    try {
+      const res = await fetch(`/api/sorteios/${sorteioId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Erro ao remover sorteio');
+      fetchSorteios();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Sorteios</h1>
@@ -260,6 +272,14 @@ const SorteiosPage = () => {
                   >
                     Ver
                   </button>
+                  {tab === 'arquivados' && (
+                    <button
+                      className="bg-red-100 text-red-700 rounded-md px-3 py-1 font-semibold hover:bg-red-200 transition"
+                      onClick={() => handleRemoverSorteio(sorteio.id)}
+                    >
+                      Remover
+                    </button>
+                  )}
                   {tab === 'ativos' && (
                     <>
                       <button
@@ -321,6 +341,14 @@ const SorteiosPage = () => {
                         >
                           Ver
                         </button>
+                        {tab === 'arquivados' && (
+                          <button
+                            className="bg-red-100 text-red-700 rounded-md px-3 py-1 font-semibold hover:bg-red-200 transition"
+                            onClick={() => handleRemoverSorteio(sorteio.id)}
+                          >
+                            Remover
+                          </button>
+                        )}
                         {tab === 'ativos' && (
                           <>
                             <button
