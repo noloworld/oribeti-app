@@ -115,8 +115,8 @@ model ParticipacaoSorteio {
   numero     Int
   data       DateTime @default(now())
 
-  sorteio    Sorteio  @relation(fields: [sorteioId], references: [id])
-  cliente    Cliente  @relation(fields: [clienteId], references: [id])
+  sorteio    Sorteio  @relation(fields: [sorteioId], references: [id], onDelete: Cascade)
+  cliente    Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
 }
 
 model PremioSorteio {
