@@ -496,22 +496,22 @@ export default function VendasPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Produtos</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Em Dívida</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Data</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-gray-300">CLIENTE</th>
+                    {/* <th className="px-2 sm:px-4 py-2 text-left text-gray-300">PRODUTOS</th> */}
+                    <th className="px-2 sm:px-4 py-2 text-left text-gray-300">EM DÍVIDA</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-gray-300">DATA</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-gray-300">AÇÕES</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {clientesDevedores.length === 0 && (
-                    <tr><td colSpan={5} className="text-center text-gray-400 py-4">Nenhum devedor</td></tr>
+                    <tr><td colSpan={4} className="text-center text-gray-400 py-4">Nenhum devedor</td></tr>
                   )}
                   {clientesDevedores.map((cliente) => (
                     <React.Fragment key={cliente.id}>
                       <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setClienteExpandido(cliente.id === clienteExpandido ? null : cliente.id)}>
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{cliente.nome}</td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden sm:table-cell">{cliente.vendas.map(v => v.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')).join('; ')}</td>
+                        {/* <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden sm:table-cell">{cliente.vendas.map(v => v.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')).join('; ')}</td> */}
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-red-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</td>
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">{cliente.vendas[0] ? new Date(cliente.vendas[0].data).toLocaleDateString('pt-PT') : ''}</td>
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
@@ -520,28 +520,30 @@ export default function VendasPage() {
                       </tr>
                       {clienteExpandido === cliente.id && (
                         <tr>
-                          <td colSpan={5} className="bg-gray-100 p-4">
-                            <div className="space-y-2">
+                          <td colSpan={4} className="bg-gray-800 p-4">
+                            <div className="space-y-4">
                               {cliente.vendas.map((venda) => (
-                                <div key={venda.id} className="border-b border-gray-300 pb-2 mb-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                  <div>
-                                    <span className="font-semibold">{venda.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}</span>
-                                    <span className="ml-2 text-gray-500">{new Date(venda.data).toLocaleDateString('pt-PT')}</span>
+                                <div key={venda.id} className="rounded-lg border border-gray-700 bg-gray-900 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow">
+                                  <div className="flex-1">
+                                    <div className="text-white font-semibold text-base mb-1">{venda.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}</div>
+                                    <div className="text-gray-400 text-sm mb-1">Data: {new Date(venda.data).toLocaleDateString('pt-PT')}</div>
                                   </div>
-                                  <div className="text-red-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorEmDivida)}</div>
-                                  <div className="flex gap-2">
-                                    <button className="text-blue-600 hover:text-blue-900" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}>
-                                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                    </button>
-                                    <button className="text-green-600 hover:text-green-900" title="Imprimir" onClick={() => handlePrintVenda(venda)}>
-                                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg>
-                                    </button>
-                                    <button className="text-yellow-600 hover:text-yellow-900" title="Adicionar Pagamento" onClick={() => handleAbrirPagamento(venda)}>
-                                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                                    </button>
-                                    <button className="text-red-600 hover:text-red-900" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}>
-                                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                    </button>
+                                  <div className="flex flex-col items-end md:items-center gap-2 min-w-[120px]">
+                                    <div className="text-lg font-bold text-red-400">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorEmDivida)}</div>
+                                    <div className="flex gap-2 mt-1">
+                                      <button className="text-blue-400 hover:text-blue-200" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                      </button>
+                                      <button className="text-green-400 hover:text-green-200" title="Imprimir" onClick={() => handlePrintVenda(venda)}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg>
+                                      </button>
+                                      <button className="text-yellow-400 hover:text-yellow-200" title="Adicionar Pagamento" onClick={() => handleAbrirPagamento(venda)}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                      </button>
+                                      <button className="text-red-400 hover:text-red-200" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               ))}
