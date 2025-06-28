@@ -6,7 +6,7 @@ interface Sorteio {
   id: number;
   nome: string;
   dataCriacao: string;
-  participacoes: { id: number }[];
+  participacoes: { id: number; clienteId?: number; cliente?: { id: number; nome: string } }[];
   encerrado: boolean;
   vencedorId?: number;
 }
@@ -248,53 +248,39 @@ const SorteiosPage = () => {
               </tr>
             </thead>
             <tbody>
-              {tab === 'arquivados' ? (
-                <table className="w-full text-left">
-                  <thead>
+              {tab === 'arquivados'
+                ? sorteios.length === 0 ? (
                     <tr>
-                      <th className="py-2 px-2">Nome</th>
-                      <th className="py-2 px-2">Data de Criação</th>
-                      <th className="py-2 px-2">Total de Participantes</th>
-                      <th className="py-2 px-2">Vencedor</th>
-                      <th className="py-2 px-2">Ações</th>
+                      <td colSpan={5} className="text-center py-8">Nenhum sorteio encontrado.</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {sorteios.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="text-center py-8">Nenhum sorteio encontrado.</td>
+                  ) : (
+                    sorteios.map((sorteio) => (
+                      <tr key={sorteio.id}>
+                        <td className="py-2 px-2">{sorteio.nome}</td>
+                        <td className="py-2 px-2">{new Date(sorteio.dataCriacao).toLocaleDateString()}</td>
+                        <td className="py-2 px-2">{sorteio.participacoes?.length ?? 0}</td>
+                        <td className="py-2 px-2">
+                          {sorteio.vencedorId && sorteio.participacoes ? (
+                            <span className="text-green-600 font-semibold">
+                              {sorteio.participacoes.find(p => p.clienteId === sorteio.vencedorId)?.cliente?.nome || '—'}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-2 align-middle">
+                          <button
+                            className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
+                            onClick={() => abrirModalVer(sorteio)}
+                            style={{ display: 'inline-block', minWidth: 60 }}
+                          >
+                            Ver
+                          </button>
+                        </td>
                       </tr>
-                    ) : (
-                      sorteios.map((sorteio) => (
-                        <tr key={sorteio.id}>
-                          <td className="py-2 px-2">{sorteio.nome}</td>
-                          <td className="py-2 px-2">{new Date(sorteio.dataCriacao).toLocaleDateString()}</td>
-                          <td className="py-2 px-2">{sorteio.participacoes?.length ?? 0}</td>
-                          <td className="py-2 px-2">
-                            {sorteio.vencedorId && sorteio.participacoes ? (
-                              <span className="text-green-600 font-semibold">
-                                {sorteio.participacoes.find(p => p.clienteId === sorteio.vencedorId)?.cliente?.nome || '—'}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">—</span>
-                            )}
-                          </td>
-                          <td className="py-2 px-2 align-middle">
-                            <button
-                              className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
-                              onClick={() => abrirModalVer(sorteio)}
-                              style={{ display: 'inline-block', minWidth: 60 }}
-                            >
-                              Ver
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              ) : (
-                sorteios.length === 0 ? (
+                    ))
+                  )
+                : sorteios.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="text-center py-8">Nenhum sorteio encontrado.</td>
                   </tr>
@@ -332,8 +318,7 @@ const SorteiosPage = () => {
                       </td>
                     </tr>
                   ))
-                )
-              )}
+                )}
             </tbody>
           </table>
         )}
