@@ -640,6 +640,7 @@ export default function VendasPage() {
                     type="button"
                     onClick={() => setIsPrestacoes((v) => !v)}
                     className={`px-3 py-1 rounded text-sm font-medium transition ${isPrestacoes ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
+                    disabled={!isFormValid()}
                   >
                     {isPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
                   </button>
