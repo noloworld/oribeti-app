@@ -165,9 +165,8 @@ export default function VendasPage() {
     }
     setLoading(true);
     try {
-      // Calcular valor pago automaticamente
-      const valorPago = isPrestacoes ? Number(form.valorPago || 0) : Number(form.valorFinal);
-      
+      // Calcular valor pago corretamente
+      const valorPago = isPrestacoes ? Number(form.valorPago || 0) : totalFinal;
       const res = await fetch('/api/vendas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -176,6 +175,7 @@ export default function VendasPage() {
           produtos,
           observacoes: form.observacoes,
           data: form.data,
+          valorPago, // Enviar valorPago correto
           status: 'PENDENTE',
         }),
       });

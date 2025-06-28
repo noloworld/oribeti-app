@@ -83,10 +83,7 @@ export default function LoginPage() {
             disabled={loading}
           >
             {loading ? (
-              <>
-                <img src="/gear.gif" alt="Carregando" className="w-6 h-6 inline-block mr-2" />
-                Entrando
-              </>
+              <>Entrando</>
             ) : "Acessar Painel"}
           </button>
           {error && <div className="text-red-400 text-sm text-center font-semibold bg-white/10 rounded p-2">{error}</div>}
