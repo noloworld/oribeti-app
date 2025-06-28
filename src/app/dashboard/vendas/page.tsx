@@ -638,9 +638,15 @@ export default function VendasPage() {
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
-                    onClick={() => setIsPrestacoes((v) => !v)}
+                    onClick={() => {
+                      if (!isFormValid()) {
+                        toast.error('Preencha os campos acima primeiro');
+                        setTouched(true);
+                        return;
+                      }
+                      setIsPrestacoes((v) => !v);
+                    }}
                     className={`px-3 py-1 rounded text-sm font-medium transition ${isPrestacoes ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
-                    disabled={!isFormValid()}
                   >
                     {isPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
                   </button>
