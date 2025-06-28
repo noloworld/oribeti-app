@@ -90,6 +90,7 @@ export default function VendasPage() {
   const [vendaSelecionada, setVendaSelecionada] = useState<Venda | null>(null);
   const [showVisualizarModal, setShowVisualizarModal] = useState(false);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -156,10 +157,20 @@ export default function VendasPage() {
   const totalRevista = produtos.reduce((acc, p) => acc + Number(p.valorRevista || 0) * Number(p.quantidade || 1), 0);
   const totalFinal = produtos.reduce((acc, p) => acc + Number(p.valorFinal || 0) * Number(p.quantidade || 1), 0);
 
+  // Função para checar se todos os campos obrigatórios estão preenchidos
+  const isFormValid = () => {
+    if (!form.clienteId || !form.data) return false;
+    for (const p of produtos) {
+      if (!p.nomeProduto || !p.quantidade || !p.valorRevista || !p.valorFinal) return false;
+    }
+    return true;
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setTouched(true);
     // Validação simples
-    if (!form.clienteId || !form.data) {
+    if (!isFormValid()) {
       toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
@@ -190,6 +201,7 @@ export default function VendasPage() {
       setModalAberto(false);
       setForm({ clienteId: '', nomeProduto: '', quantidade: 1, valorRevista: 0, valorFinal: 0, valorPago: 0, observacoes: '', data: '', status: 'PENDENTE' });
       setIsPrestacoes(false); // Reset do estado de prestações
+      setTouched(false);
       fetchVendas();
     } catch {
       toast.error('Erro ao registrar venda.');
@@ -509,8 +521,8 @@ export default function VendasPage() {
 
       {/* Modal de Venda */}
       {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={handleCloseModal}>
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" onClick={e => e.stopPropagation()}>
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 {editVenda ? 'Editar Venda' : 'Nova Venda'}
@@ -523,6 +535,7 @@ export default function VendasPage() {
                     onChange={(e) => setForm({ ...form, clienteId: e.target.value })}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
+                    onBlur={() => setTouched(true)}
                   >
                     <option value="">Selecione um cliente</option>
                     {clientes.map((cliente) => (
@@ -547,6 +560,7 @@ export default function VendasPage() {
                             className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
                             required
                             placeholder="Nome do produto"
+                            onBlur={() => setTouched(true)}
                           />
                         </div>
                         <div className="w-20">
@@ -559,6 +573,7 @@ export default function VendasPage() {
                             required
                             min="1"
                             placeholder="1"
+                            onBlur={() => setTouched(true)}
                           />
                         </div>
                         <div className="w-28">
@@ -572,6 +587,7 @@ export default function VendasPage() {
                             required
                             min="0"
                             placeholder="0,00"
+                            onBlur={() => setTouched(true)}
                           />
                         </div>
                         <div className="w-28">
@@ -585,6 +601,7 @@ export default function VendasPage() {
                             required
                             min="0"
                             placeholder="0,00"
+                            onBlur={() => setTouched(true)}
                           />
                         </div>
                         {produtos.length > 1 && (
@@ -615,6 +632,7 @@ export default function VendasPage() {
                     onChange={(e) => setForm({ ...form, data: e.target.value })}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
+                    onBlur={() => setTouched(true)}
                   />
                 </div>
                 <div className="flex items-center gap-4">
@@ -635,11 +653,15 @@ export default function VendasPage() {
                       onChange={(e) => setForm({ ...form, valorPago: Number(e.target.value) })}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                       min="0"
+                      onBlur={() => setTouched(true)}
                     />
                     <div className="text-sm text-yellow-700 mt-1">
                       Valor em dívida: € {(produtos.reduce((acc, p) => acc + Number(p.valorFinal || 0) * Number(p.quantidade || 1), 0) - Number(form.valorPago || 0)).toFixed(2)}
                     </div>
                   </div>
+                )}
+                {!isFormValid() && touched && (
+                  <div className="text-red-500 text-sm font-semibold mb-2">Preencha primeiro os campos acima</div>
                 )}
                 <div className="flex justify-end space-x-3">
                   <button
@@ -652,6 +674,7 @@ export default function VendasPage() {
                   <button
                     type="submit"
                     className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={loading || !isFormValid()}
                   >
                     {editVenda ? 'Atualizar' : 'Criar'}
                   </button>
@@ -724,8 +747,8 @@ export default function VendasPage() {
 
       {/* Modais no final do componente */}
       {showVisualizarModal && vendaSelecionada && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
-          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4" onClick={handleFecharVisualizar}>
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900" onClick={e => e.stopPropagation()}>
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={handleFecharVisualizar}>&times;</button>
             <div className="mb-5">
               <h2 className="text-2xl font-extrabold text-blue-900 mb-1 flex items-center gap-2">Detalhes da Venda</h2>

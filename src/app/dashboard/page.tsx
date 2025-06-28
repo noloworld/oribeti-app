@@ -262,8 +262,8 @@ export default function DashboardPage() {
       </div>
 
       {showVendaModal && vendaSelecionada && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4" onClick={() => setShowVendaModal(false)}>
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900" onClick={e => e.stopPropagation()}>
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={() => setShowVendaModal(false)}>&times;</button>
             <h2 className="text-xl font-bold mb-4 text-blue-900">Detalhes da Venda</h2>
             <div className="mb-2"><b>Cliente:</b> {vendaSelecionada.cliente}</div>
