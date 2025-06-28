@@ -196,13 +196,21 @@ const SorteiosPage = () => {
       <h1 className="text-2xl font-bold mb-4">Sorteios</h1>
       <div className="flex gap-4 mb-6">
         <button
-          className={`px-4 py-2 rounded ${tab === 'ativos' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          className={`px-4 py-2 rounded font-semibold transition ${
+            tab === 'ativos'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-600 text-white'
+          }`}
           onClick={() => setTab('ativos')}
         >
           Ativos
         </button>
         <button
-          className={`px-4 py-2 rounded ${tab === 'arquivados' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          className={`px-4 py-2 rounded font-semibold transition ${
+            tab === 'arquivados'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-600 text-white'
+          }`}
           onClick={() => setTab('arquivados')}
         >
           Arquivados
@@ -248,28 +256,30 @@ const SorteiosPage = () => {
                     <td className="py-2 px-2">{new Date(sorteio.dataCriacao).toLocaleDateString()}</td>
                     <td className="py-2 px-2">{sorteio.participacoes?.length ?? 0}</td>
                     <td className="py-2 px-2">
-                      <button
-                        className="text-blue-500 hover:underline mr-2"
-                        onClick={() => abrirModalVer(sorteio)}
-                      >
-                        Ver
-                      </button>
-                      {tab === 'ativos' && (
-                        <>
-                          <button
-                            className="text-green-500 hover:underline mr-2"
-                            onClick={() => abrirModalParticipante(sorteio)}
-                          >
-                            Adicionar Cliente
-                          </button>
-                          <button
-                            className="text-yellow-500 hover:underline"
-                            onClick={() => abrirModalVencedor(sorteio)}
-                          >
-                            Inserir Número Vencedor
-                          </button>
-                        </>
-                      )}
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          className="text-blue-500 hover:underline mr-0 sm:mr-2"
+                          onClick={() => abrirModalVer(sorteio)}
+                        >
+                          Ver
+                        </button>
+                        {tab === 'ativos' && (
+                          <>
+                            <button
+                              className="text-green-500 hover:underline mr-0 sm:mr-2"
+                              onClick={() => abrirModalParticipante(sorteio)}
+                            >
+                              Adicionar Cliente
+                            </button>
+                            <button
+                              className="text-yellow-500 hover:underline"
+                              onClick={() => abrirModalVencedor(sorteio)}
+                            >
+                              Inserir Número Vencedor
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -281,8 +291,8 @@ const SorteiosPage = () => {
 
       {/* Modal de criar sorteio */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-lg relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div className="bg-white text-black rounded-lg p-8 w-full max-w-md shadow-lg relative">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
               onClick={() => setShowModal(false)}
@@ -293,7 +303,7 @@ const SorteiosPage = () => {
             <form onSubmit={handleCriarSorteio}>
               <input
                 type="text"
-                className="w-full border rounded px-3 py-2 mb-4"
+                className="w-full border rounded px-3 py-2 mb-4 text-black"
                 placeholder="Nome do sorteio"
                 value={nomeSorteio}
                 onChange={e => setNomeSorteio(e.target.value)}
@@ -315,8 +325,8 @@ const SorteiosPage = () => {
 
       {/* Modal de adicionar participante */}
       {showParticipanteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-lg relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={e => { if (e.target === e.currentTarget) setShowParticipanteModal(false); }}>
+          <div className="bg-white text-black rounded-lg p-8 w-full max-w-md shadow-lg relative">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
               onClick={() => setShowParticipanteModal(false)}
@@ -325,9 +335,9 @@ const SorteiosPage = () => {
             </button>
             <h3 className="text-xl font-bold mb-4">Adicionar Participante</h3>
             <form onSubmit={handleAdicionarParticipante}>
-              <label className="block mb-2">Cliente</label>
+              <label className="block mb-2 text-black">Cliente</label>
               <select
-                className="w-full border rounded px-3 py-2 mb-4"
+                className="w-full border rounded px-3 py-2 mb-4 text-black"
                 value={clienteId}
                 onChange={e => setClienteId(e.target.value)}
                 required
@@ -337,10 +347,10 @@ const SorteiosPage = () => {
                   <option key={c.id} value={c.id}>{c.nome}</option>
                 ))}
               </select>
-              <label className="block mb-2">Número escolhido</label>
+              <label className="block mb-2 text-black">Número escolhido</label>
               <input
                 type="number"
-                className="w-full border rounded px-3 py-2 mb-4"
+                className="w-full border rounded px-3 py-2 mb-4 text-black"
                 placeholder="Número"
                 value={numero}
                 onChange={e => setNumero(e.target.value)}
@@ -362,8 +372,8 @@ const SorteiosPage = () => {
 
       {/* Modal de inserir número vencedor */}
       {showVencedorModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-lg relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={e => { if (e.target === e.currentTarget) setShowVencedorModal(false); }}>
+          <div className="bg-white text-black rounded-lg p-8 w-full max-w-md shadow-lg relative">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
               onClick={() => setShowVencedorModal(false)}
@@ -374,7 +384,7 @@ const SorteiosPage = () => {
             <form onSubmit={handleInserirVencedor}>
               <input
                 type="number"
-                className="w-full border rounded px-3 py-2 mb-4"
+                className="w-full border rounded px-3 py-2 mb-4 text-black"
                 placeholder="Número vencedor"
                 value={numeroVencedor}
                 onChange={e => setNumeroVencedor(e.target.value)}
@@ -397,8 +407,8 @@ const SorteiosPage = () => {
 
       {/* Modal de ver participantes */}
       {showVerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-2xl shadow-lg relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={e => { if (e.target === e.currentTarget) setShowVerModal(false); }}>
+          <div className="bg-white text-black rounded-lg p-8 w-full max-w-2xl shadow-lg relative">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
               onClick={() => setShowVerModal(false)}

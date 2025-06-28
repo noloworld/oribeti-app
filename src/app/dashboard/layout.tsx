@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
+import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes, FaUserCircle, FaHome } from 'react-icons/fa';
 import { Transition } from '@headlessui/react';
 import Link from 'next/link';
 import { ModalProvider, useModalAberto } from '../../components/ModalContext';
@@ -78,14 +78,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, 1200);
   }
 
-  const links = [
-    { href: '/dashboard', label: 'Resumo Geral', icon: <FaChartPie className="text-lg mr-2" /> },
+  const menuItems = [
+    { href: '/dashboard', label: 'Resumo Geral', icon: <FaHome className="text-lg mr-2" /> },
     { href: '/dashboard/vendas', label: 'Registo Vendas', icon: <FaShoppingCart className="text-lg mr-2" /> },
     { href: '/dashboard/clientes', label: 'Clientes', icon: <FaUsers className="text-lg mr-2" /> },
     { href: '/dashboard/devedores', label: 'Devedores', icon: <FaExclamationTriangle className="text-lg mr-2" /> },
     { href: '/dashboard/despesas', label: 'Despesas', icon: <FaMoneyBillWave className="text-lg mr-2" /> },
-    { href: '/dashboard/definicoes', label: 'Definições', icon: <FaCog className="text-lg mr-2" /> },
     { href: '/dashboard/sorteios', label: 'Sorteios', icon: <FaGift className="text-lg mr-2" /> },
+    { href: '/dashboard/definicoes', label: 'Definições', icon: <FaCog className="text-lg mr-2" /> },
   ];
 
   function normalizePath(path: string) {
@@ -181,14 +181,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     }, 1200);
   }
 
-  const links = [
-    { href: '/dashboard', label: 'Resumo Geral', icon: <FaChartPie className="text-lg mr-2" /> },
+  const menuItems = [
+    { href: '/dashboard', label: 'Resumo Geral', icon: <FaHome className="text-lg mr-2" /> },
     { href: '/dashboard/vendas', label: 'Registo Vendas', icon: <FaShoppingCart className="text-lg mr-2" /> },
     { href: '/dashboard/clientes', label: 'Clientes', icon: <FaUsers className="text-lg mr-2" /> },
     { href: '/dashboard/devedores', label: 'Devedores', icon: <FaExclamationTriangle className="text-lg mr-2" /> },
     { href: '/dashboard/despesas', label: 'Despesas', icon: <FaMoneyBillWave className="text-lg mr-2" /> },
-    { href: '/dashboard/definicoes', label: 'Definições', icon: <FaCog className="text-lg mr-2" /> },
     { href: '/dashboard/sorteios', label: 'Sorteios', icon: <FaGift className="text-lg mr-2" /> },
+    { href: '/dashboard/definicoes', label: 'Definições', icon: <FaCog className="text-lg mr-2" /> },
   ];
 
   function normalizePath(path: string) {
@@ -252,7 +252,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           )}
         </div>
         <nav className="flex flex-col gap-2 mb-8">
-          {links.map(link => (
+          {menuItems.map(link => (
             <a
               key={link.href}
               href={link.href}
