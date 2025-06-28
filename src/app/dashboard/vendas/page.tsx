@@ -92,6 +92,10 @@ export default function VendasPage() {
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
   const [touched, setTouched] = useState(false);
   const [clienteExpandido, setClienteExpandido] = useState<number | null>(null);
+  const [abaterClienteId, setAbaterClienteId] = useState<number | null>(null);
+  const [valorAbater, setValorAbater] = useState<string>('');
+  const [abaterLoading, setAbaterLoading] = useState(false);
+  const [abaterErro, setAbaterErro] = useState<string>('');
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -379,6 +383,55 @@ export default function VendasPage() {
     setVendaSelecionada(null);
   }
 
+  // Função para abater valor na venda mais antiga em aberto do cliente
+  async function handleAbaterDivida(cliente: any) {
+    setAbaterErro('');
+    const valor = parseFloat(valorAbater.replace(',', '.'));
+    if (isNaN(valor) || valor <= 0) {
+      setAbaterErro('Digite um valor válido.');
+      return;
+    }
+    if (valor > cliente.totalEmDivida) {
+      setAbaterErro('O valor não pode ser maior que o total em dívida.');
+      return;
+    }
+    setAbaterLoading(true);
+    try {
+      // Encontrar a venda mais antiga em aberto
+      const vendaEmAberto = cliente.vendas.slice().reverse().find((v: any) => v.valorEmDivida > 0);
+      if (!vendaEmAberto) {
+        setAbaterErro('Nenhuma venda em aberto encontrada.');
+        setAbaterLoading(false);
+        return;
+      }
+      // Chamar API de pagamentos
+      const res = await fetch('/api/pagamentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vendaId: vendaEmAberto.id,
+          valor: valor,
+          data: new Date().toISOString().split('T')[0],
+          observacoes: 'Abatimento direto pelo painel de devedores',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAbaterErro(data.error || 'Erro ao abater dívida.');
+        setAbaterLoading(false);
+        return;
+      }
+      setAbaterClienteId(null);
+      setValorAbater('');
+      setAbaterErro('');
+      fetchVendas();
+    } catch (e) {
+      setAbaterErro('Erro ao abater dívida.');
+    } finally {
+      setAbaterLoading(false);
+    }
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -494,13 +547,12 @@ export default function VendasPage() {
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-800">
                   <tr>
-                    <th className="px-2 sm:px-4 py-2 text-left text-gray-300">CLIENTE</th>
-                    {/* <th className="px-2 sm:px-4 py-2 text-left text-gray-300">PRODUTOS</th> */}
-                    <th className="px-2 sm:px-4 py-2 text-left text-gray-300">EM DÍVIDA</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-gray-300">DATA</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-gray-300">AÇÕES</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">CLIENTE</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">EM DÍVIDA</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">DATA</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">AÇÕES</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -511,11 +563,40 @@ export default function VendasPage() {
                     <React.Fragment key={cliente.id}>
                       <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setClienteExpandido(cliente.id === clienteExpandido ? null : cliente.id)}>
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{cliente.nome}</td>
-                        {/* <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden sm:table-cell">{cliente.vendas.map(v => v.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')).join('; ')}</td> */}
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-red-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</td>
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">{cliente.vendas[0] ? new Date(cliente.vendas[0].data).toLocaleDateString('pt-PT') : ''}</td>
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
-                          {/* Ações gerais do cliente, se necessário */}
+                          {abaterClienteId === cliente.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min="0.01"
+                                max={cliente.totalEmDivida}
+                                step="0.01"
+                                value={valorAbater}
+                                onChange={e => setValorAbater(e.target.value)}
+                                className="w-24 px-2 py-1 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none"
+                                placeholder={`até €${cliente.totalEmDivida.toFixed(2)}`}
+                                disabled={abaterLoading}
+                              />
+                              <button
+                                className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded font-semibold"
+                                onClick={() => handleAbaterDivida(cliente)}
+                                disabled={abaterLoading}
+                              >OK</button>
+                              <button
+                                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded font-semibold"
+                                onClick={() => { setAbaterClienteId(null); setValorAbater(''); setAbaterErro(''); }}
+                                disabled={abaterLoading}
+                              >Cancelar</button>
+                              {abaterErro && <span className="text-red-400 text-xs ml-2">{abaterErro}</span>}
+                            </div>
+                          ) : (
+                            <button
+                              className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded font-semibold"
+                              onClick={e => { e.stopPropagation(); setAbaterClienteId(cliente.id); setValorAbater(''); setAbaterErro(''); }}
+                            >Abater</button>
+                          )}
                         </td>
                       </tr>
                       {clienteExpandido === cliente.id && (
@@ -531,15 +612,6 @@ export default function VendasPage() {
                                   <div className="flex flex-col items-end md:items-center gap-2 min-w-[120px]">
                                     <div className="text-lg font-bold text-red-400">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorEmDivida)}</div>
                                     <div className="flex gap-2 mt-1">
-                                      <button className="text-blue-400 hover:text-blue-200" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                      </button>
-                                      <button className="text-green-400 hover:text-green-200" title="Imprimir" onClick={() => handlePrintVenda(venda)}>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg>
-                                      </button>
-                                      <button className="text-yellow-400 hover:text-yellow-200" title="Adicionar Pagamento" onClick={() => handleAbrirPagamento(venda)}>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                                      </button>
                                       <button className="text-red-400 hover:text-red-200" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}>
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                       </button>
