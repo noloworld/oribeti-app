@@ -232,12 +232,8 @@ const SorteiosPage = () => {
         )}
       </div>
       <div className="bg-gray-800 rounded p-4 shadow min-h-[200px]">
-        {loading ? (
-          <div className="text-center py-8">Carregando...</div>
-        ) : erro ? (
-          <div className="text-red-500 text-center py-8">{erro}</div>
-        ) : (
-          <table className="w-full text-left">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-left">
             <thead>
               <tr>
                 <th className="py-2 px-2">Nome</th>
@@ -321,7 +317,7 @@ const SorteiosPage = () => {
                 )}
             </tbody>
           </table>
-        )}
+        </div>
       </div>
 
       {/* Modal de criar sorteio */}
