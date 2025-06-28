@@ -85,6 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/dashboard/devedores', label: 'Devedores', icon: <FaExclamationTriangle className="text-lg mr-2" /> },
     { href: '/dashboard/despesas', label: 'Despesas', icon: <FaMoneyBillWave className="text-lg mr-2" /> },
     { href: '/dashboard/definicoes', label: 'Definições', icon: <FaCog className="text-lg mr-2" /> },
+    { href: '/dashboard/sorteios', label: 'Sorteios', icon: <FaGift className="text-lg mr-2" /> },
   ];
 
   function normalizePath(path: string) {
@@ -187,6 +188,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { href: '/dashboard/devedores', label: 'Devedores', icon: <FaExclamationTriangle className="text-lg mr-2" /> },
     { href: '/dashboard/despesas', label: 'Despesas', icon: <FaMoneyBillWave className="text-lg mr-2" /> },
     { href: '/dashboard/definicoes', label: 'Definições', icon: <FaCog className="text-lg mr-2" /> },
+    { href: '/dashboard/sorteios', label: 'Sorteios', icon: <FaGift className="text-lg mr-2" /> },
   ];
 
   function normalizePath(path: string) {
