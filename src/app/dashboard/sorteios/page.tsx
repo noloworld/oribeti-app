@@ -7,6 +7,8 @@ interface Sorteio {
   nome: string;
   dataCriacao: string;
   participacoes: { id: number }[];
+  encerrado: boolean;
+  vencedorId?: number;
 }
 
 interface Cliente {
@@ -241,48 +243,84 @@ const SorteiosPage = () => {
                 <th className="py-2 px-2">Nome</th>
                 <th className="py-2 px-2">Data de Criação</th>
                 <th className="py-2 px-2">Total de Participantes</th>
+                <th className="py-2 px-2">Vencedor</th>
                 <th className="py-2 px-2">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {sorteios.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center py-8">Nenhum sorteio encontrado.</td>
-                </tr>
-              ) : (
-                sorteios.map((sorteio) => (
-                  <tr key={sorteio.id}>
-                    <td className="py-2 px-2">{sorteio.nome}</td>
-                    <td className="py-2 px-2">{new Date(sorteio.dataCriacao).toLocaleDateString()}</td>
-                    <td className="py-2 px-2">{sorteio.participacoes?.length ?? 0}</td>
-                    <td className="py-2 px-2">
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <button
-                          className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
-                          onClick={() => abrirModalVer(sorteio)}
-                        >
-                          Ver
-                        </button>
-                        {tab === 'ativos' && (
-                          <>
-                            <button
-                              className="bg-green-100 text-green-700 rounded-md px-3 py-1 font-semibold hover:bg-green-200 transition"
-                              onClick={() => abrirModalParticipante(sorteio)}
-                            >
-                              Adicionar Cliente
-                            </button>
-                            <button
-                              className="bg-yellow-100 text-yellow-800 rounded-md px-3 py-1 font-semibold hover:bg-yellow-200 transition"
-                              onClick={() => abrirModalVencedor(sorteio)}
-                            >
-                              Inserir Número Vencedor
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+              {tab === 'arquivados' ? (
+                sorteios.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-8">Nenhum sorteio encontrado.</td>
                   </tr>
-                ))
+                ) : (
+                  sorteios.map((sorteio) => (
+                    <tr key={sorteio.id}>
+                      <td className="py-2 px-2">{sorteio.nome}</td>
+                      <td className="py-2 px-2">{new Date(sorteio.dataCriacao).toLocaleDateString()}</td>
+                      <td className="py-2 px-2">{sorteio.participacoes?.length ?? 0}</td>
+                      <td className="py-2 px-2">
+                        {sorteio.vencedorId && sorteio.participacoes ? (
+                          <span className="text-green-600 font-semibold">
+                            {sorteio.participacoes.find(p => p.clienteId === sorteio.vencedorId)?.cliente?.nome || '—'}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
+                            onClick={() => abrirModalVer(sorteio)}
+                          >
+                            Ver
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )
+              ) : (
+                sorteios.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8">Nenhum sorteio encontrado.</td>
+                  </tr>
+                ) : (
+                  sorteios.map((sorteio) => (
+                    <tr key={sorteio.id}>
+                      <td className="py-2 px-2">{sorteio.nome}</td>
+                      <td className="py-2 px-2">{new Date(sorteio.dataCriacao).toLocaleDateString()}</td>
+                      <td className="py-2 px-2">{sorteio.participacoes?.length ?? 0}</td>
+                      <td className="py-2 px-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
+                            onClick={() => abrirModalVer(sorteio)}
+                          >
+                            Ver
+                          </button>
+                          {tab === 'ativos' && (
+                            <>
+                              <button
+                                className="bg-green-100 text-green-700 rounded-md px-3 py-1 font-semibold hover:bg-green-200 transition"
+                                onClick={() => abrirModalParticipante(sorteio)}
+                              >
+                                Adicionar Cliente
+                              </button>
+                              <button
+                                className="bg-yellow-100 text-yellow-800 rounded-md px-3 py-1 font-semibold hover:bg-yellow-200 transition"
+                                onClick={() => abrirModalVencedor(sorteio)}
+                              >
+                                Inserir Número Vencedor
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )
               )}
             </tbody>
           </table>
@@ -416,6 +454,20 @@ const SorteiosPage = () => {
               &times;
             </button>
             <h3 className="text-xl font-bold mb-4">Participantes do Sorteio: {sorteioSelecionado?.nome}</h3>
+            {/* Vencedor em destaque se sorteio encerrado */}
+            {sorteioSelecionado?.encerrado && sorteioSelecionado?.vencedorId && participantes.length > 0 && (
+              (() => {
+                const vencedor = participantes.find(p => p.cliente.id === sorteioSelecionado.vencedorId);
+                if (!vencedor) return null;
+                return (
+                  <div className="mb-4 text-lg">
+                    <span className="font-semibold">Vencedor: </span>
+                    <span className="text-green-600 font-bold">{vencedor.cliente.nome}</span>
+                    <span className="ml-2 text-gray-700">(Número: {vencedor.numero})</span>
+                  </div>
+                );
+              })()
+            )}
             {loadingParticipantes ? (
               <div className="text-center py-8">Carregando...</div>
             ) : erroVer ? (
@@ -438,25 +490,27 @@ const SorteiosPage = () => {
                       <td className="py-2 px-2">{p.cliente.nome}</td>
                       <td className="py-2 px-2">{p.numero}</td>
                       <td className="py-2 px-2">{new Date(p.data).toLocaleString()}</td>
-                      <td className="py-2 px-2">
-                        <button
-                          className="text-red-500 hover:underline"
-                          disabled={removendoId === p.id}
-                          onClick={async () => {
-                            if (!window.confirm('Remover esta participação?')) return;
-                            setRemovendoId(p.id);
-                            try {
-                              await fetch(`/api/sorteios/${sorteioSelecionado?.id}/participantes?idParticipacao=${p.id}`, { method: 'DELETE' });
-                              setParticipantes(participantes.filter((x) => x.id !== p.id));
-                              fetchSorteios();
-                            } finally {
-                              setRemovendoId(null);
-                            }
-                          }}
-                        >
-                          Remover
-                        </button>
-                      </td>
+                      {sorteioSelecionado && sorteioSelecionado.encerrado === false && (
+                        <td className="py-2 px-2">
+                          <button
+                            className="text-red-500 hover:underline"
+                            disabled={removendoId === p.id}
+                            onClick={async () => {
+                              if (!window.confirm('Remover esta participação?')) return;
+                              setRemovendoId(p.id);
+                              try {
+                                await fetch(`/api/sorteios/${sorteioSelecionado?.id}/participantes?idParticipacao=${p.id}`, { method: 'DELETE' });
+                                setParticipantes(participantes.filter((x) => x.id !== p.id));
+                                fetchSorteios();
+                              } finally {
+                                setRemovendoId(null);
+                              }
+                            }}
+                          >
+                            Remover
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
