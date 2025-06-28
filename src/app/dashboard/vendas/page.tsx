@@ -91,6 +91,7 @@ export default function VendasPage() {
   const [showVisualizarModal, setShowVisualizarModal] = useState(false);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [clienteExpandido, setClienteExpandido] = useState<number | null>(null);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -121,6 +122,25 @@ export default function VendasPage() {
       .then(res => res.json())
       .then(data => setTodasVendas(data.vendas || []));
   }, []);
+
+  // Após buscar todasVendas, agrupar devedores por cliente:
+  const clientesDevedores = Object.values(
+    todasVendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) - (v.valorPago || 0)) > 0)
+      .reduce((acc, venda) => {
+        const valorTotal = venda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0);
+        const valorEmDivida = valorTotal - (venda.valorPago || 0);
+        if (!acc[venda.cliente.id]) {
+          acc[venda.cliente.id] = {
+            id: venda.cliente.id,
+            nome: venda.cliente.nome,
+            totalEmDivida: 0,
+            vendas: []
+          };
+        }
+        acc[venda.cliente.id].totalEmDivida += valorEmDivida;
+        acc[venda.cliente.id].vendas.push({ ...venda, valorEmDivida });
+        return acc;
+      }, {} as Record<string, { id: number, nome: string, totalEmDivida: number, vendas: any[] }>));
 
   // Manipulação do formulário
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
@@ -390,7 +410,7 @@ export default function VendasPage() {
         {/* Número de Devedores */}
         <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
           <span className="text-sm font-medium text-gray-600">Devedores</span>
-          <span className="text-xl sm:text-2xl font-bold text-red-600">{devedores.length}</span>
+          <span className="text-xl sm:text-2xl font-bold text-red-600">{clientesDevedores.length}</span>
         </div>
         {/* Valor Total Devedores */}
         <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
@@ -484,34 +504,53 @@ export default function VendasPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {devedores.length === 0 && (
+                  {clientesDevedores.length === 0 && (
                     <tr><td colSpan={5} className="text-center text-gray-400 py-4">Nenhum devedor</td></tr>
                   )}
-                  {devedores.map((venda) => {
-                    const valorTotal = venda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0);
-                    const valorEmDivida = valorTotal - (venda.valorPago || 0);
-                    return (
-                      <tr key={venda.id} className="hover:bg-gray-50">
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{venda.cliente?.nome || 'N/A'}</td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden sm:table-cell">
-                          {venda.produtos.map(p => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}
-                        </td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-red-700 font-bold">
-                          {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(valorEmDivida)}
-                        </td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">
-                          {new Date(venda.data).toLocaleDateString('pt-PT')}
-                        </td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap flex gap-1 sm:gap-2">
-                          {/* Botões de ação: visualizar, imprimir, eliminar, adicionar pagamento */}
-                          <button className="text-blue-600 hover:text-blue-900" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
-                          <button className="text-green-600 hover:text-green-900" title="Imprimir" onClick={() => handlePrintVenda(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
-                          <button className="text-yellow-600 hover:text-yellow-900" title="Adicionar Pagamento" onClick={() => handleAbrirPagamento(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg></button>
-                          <button className="text-red-600 hover:text-red-900" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                  {clientesDevedores.map((cliente) => (
+                    <React.Fragment key={cliente.id}>
+                      <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setClienteExpandido(cliente.id === clienteExpandido ? null : cliente.id)}>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{cliente.nome}</td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden sm:table-cell">{cliente.vendas.map(v => v.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')).join('; ')}</td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-red-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">{cliente.vendas[0] ? new Date(cliente.vendas[0].data).toLocaleDateString('pt-PT') : ''}</td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                          {/* Ações gerais do cliente, se necessário */}
                         </td>
                       </tr>
-                    );
-                  })}
+                      {clienteExpandido === cliente.id && (
+                        <tr>
+                          <td colSpan={5} className="bg-gray-100 p-4">
+                            <div className="space-y-2">
+                              {cliente.vendas.map((venda) => (
+                                <div key={venda.id} className="border-b border-gray-300 pb-2 mb-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                  <div>
+                                    <span className="font-semibold">{venda.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}</span>
+                                    <span className="ml-2 text-gray-500">{new Date(venda.data).toLocaleDateString('pt-PT')}</span>
+                                  </div>
+                                  <div className="text-red-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorEmDivida)}</div>
+                                  <div className="flex gap-2">
+                                    <button className="text-blue-600 hover:text-blue-900" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}>
+                                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                    </button>
+                                    <button className="text-green-600 hover:text-green-900" title="Imprimir" onClick={() => handlePrintVenda(venda)}>
+                                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg>
+                                    </button>
+                                    <button className="text-yellow-600 hover:text-yellow-900" title="Adicionar Pagamento" onClick={() => handleAbrirPagamento(venda)}>
+                                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                    </button>
+                                    <button className="text-red-600 hover:text-red-900" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}>
+                                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
                 </tbody>
               </table>
             </div>
