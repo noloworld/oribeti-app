@@ -177,7 +177,7 @@ export default function VendasPage() {
     setLoading(true);
     try {
       // Calcular valor pago corretamente
-      const valorPago = isPrestacoes ? Number(form.valorPago || 0) : totalFinal;
+      const valorPago = isPrestacoes ? 0 : Number(form.valorPago || 0);
       const res = await fetch('/api/vendas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -635,36 +635,26 @@ export default function VendasPage() {
                     onBlur={() => setTouched(true)}
                   />
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 mb-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      if (!isFormValid()) {
-                        toast.error('Preencha os campos acima primeiro');
-                        setTouched(true);
-                        return;
-                      }
-                      setIsPrestacoes((v) => !v);
-                    }}
-                    className={`px-3 py-1 rounded text-sm font-medium transition ${isPrestacoes ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
+                    onClick={() => setIsPrestacoes(!isPrestacoes)}
+                    className={`px-3 py-1 rounded text-sm font-medium transition ${
+                      isPrestacoes 
+                        ? 'bg-yellow-600 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
                   >
                     {isPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
                   </button>
+                  {!isPrestacoes && (
+                    <span className="text-green-400 text-sm">Pagamento total à vista</span>
+                  )}
                 </div>
-                {isPrestacoes && (
+                {!isPrestacoes && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Valor Pago (€)</label>
-                    <input
-                      type="number"
-                      value={form.valorPago}
-                      onChange={(e) => setForm({ ...form, valorPago: Number(e.target.value) })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                      min="0"
-                      onBlur={() => setTouched(true)}
-                    />
-                    <div className="text-sm text-yellow-700 mt-1">
-                      Valor em dívida: € {(produtos.reduce((acc, p) => acc + Number(p.valorFinal || 0) * Number(p.quantidade || 1), 0) - Number(form.valorPago || 0)).toFixed(2)}
-                    </div>
+                    <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
+                    <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
                   </div>
                 )}
                 {!isFormValid() && touched && (

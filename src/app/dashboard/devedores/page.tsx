@@ -1,7 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { FaEuroSign, FaHistory, FaUser, FaCalendar, FaCheckCircle, FaClock } from 'react-icons/fa';
+import { FaEuroSign, FaHistory, FaUser, FaCalendar, FaCheckCircle, FaClock, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import PagamentoModal from '@/components/PagamentoModal';
 
 interface VendaProduto {
   id: number;
@@ -20,9 +21,9 @@ interface Pagamento {
 
 interface Venda {
   id: number;
-  valorPago: number;
   data: string;
   status: string;
+  valorPago: number;
   observacoes?: string;
   produtos: VendaProduto[];
   pagamentos: Pagamento[];
@@ -45,17 +46,25 @@ interface EstatisticasCliente {
 interface Cliente {
   id: number;
   nome: string;
-  email?: string;
-  telefone?: string;
-  morada?: string;
   vendas: Venda[];
   estatisticas: EstatisticasCliente;
+}
+
+interface ModalPagamentoState {
+  aberto: boolean;
+  venda: Venda | null;
+  cliente: Cliente | null;
 }
 
 export default function DevedoresPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [clienteExpandido, setClienteExpandido] = useState<number | null>(null);
+  const [modalPagamento, setModalPagamento] = useState<ModalPagamentoState>({
+    aberto: false,
+    venda: null,
+    cliente: null
+  });
 
   const fetchClientes = async () => {
     try {
@@ -99,6 +108,27 @@ export default function DevedoresPage() {
     return new Date(data).toLocaleDateString('pt-PT');
   };
 
+  const handleAbrirModalPagamento = (venda: Venda, cliente: Cliente) => {
+    setModalPagamento({
+      aberto: true,
+      venda,
+      cliente
+    });
+  };
+
+  const handleFecharModalPagamento = () => {
+    setModalPagamento({
+      aberto: false,
+      venda: null,
+      cliente: null
+    });
+  };
+
+  const handlePagamentoSucesso = () => {
+    handleFecharModalPagamento();
+    fetchClientes(); // Recarregar dados
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col gap-6">
@@ -122,7 +152,7 @@ export default function DevedoresPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {clientes.map((cliente) => (
+          {clientes.filter(c => c.estatisticas.totalDevido > 0).map((cliente) => (
             <div key={cliente.id} className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
               {/* Cabeçalho do Cliente */}
               <div 
@@ -166,11 +196,11 @@ export default function DevedoresPage() {
                   <div className="p-6">
                     <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
                       <FaHistory className="w-5 h-5 mr-2 text-blue-400" />
-                      Histórico de Vendas
+                      Vendas a Prestações Ativas
                     </h4>
                     
                     <div className="space-y-4">
-                      {cliente.vendas.map((venda) => (
+                      {cliente.vendas.filter(v => v.status === 'PENDENTE' || v.valorEmDivida > 0).map((venda) => (
                         <div key={venda.id} className="bg-gray-800 rounded-lg p-4">
                           {/* Cabeçalho da Venda */}
                           <div className="flex items-center justify-between mb-3">
@@ -253,11 +283,18 @@ export default function DevedoresPage() {
                             </div>
                           )}
 
-                          {/* Observações */}
-                          {venda.observacoes && (
-                            <div className="mt-3 p-3 bg-gray-700 rounded">
-                              <div className="text-sm text-gray-400 mb-1">Observações:</div>
-                              <div className="text-white text-sm">{venda.observacoes}</div>
+                          {/* Botão para adicionar pagamento */}
+                          {venda.valorEmDivida > 0 && (
+                            <div className="mt-3">
+                              <button
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAbrirModalPagamento(venda, cliente);
+                                }}
+                              >
+                                Adicionar Pagamento
+                              </button>
                             </div>
                           )}
                         </div>
@@ -269,6 +306,18 @@ export default function DevedoresPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modal de Pagamento */}
+      {modalPagamento.aberto && modalPagamento.venda && (
+        <PagamentoModal
+          isOpen={modalPagamento.aberto}
+          onClose={handleFecharModalPagamento}
+          vendaId={modalPagamento.venda.id}
+          valorFinal={modalPagamento.venda.valorFinal}
+          valorPago={modalPagamento.venda.valorPago || 0}
+          onPagamentoAdded={handlePagamentoSucesso}
+        />
       )}
     </div>
   );
