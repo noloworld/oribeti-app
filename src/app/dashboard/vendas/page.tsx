@@ -96,6 +96,8 @@ export default function VendasPage() {
   const [valorAbater, setValorAbater] = useState<string>('');
   const [abaterLoading, setAbaterLoading] = useState(false);
   const [abaterErro, setAbaterErro] = useState<string>('');
+  // Novo estado para expandir cliente em dia
+  const [clienteEmDiaExpandido, setClienteEmDiaExpandido] = useState<number | null>(null);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -145,6 +147,24 @@ export default function VendasPage() {
         acc[venda.cliente.id].vendas.push({ ...venda, valorEmDivida });
         return acc;
       }, {} as Record<string, { id: number, nome: string, totalEmDivida: number, vendas: any[] }>));
+
+  // Agrupar vendas pagas por cliente
+  const clientesEmDiaAgrupados = Object.values(
+    vendas.filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) - (v.valorPago || 0)) <= 0)
+      .reduce((acc, venda) => {
+        const valorTotal = venda.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0);
+        if (!acc[venda.cliente.id]) {
+          acc[venda.cliente.id] = {
+            id: venda.cliente.id,
+            nome: venda.cliente.nome,
+            totalPago: 0,
+            vendas: []
+          };
+        }
+        acc[venda.cliente.id].totalPago += venda.valorPago || 0;
+        acc[venda.cliente.id].vendas.push({ ...venda, valorTotal });
+        return acc;
+      }, {} as Record<string, { id: number, nome: string, totalPago: number, vendas: any[] }>));
 
   // Manipulação do formulário
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
@@ -227,6 +247,10 @@ export default function VendasPage() {
       setIsPrestacoes(false); // Reset do estado de prestações
       setTouched(false);
       fetchVendas();
+      // Atualizar todasVendas também
+      fetch('/api/vendas?all=true')
+        .then(res => res.json())
+        .then(data => setTodasVendas(data.vendas || []));
     } catch {
       toast.error('Erro ao registrar venda.');
     } finally {
@@ -425,6 +449,10 @@ export default function VendasPage() {
       setValorAbater('');
       setAbaterErro('');
       fetchVendas();
+      // Atualizar todasVendas também
+      fetch('/api/vendas?all=true')
+        .then(res => res.json())
+        .then(data => setTodasVendas(data.vendas || []));
     } catch (e) {
       setAbaterErro('Erro ao abater dívida.');
     } finally {
@@ -500,38 +528,57 @@ export default function VendasPage() {
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-800">
                   <tr>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Produtos</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Pago</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Data</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">CLIENTE</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">TOTAL PAGO</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">DATA</th>
+                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">AÇÕES</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {clientesEmDia.length === 0 && (
-                    <tr><td colSpan={5} className="text-center text-gray-400 py-4">Nenhum cliente em dia</td></tr>
+                  {clientesEmDiaAgrupados.length === 0 && (
+                    <tr><td colSpan={4} className="text-center text-gray-400 py-4">Nenhum cliente em dia</td></tr>
                   )}
-                  {clientesEmDia.map((venda) => (
-                    <tr key={venda.id} className="hover:bg-gray-50">
-                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{venda.cliente?.nome || 'N/A'}</td>
-                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden sm:table-cell">
-                        {venda.produtos.map(p => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}
-                      </td>
-                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-green-700 font-bold">
-                        {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorPago)}
-                      </td>
-                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">
-                        {new Date(venda.data).toLocaleDateString('pt-PT')}
-                      </td>
-                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap flex gap-1 sm:gap-2">
-                        {/* Botões de ação: visualizar, imprimir, eliminar */}
-                        <button className="text-blue-600 hover:text-blue-900" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
-                        <button className="text-green-600 hover:text-green-900" title="Imprimir" onClick={() => handlePrintVenda(venda)}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
-                        <button className="text-red-600 hover:text-red-900" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-                      </td>
-                    </tr>
+                  {clientesEmDiaAgrupados.map((cliente) => (
+                    <React.Fragment key={cliente.id}>
+                      <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setClienteEmDiaExpandido(cliente.id === clienteEmDiaExpandido ? null : cliente.id)}>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{cliente.nome}</td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-green-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalPago)}</td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">{cliente.vendas[0] ? new Date(cliente.vendas[0].data).toLocaleDateString('pt-PT') : ''}</td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap"></td>
+                      </tr>
+                      {clienteEmDiaExpandido === cliente.id && (
+                        <tr>
+                          <td colSpan={4} className="bg-gray-800 p-4">
+                            <div className="space-y-4">
+                              {cliente.vendas.map((venda) => (
+                                <div key={venda.id} className="rounded-lg border border-gray-700 bg-gray-900 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow">
+                                  <div className="flex-1">
+                                    <div className="text-white font-semibold text-base mb-1">{venda.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}</div>
+                                    <div className="text-gray-400 text-sm mb-1">Data: {new Date(venda.data).toLocaleDateString('pt-PT')}</div>
+                                  </div>
+                                  <div className="flex flex-col items-end md:items-center gap-2 min-w-[120px]">
+                                    <div className="text-lg font-bold text-green-400">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorPago)}</div>
+                                    <div className="flex gap-2 mt-1">
+                                      <button className="text-blue-400 hover:text-blue-200" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                      </button>
+                                      <button className="text-green-400 hover:text-green-200" title="Imprimir" onClick={() => handlePrintVenda(venda)}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg>
+                                      </button>
+                                      <button className="text-red-400 hover:text-red-200" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
