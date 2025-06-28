@@ -105,6 +105,7 @@ model Sorteio {
   vencedorId      Int?
   encerrado       Boolean               @default(false)
   participacoes   ParticipacaoSorteio[]
+  premios         PremioSorteio[]
 }
 
 model ParticipacaoSorteio {
@@ -116,4 +117,11 @@ model ParticipacaoSorteio {
 
   sorteio    Sorteio  @relation(fields: [sorteioId], references: [id])
   cliente    Cliente  @relation(fields: [clienteId], references: [id])
+}
+
+model PremioSorteio {
+  id         Int      @id @default(autoincrement())
+  sorteioId  Int
+  descricao  String
+  sorteio    Sorteio  @relation(fields: [sorteioId], references: [id], onDelete: Cascade)
 }

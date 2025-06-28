@@ -9,6 +9,7 @@ interface Sorteio {
   participacoes: { id: number; clienteId?: number; cliente?: { id: number; nome: string } }[];
   encerrado: boolean;
   vencedorId?: number;
+  premios?: { id: number; descricao: string }[];
 }
 
 interface Cliente {
@@ -49,6 +50,7 @@ const SorteiosPage = () => {
   const [loadingParticipantes, setLoadingParticipantes] = useState(false);
   const [erroVer, setErroVer] = useState<string | null>(null);
   const [removendoId, setRemovendoId] = useState<number | null>(null);
+  const [premios, setPremios] = useState<string[]>(['']);
 
   const fetchSorteios = () => {
     setLoading(true);
@@ -74,10 +76,11 @@ const SorteiosPage = () => {
     setCriando(true);
     setErroCriar(null);
     try {
+      if (premios.some(p => !p.trim())) throw new Error('Preencha todos os prêmios');
       const res = await fetch('/api/sorteios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: nomeSorteio }),
+        body: JSON.stringify({ nome: nomeSorteio, premios }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -85,6 +88,7 @@ const SorteiosPage = () => {
       }
       setShowModal(false);
       setNomeSorteio('');
+      setPremios(['']);
       fetchSorteios();
     } catch (err: any) {
       setErroCriar(err.message);
@@ -297,6 +301,18 @@ const SorteiosPage = () => {
                     </>
                   )}
                 </div>
+                <div className="flex flex-col gap-1 mb-2">
+                  {sorteio.premios && sorteio.premios.length > 0 && (
+                    <div>
+                      <span className="font-semibold">Prêmios:</span>
+                      <ul className="list-disc ml-6">
+                        {sorteio.premios.map((p: any) => (
+                          <li key={p.id}>{p.descricao}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           )}
@@ -310,6 +326,7 @@ const SorteiosPage = () => {
                 <th className="py-2 px-2">Data de Criação</th>
                 <th className="py-2 px-2">Total de Participantes</th>
                 <th className="py-2 px-2">Vencedor</th>
+                <th className="py-2 px-2">Prêmios</th>
                 <th className="py-2 px-2">Ações</th>
               </tr>
             </thead>
@@ -331,6 +348,18 @@ const SorteiosPage = () => {
                         </span>
                       ) : (
                         <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2">
+                      {sorteio.premios && sorteio.premios.length > 0 && (
+                        <div>
+                          <span className="font-semibold">Prêmios:</span>
+                          <ul className="list-disc ml-6">
+                            {sorteio.premios.map((p: any) => (
+                              <li key={p.id}>{p.descricao}</li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
                     </td>
                     <td className="py-2 px-2 align-middle">
@@ -396,6 +425,43 @@ const SorteiosPage = () => {
                 required
                 maxLength={100}
               />
+              <div className="mb-4">
+                <label className="block font-semibold mb-2">Prêmios</label>
+                {premios.map((premio, idx) => (
+                  <div key={idx} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      className="flex-1 border rounded px-3 py-2 text-black"
+                      placeholder={`Prêmio ${idx + 1}`}
+                      value={premio}
+                      onChange={e => {
+                        const arr = [...premios];
+                        arr[idx] = e.target.value;
+                        setPremios(arr);
+                      }}
+                      required
+                      maxLength={100}
+                    />
+                    {premios.length > 1 && (
+                      <button
+                        type="button"
+                        className="bg-red-100 text-red-700 rounded px-2 font-bold hover:bg-red-200"
+                        onClick={() => setPremios(premios.filter((_, i) => i !== idx))}
+                        tabIndex={-1}
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="bg-blue-100 text-blue-700 rounded px-3 py-1 font-semibold hover:bg-blue-200 transition"
+                  onClick={() => setPremios([...premios, ''])}
+                >
+                  + Adicionar Prêmio
+                </button>
+              </div>
               {erroCriar && <div className="text-red-500 mb-2">{erroCriar}</div>}
               <button
                 type="submit"

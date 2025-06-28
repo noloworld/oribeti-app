@@ -9,6 +9,7 @@ export async function GET() {
       orderBy: { dataCriacao: 'desc' },
       include: {
         participacoes: true,
+        premios: true,
       },
     });
     return NextResponse.json(sorteios);
@@ -20,12 +21,21 @@ export async function GET() {
 // POST /api/sorteios - Criar novo sorteio
 export async function POST(req: NextRequest) {
   try {
-    const { nome } = await req.json();
+    const { nome, premios } = await req.json();
     if (!nome || typeof nome !== 'string') {
       return NextResponse.json({ error: 'Nome do sorteio é obrigatório' }, { status: 400 });
     }
+    if (!premios || !Array.isArray(premios) || premios.length === 0) {
+      return NextResponse.json({ error: 'Informe pelo menos um prêmio' }, { status: 400 });
+    }
     const sorteio = await prisma.sorteio.create({
-      data: { nome },
+      data: {
+        nome,
+        premios: {
+          create: premios.map((descricao: string) => ({ descricao })),
+        },
+      },
+      include: { premios: true },
     });
     return NextResponse.json(sorteio, { status: 201 });
   } catch (error) {
