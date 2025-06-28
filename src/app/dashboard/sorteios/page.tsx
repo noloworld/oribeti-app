@@ -258,7 +258,7 @@ const SorteiosPage = () => {
                     <td className="py-2 px-2">
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button
-                          className="text-blue-500 hover:underline mr-0 sm:mr-2"
+                          className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
                           onClick={() => abrirModalVer(sorteio)}
                         >
                           Ver
@@ -266,13 +266,13 @@ const SorteiosPage = () => {
                         {tab === 'ativos' && (
                           <>
                             <button
-                              className="text-green-500 hover:underline mr-0 sm:mr-2"
+                              className="bg-green-100 text-green-700 rounded-md px-3 py-1 font-semibold hover:bg-green-200 transition"
                               onClick={() => abrirModalParticipante(sorteio)}
                             >
                               Adicionar Cliente
                             </button>
                             <button
-                              className="text-yellow-500 hover:underline"
+                              className="bg-yellow-100 text-yellow-800 rounded-md px-3 py-1 font-semibold hover:bg-yellow-200 transition"
                               onClick={() => abrirModalVencedor(sorteio)}
                             >
                               Inserir Número Vencedor
