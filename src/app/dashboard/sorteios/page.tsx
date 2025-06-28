@@ -232,7 +232,57 @@ const SorteiosPage = () => {
         )}
       </div>
       <div className="bg-gray-800 rounded p-4 shadow min-h-[200px]">
-        <div className="overflow-x-auto">
+        {/* Mobile: Cards verticais */}
+        <div className="block sm:hidden">
+          {sorteios.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">Nenhum sorteio encontrado.</div>
+          ) : (
+            sorteios.map((sorteio) => (
+              <div key={sorteio.id} className="bg-gray-900 rounded-lg p-4 mb-4 shadow flex flex-col gap-2">
+                <div><span className="font-semibold">Nome:</span> {sorteio.nome}</div>
+                {tab === 'arquivados' ? null : (
+                  <div><span className="font-semibold">Data de Criação:</span> {new Date(sorteio.dataCriacao).toLocaleDateString()}</div>
+                )}
+                <div><span className="font-semibold">Total de Participantes:</span> {sorteio.participacoes?.length ?? 0}</div>
+                <div>
+                  <span className="font-semibold">Vencedor:</span> {sorteio.vencedorId && sorteio.participacoes ? (
+                    <span className="text-green-600 font-semibold">
+                      {sorteio.participacoes.find(p => p.clienteId === sorteio.vencedorId)?.cliente?.nome || '—'}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
+                </div>
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  <button
+                    className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
+                    onClick={() => abrirModalVer(sorteio)}
+                  >
+                    Ver
+                  </button>
+                  {tab === 'ativos' && (
+                    <>
+                      <button
+                        className="bg-green-100 text-green-700 rounded-md px-3 py-1 font-semibold hover:bg-green-200 transition"
+                        onClick={() => abrirModalParticipante(sorteio)}
+                      >
+                        Adicionar Cliente
+                      </button>
+                      <button
+                        className="bg-yellow-100 text-yellow-800 rounded-md px-3 py-1 font-semibold hover:bg-yellow-200 transition"
+                        onClick={() => abrirModalVencedor(sorteio)}
+                      >
+                        Inserir Número Vencedor
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        {/* Desktop/tablet: Tabela tradicional */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full min-w-[600px] text-left">
             <thead>
               <tr>
@@ -244,77 +294,54 @@ const SorteiosPage = () => {
               </tr>
             </thead>
             <tbody>
-              {tab === 'arquivados'
-                ? sorteios.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-8">Nenhum sorteio encontrado.</td>
-                    </tr>
-                  ) : (
-                    sorteios.map((sorteio) => (
-                      <tr key={sorteio.id}>
-                        <td className="py-2 px-2">{sorteio.nome}</td>
-                        <td className="py-2 px-2">{new Date(sorteio.dataCriacao).toLocaleDateString()}</td>
-                        <td className="py-2 px-2">{sorteio.participacoes?.length ?? 0}</td>
-                        <td className="py-2 px-2">
-                          {sorteio.vencedorId && sorteio.participacoes ? (
-                            <span className="text-green-600 font-semibold">
-                              {sorteio.participacoes.find(p => p.clienteId === sorteio.vencedorId)?.cliente?.nome || '—'}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">—</span>
-                          )}
-                        </td>
-                        <td className="py-2 px-2 align-middle">
-                          <button
-                            className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
-                            onClick={() => abrirModalVer(sorteio)}
-                            style={{ display: 'inline-block', minWidth: 60 }}
-                          >
-                            Ver
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )
-                : sorteios.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="text-center py-8">Nenhum sorteio encontrado.</td>
+              {sorteios.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-8">Nenhum sorteio encontrado.</td>
+                </tr>
+              ) : (
+                sorteios.map((sorteio) => (
+                  <tr key={sorteio.id}>
+                    <td className="py-2 px-2">{sorteio.nome}</td>
+                    <td className="py-2 px-2">{new Date(sorteio.dataCriacao).toLocaleDateString()}</td>
+                    <td className="py-2 px-2">{sorteio.participacoes?.length ?? 0}</td>
+                    <td className="py-2 px-2">
+                      {sorteio.vencedorId && sorteio.participacoes ? (
+                        <span className="text-green-600 font-semibold">
+                          {sorteio.participacoes.find(p => p.clienteId === sorteio.vencedorId)?.cliente?.nome || '—'}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2 align-middle">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
+                          onClick={() => abrirModalVer(sorteio)}
+                        >
+                          Ver
+                        </button>
+                        {tab === 'ativos' && (
+                          <>
+                            <button
+                              className="bg-green-100 text-green-700 rounded-md px-3 py-1 font-semibold hover:bg-green-200 transition"
+                              onClick={() => abrirModalParticipante(sorteio)}
+                            >
+                              Adicionar Cliente
+                            </button>
+                            <button
+                              className="bg-yellow-100 text-yellow-800 rounded-md px-3 py-1 font-semibold hover:bg-yellow-200 transition"
+                              onClick={() => abrirModalVencedor(sorteio)}
+                            >
+                              Inserir Número Vencedor
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
                   </tr>
-                ) : (
-                  sorteios.map((sorteio) => (
-                    <tr key={sorteio.id}>
-                      <td className="py-2 px-2">{sorteio.nome}</td>
-                      <td className="py-2 px-2">{new Date(sorteio.dataCriacao).toLocaleDateString()}</td>
-                      <td className="py-2 px-2">{sorteio.participacoes?.length ?? 0}</td>
-                      <td className="py-2 px-2">
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <button
-                            className="bg-blue-100 text-blue-700 rounded-md px-3 py-1 font-semibold hover:bg-blue-200 transition"
-                            onClick={() => abrirModalVer(sorteio)}
-                          >
-                            Ver
-                          </button>
-                          {tab === 'ativos' && (
-                            <>
-                              <button
-                                className="bg-green-100 text-green-700 rounded-md px-3 py-1 font-semibold hover:bg-green-200 transition"
-                                onClick={() => abrirModalParticipante(sorteio)}
-                              >
-                                Adicionar Cliente
-                              </button>
-                              <button
-                                className="bg-yellow-100 text-yellow-800 rounded-md px-3 py-1 font-semibold hover:bg-yellow-200 transition"
-                                onClick={() => abrirModalVencedor(sorteio)}
-                              >
-                                Inserir Número Vencedor
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))
+              )}
             </tbody>
           </table>
         </div>
