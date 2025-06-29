@@ -76,24 +76,24 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
         
         {/* Phase 1: Logo Epic Entrance */}
         {phase >= 1 && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="text-center animate-logoEntrance">
-              <div className="text-8xl font-black mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-pulse">
+              <div className="text-4xl md:text-8xl font-black mb-2 md:mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-pulse">
                 ORIBETI
               </div>
-              <div className="w-64 h-1 bg-gradient-to-r from-transparent via-white to-transparent animate-expand"></div>
+              <div className="w-32 md:w-64 h-1 bg-gradient-to-r from-transparent via-white to-transparent animate-expand mx-auto"></div>
             </div>
           </div>
         )}
 
         {/* Phase 2: Epic Text Reveal */}
         {phase >= 2 && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="text-center animate-textReveal">
-              <div className="text-6xl font-bold mb-8 animate-glow">
+              <div className="text-3xl md:text-6xl font-bold mb-4 md:mb-8 animate-glow">
                 APRESENTAÇÃO
               </div>
-              <div className="text-3xl font-light tracking-widest animate-typewriter">
+              <div className="text-lg md:text-3xl font-light tracking-widest animate-typewriter">
                 ESPETACULAR
               </div>
             </div>
@@ -103,16 +103,16 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
         {/* Phase 3: Particle Explosion */}
         {phase >= 3 && (
           <>
-            {[...Array(50)].map((_, i) => (
+            {[...Array(window.innerWidth < 768 ? 25 : 50)].map((_, i) => (
               <div
                 key={i}
-                className="absolute w-2 h-2 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full animate-explode"
+                className="absolute w-1 md:w-2 h-1 md:h-2 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full animate-explode"
                 style={{
                   left: '50%',
                   top: '50%',
                   animationDelay: `${i * 20}ms`,
-                  '--random-x': `${(Math.random() - 0.5) * 1000}px`,
-                  '--random-y': `${(Math.random() - 0.5) * 1000}px`,
+                  '--random-x': `${(Math.random() - 0.5) * (window.innerWidth < 768 ? 500 : 1000)}px`,
+                  '--random-y': `${(Math.random() - 0.5) * (window.innerWidth < 768 ? 500 : 1000)}px`,
                 } as any}
               />
             ))}
@@ -121,17 +121,17 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
 
         {/* Phase 4: Final Epic Text */}
         {phase >= 4 && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="text-center animate-finalReveal">
-              <div className="text-7xl font-black mb-6 bg-gradient-to-r from-yellow-300 via-red-500 to-purple-600 bg-clip-text text-transparent animate-rainbow">
+              <div className="text-4xl md:text-7xl font-black mb-3 md:mb-6 bg-gradient-to-r from-yellow-300 via-red-500 to-purple-600 bg-clip-text text-transparent animate-rainbow">
                 PREPARE-SE
               </div>
-              <div className="text-4xl font-bold text-white animate-bounce">
+              <div className="text-2xl md:text-4xl font-bold text-white animate-bounce">
                 PARA O FUTURO!
               </div>
               {/* Epic Shockwave */}
-              <div className="absolute inset-0 border-4 border-white rounded-full animate-shockwave"></div>
-              <div className="absolute inset-0 border-2 border-blue-400 rounded-full animate-shockwave2"></div>
+              <div className="absolute inset-0 border-2 md:border-4 border-white rounded-full animate-shockwave"></div>
+              <div className="absolute inset-0 border-1 md:border-2 border-blue-400 rounded-full animate-shockwave2"></div>
             </div>
           </div>
         )}
@@ -165,10 +165,11 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
         {/* Skip Button */}
         <button
           onClick={onSkip}
-          className="absolute bottom-8 right-8 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-sm transition-all duration-300 animate-fadeIn"
+          className="absolute bottom-4 md:bottom-8 right-4 md:right-8 px-3 py-2 md:px-6 md:py-3 bg-white/10 hover:bg-white/20 text-white text-sm md:text-base rounded-lg backdrop-blur-sm transition-all duration-300 animate-fadeIn"
           style={{ animationDelay: '2s' }}
         >
-          Pular Intro →
+          <span className="hidden md:inline">Pular Intro →</span>
+          <span className="md:hidden">Pular →</span>
         </button>
       </div>
 
@@ -375,11 +376,11 @@ function SpeechBubble({
         transform: 'translate(-50%, -100%)'
       }}
     >
-      <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-2xl shadow-2xl max-w-sm">
-        <p className="text-sm font-medium leading-relaxed">{text}</p>
+      <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-2xl shadow-2xl max-w-xs md:max-w-sm mx-2">
+        <p className="text-xs md:text-sm font-medium leading-relaxed">{text}</p>
         {/* Speech bubble tail */}
         <div className="absolute top-full left-1/2 transform -translate-x-1/2">
-          <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[15px] border-l-transparent border-r-transparent border-t-blue-600"></div>
+          <div className="w-0 h-0 border-l-[10px] md:border-l-[15px] border-r-[10px] md:border-r-[15px] border-t-[10px] md:border-t-[15px] border-l-transparent border-r-transparent border-t-blue-600"></div>
         </div>
         {/* Animated border */}
         <div className="absolute inset-0 rounded-2xl border-2 border-white/30 animate-pulse"></div>
@@ -406,6 +407,18 @@ export default function PresentationOverlay() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [bubblePosition, setBubblePosition] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Calculate bubble position based on highlighted element
   useEffect(() => {
@@ -415,9 +428,11 @@ export default function PresentationOverlay() {
       const element = document.querySelector(currentStepData.highlightSelector!);
       if (element) {
         const rect = element.getBoundingClientRect();
+        // Adjust position for mobile
+        const mobileOffset = isMobile ? 10 : 20;
         setBubblePosition({
-          x: rect.left + rect.width / 2,
-          y: rect.top - 20
+          x: Math.min(Math.max(rect.left + rect.width / 2, 100), window.innerWidth - 100),
+          y: rect.top - mobileOffset
         });
       }
     };
@@ -430,7 +445,7 @@ export default function PresentationOverlay() {
       clearTimeout(timer);
       window.removeEventListener('resize', updateBubblePosition);
     };
-  }, [currentStepData?.highlightSelector]);
+  }, [currentStepData?.highlightSelector, isMobile]);
 
   useEffect(() => {
     if (!isPresenting || !currentStepData || isIntroPlaying) return;
@@ -477,97 +492,165 @@ export default function PresentationOverlay() {
 
   return (
     <>
-      {/* Top presentation bar - elegant and minimal */}
+      {/* Top presentation bar - fully responsive */}
       <div className="fixed top-0 left-0 right-0 z-[12000] pointer-events-auto">
         <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 shadow-2xl">
-          <div className="px-6 py-4">
+          <div className="px-2 py-2 md:px-6 md:py-4">
             {/* Progress bar */}
-            <div className="w-full bg-white/20 rounded-full h-1 mb-3">
+            <div className="w-full bg-white/20 rounded-full h-1 mb-2 md:mb-3">
               <div 
                 className="bg-white h-1 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
 
-            <div className="flex items-center justify-between text-white">
-              {/* Left: Step info */}
-              <div className="flex items-center gap-4">
-                <div className="text-sm font-medium opacity-90">
-                  Passo {currentStep + 1} de {steps.length}
+            {/* Mobile Layout */}
+            {isMobile ? (
+              <div className="space-y-2">
+                {/* Top row: Step info and controls */}
+                <div className="flex items-center justify-between text-white">
+                  <div className="flex items-center gap-2">
+                    <div className="text-xs font-medium opacity-90">
+                      {currentStep + 1}/{steps.length}
+                    </div>
+                    <div className="text-sm font-bold truncate max-w-[120px]">
+                      {currentStepData.title}
+                    </div>
+                  </div>
+                  
+                  {/* Mobile Controls */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={previousStep}
+                      disabled={currentStep === 0}
+                      className="p-1.5 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-white/30 rounded-lg transition-all"
+                      title="Anterior"
+                    >
+                      <FaChevronLeft className="w-3 h-3" />
+                    </button>
+
+                    <button
+                      onClick={toggleAutoPlay}
+                      className={`p-1.5 rounded-lg transition-all ${
+                        isAutoPlaying 
+                          ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-200' 
+                          : 'bg-green-500/20 hover:bg-green-500/30 text-green-200'
+                      }`}
+                      title={isAutoPlaying ? 'Pausar' : 'Reproduzir'}
+                    >
+                      {isAutoPlaying ? <FaPause className="w-3 h-3" /> : <FaPlay className="w-3 h-3" />}
+                    </button>
+
+                    <button
+                      onClick={stopPresentation}
+                      className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-all"
+                      title="Parar"
+                    >
+                      <FaStop className="w-3 h-3" />
+                    </button>
+
+                    <button
+                      onClick={nextStep}
+                      disabled={currentStep === steps.length - 1}
+                      className="p-1.5 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-white/30 rounded-lg transition-all"
+                      title="Próximo"
+                    >
+                      <FaChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
-                <div className="text-lg font-bold">
-                  {currentStepData.title}
+                
+                {/* Bottom row: Description */}
+                <div className="text-center">
+                  <p className="text-white/90 text-xs font-medium leading-relaxed">
+                    {currentStepData.description}
+                  </p>
                 </div>
               </div>
+            ) : (
+              /* Desktop Layout */
+              <div className="flex items-center justify-between text-white">
+                {/* Left: Step info */}
+                <div className="flex items-center gap-4">
+                  <div className="text-sm font-medium opacity-90">
+                    Passo {currentStep + 1} de {steps.length}
+                  </div>
+                  <div className="text-lg font-bold">
+                    {currentStepData.title}
+                  </div>
+                </div>
 
-              {/* Center: Description */}
-              <div className="flex-1 mx-8 text-center">
-                <p className="text-white/90 font-medium">
-                  {currentStepData.description}
-                </p>
+                {/* Center: Description */}
+                <div className="flex-1 mx-8 text-center">
+                  <p className="text-white/90 font-medium">
+                    {currentStepData.description}
+                  </p>
+                </div>
+
+                {/* Right: Controls */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={previousStep}
+                    disabled={currentStep === 0}
+                    className="p-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-white/30 rounded-lg transition-all"
+                    title="Anterior"
+                  >
+                    <FaChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={toggleAutoPlay}
+                    className={`p-2 rounded-lg transition-all ${
+                      isAutoPlaying 
+                        ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-200' 
+                        : 'bg-green-500/20 hover:bg-green-500/30 text-green-200'
+                    }`}
+                    title={isAutoPlaying ? 'Pausar' : 'Reproduzir'}
+                  >
+                    {isAutoPlaying ? <FaPause className="w-4 h-4" /> : <FaPlay className="w-4 h-4" />}
+                  </button>
+
+                  <button
+                    onClick={stopPresentation}
+                    className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-all"
+                    title="Parar apresentação"
+                  >
+                    <FaStop className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={nextStep}
+                    disabled={currentStep === steps.length - 1}
+                    className="p-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-white/30 rounded-lg transition-all"
+                    title="Próximo"
+                  >
+                    <FaChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-
-              {/* Right: Controls */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={previousStep}
-                  disabled={currentStep === 0}
-                  className="p-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-white/30 rounded-lg transition-all"
-                  title="Anterior"
-                >
-                  <FaChevronLeft className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={toggleAutoPlay}
-                  className={`p-2 rounded-lg transition-all ${
-                    isAutoPlaying 
-                      ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-200' 
-                      : 'bg-green-500/20 hover:bg-green-500/30 text-green-200'
-                  }`}
-                  title={isAutoPlaying ? 'Pausar' : 'Reproduzir'}
-                >
-                  {isAutoPlaying ? <FaPause className="w-4 h-4" /> : <FaPlay className="w-4 h-4" />}
-                </button>
-
-                <button
-                  onClick={stopPresentation}
-                  className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-all"
-                  title="Parar apresentação"
-                >
-                  <FaStop className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={nextStep}
-                  disabled={currentStep === steps.length - 1}
-                  className="p-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-white/30 rounded-lg transition-all"
-                  title="Próximo"
-                >
-                  <FaChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Speech Bubble */}
-      <SpeechBubble
-        text={currentStepData.description}
-        position={bubblePosition}
-        isVisible={!!currentStepData.highlightSelector}
-      />
+      {/* Speech Bubble - only on desktop */}
+      {!isMobile && (
+        <SpeechBubble
+          text={currentStepData.description}
+          position={bubblePosition}
+          isVisible={!!currentStepData.highlightSelector}
+        />
+      )}
 
-      {/* Elegant floating particles - reduced opacity */}
+      {/* Elegant floating particles - reduced for mobile */}
       <div className="fixed inset-0 pointer-events-none z-[9998]">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(isMobile ? 3 : 6)].map((_, i) => (
           <div
             key={i}
             className={`absolute rounded-full opacity-10 animate-float ${
-              i % 3 === 0 ? 'w-2 h-2 bg-blue-300' :
-              i % 3 === 1 ? 'w-1 h-1 bg-purple-300' :
-              'w-3 h-3 bg-indigo-200'
+              i % 3 === 0 ? 'w-1 md:w-2 h-1 md:h-2 bg-blue-300' :
+              i % 3 === 1 ? 'w-0.5 md:w-1 h-0.5 md:h-1 bg-purple-300' :
+              'w-2 md:w-3 h-2 md:h-3 bg-indigo-200'
             }`}
             style={{
               left: `${Math.random() * 100}%`,
@@ -581,9 +664,15 @@ export default function PresentationOverlay() {
 
       {/* All custom styles in one block */}
       <style jsx global>{`
-        /* Add padding to body when presentation is active */
+        /* Add padding to body when presentation is active - responsive */
         body {
-          padding-top: 80px !important;
+          padding-top: 70px !important;
+        }
+        
+        @media (min-width: 768px) {
+          body {
+            padding-top: 80px !important;
+          }
         }
 
         @keyframes float {
@@ -619,11 +708,25 @@ export default function PresentationOverlay() {
         @keyframes elementHighlight {
           0%, 100% { 
             transform: scale(1);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
           }
           50% { 
-            transform: scale(1.05);
-            box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.6);
+            transform: scale(1.02);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.6);
+          }
+        }
+        
+        /* Mobile-specific element highlighting */
+        @media (max-width: 767px) {
+          @keyframes elementHighlight {
+            0%, 100% { 
+              transform: scale(1);
+              box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4);
+            }
+            50% { 
+              transform: scale(1.01);
+              box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.7);
+            }
           }
         }
 
@@ -631,9 +734,15 @@ export default function PresentationOverlay() {
           ${currentStepData.highlightSelector} {
             position: relative !important;
             z-index: 11000 !important;
-            border-radius: 12px !important;
+            border-radius: 8px !important;
             animation: elementHighlight 2s ease-in-out infinite !important;
             transition: all 0.3s ease !important;
+          }
+          
+          @media (min-width: 768px) {
+            ${currentStepData.highlightSelector} {
+              border-radius: 12px !important;
+            }
           }
         ` : ''}
       `}</style>
