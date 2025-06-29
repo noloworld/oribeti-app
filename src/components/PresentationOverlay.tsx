@@ -157,34 +157,6 @@ export default function PresentationOverlay() {
         </div>
       </div>
 
-      {/* Spotlight effect for highlighted elements */}
-      {currentStepData.element && (
-        <style jsx global>{`
-          ${currentStepData.element} {
-            position: relative;
-            z-index: 10001;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 
-                        0 0 30px rgba(59, 130, 246, 0.8),
-                        inset 0 0 30px rgba(59, 130, 246, 0.3);
-            border-radius: 8px;
-            animation: spotlightPulse 2s infinite;
-          }
-          
-          @keyframes spotlightPulse {
-            0%, 100% { 
-              box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 
-                          0 0 30px rgba(59, 130, 246, 0.8),
-                          inset 0 0 30px rgba(59, 130, 246, 0.3);
-            }
-            50% { 
-              box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 
-                          0 0 50px rgba(59, 130, 246, 1),
-                          inset 0 0 50px rgba(59, 130, 246, 0.5);
-            }
-          }
-        `}</style>
-      )}
-
       {/* Floating particles animation */}
       <div className="fixed inset-0 pointer-events-none z-[9998]">
         {[...Array(20)].map((_, i) => (
@@ -201,7 +173,7 @@ export default function PresentationOverlay() {
         ))}
       </div>
 
-      {/* Custom animations */}
+      {/* All custom styles in one block */}
       <style jsx global>{`
         @keyframes float {
           0%, 100% {
@@ -217,6 +189,31 @@ export default function PresentationOverlay() {
         .animate-float {
           animation: float 4s ease-in-out infinite;
         }
+
+        @keyframes spotlightPulse {
+          0%, 100% { 
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 
+                        0 0 30px rgba(59, 130, 246, 0.8),
+                        inset 0 0 30px rgba(59, 130, 246, 0.3);
+          }
+          50% { 
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 
+                        0 0 50px rgba(59, 130, 246, 1),
+                        inset 0 0 50px rgba(59, 130, 246, 0.5);
+          }
+        }
+
+        ${currentStepData?.element ? `
+          ${currentStepData.element} {
+            position: relative;
+            z-index: 10001;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 
+                        0 0 30px rgba(59, 130, 246, 0.8),
+                        inset 0 0 30px rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            animation: spotlightPulse 2s infinite;
+          }
+        ` : ''}
       `}</style>
     </>
   );
