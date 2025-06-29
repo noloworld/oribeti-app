@@ -778,7 +778,20 @@ export default function VendasPage() {
                 <div className="text-center text-gray-400 py-4">Nenhum cliente com vendas</div>
               );
             }
-            return clientesArr.map((cliente: ClienteAgrupado) => (
+            return clientesArr.map((cliente: ClienteAgrupado) => {
+              // Preparar dados de paginação para este cliente (versão mobile)
+              const vendasOrdenadas = cliente.vendas
+                .slice()
+                .sort((a: any, b: any) => {
+                  const aPendente = a.valorEmDivida > 0;
+                  const bPendente = b.valorEmDivida > 0;
+                  if (aPendente === bPendente) return new Date(b.data).getTime() - new Date(a.data).getTime();
+                  return aPendente ? -1 : 1;
+                });
+              
+              const { vendas: vendasPaginadas, paginaAtual, totalPaginas, temMaisVendas } = getVendasPaginadas(vendasOrdenadas, cliente.id);
+              
+              return (
               <div key={cliente.id} className="bg-white rounded-lg shadow p-4 cursor-pointer select-none" onClick={() => setClienteExpandido(clienteExpandido === cliente.id ? null : cliente.id)}>
                 <div className="flex items-center justify-between">
                   <div className="font-bold text-gray-900 text-lg flex-1">{cliente.nome}</div>
@@ -857,7 +870,8 @@ export default function VendasPage() {
                   </div>
                 )}
               </div>
-            ));
+              );
+            });
           })()}
         </div>
       </div>
