@@ -8,11 +8,7 @@ interface PresentationStep {
   title: string;
   description: string;
   page: string;
-  element?: string;
-  action?: 'click' | 'scroll' | 'highlight' | 'navigate';
   duration?: number;
-  position?: 'top' | 'bottom' | 'left' | 'right' | 'center';
-  highlightSelector?: string | null;
 }
 
 interface PresentationContextType {
@@ -39,7 +35,6 @@ const PRESENTATION_STEPS: PresentationStep[] = [
     title: '🎉 Bem-vindo ao Oribeti',
     description: 'Sistema de gestão completo para o seu negócio',
     page: '/dashboard',
-    highlightSelector: null,
     duration: 8000
   },
   {
@@ -47,56 +42,49 @@ const PRESENTATION_STEPS: PresentationStep[] = [
     title: '📊 Dashboard - Centro de Controlo',
     description: 'Visão geral completa do seu negócio em tempo real',
     page: '/dashboard',
-    highlightSelector: '.grid-cols-1.md\\:grid-cols-5',
     duration: 12000
   },
   {
     id: 'vendas-system',
     title: '💰 Sistema de Vendas Inteligente',
-    description: 'Clique em "Adicionar Venda" para registrar uma nova venda. Abaixo vê todas as vendas por cliente organizadas',
+    description: 'Gerencie todas as suas vendas e pagamentos de forma inteligente',
     page: '/dashboard/vendas',
-    highlightSelector: 'button[class*="bg-blue"], .bg-gray-800',
-    duration: 18000
+    duration: 15000
   },
   {
     id: 'devedores-control',
     title: '⚠️ Controlo Automático de Devedores',
-    description: 'Vê detalhadamente cada cliente que te deve dinheiro, clicando no cliente',
+    description: 'Acompanhe clientes em dívida e gerencie cobranças automaticamente',
     page: '/dashboard/devedores',
-    highlightSelector: '[class*="space-y-4"]',
-    duration: 14000
+    duration: 12000
   },
   {
     id: 'chat-system',
     title: '💬 Chat em Tempo Real',
-    description: 'Um chat para comunicação de problemas no site',
+    description: 'Comunicação instantânea com a equipa em tempo real',
     page: '/dashboard/chat',
-    highlightSelector: '[class*="h-[600px]"], [class*="flex-col"]',
-    duration: 12000
+    duration: 10000
   },
   {
     id: 'sorteios-engagement',
     title: '🎲 Sorteios para Engajamento',
-    description: 'Funcionalidade exclusiva! Crie sorteios, adicione prémios e aumente o envolvimento dos clientes',
+    description: 'Crie sorteios e aumente o envolvimento dos seus clientes',
     page: '/dashboard/sorteios',
-    highlightSelector: '[class*="bg-blue-600"], .bg-blue-600',
-    duration: 16000
+    duration: 12000
   },
   {
     id: 'notifications-smart',
     title: '🔔 Notificações Inteligentes',
-    description: 'Sistema de notificações inteligente integrado com o chat e os devedores à mais de dois meses',
+    description: 'Sistema de notificações inteligente integrado com o chat e os devedores',
     page: '/dashboard',
-    highlightSelector: '.bg-red-500, [class*="bg-red"]',
-    duration: 14000
+    duration: 10000
   },
   {
     id: 'conclusion',
     title: '🚀 Oribeti - O Futuro da Gestão!',
     description: 'Sistema criado por Manolo - vendo systems',
     page: '/dashboard',
-    highlightSelector: null,
-    duration: 10000
+    duration: 8000
   }
 ];
 
