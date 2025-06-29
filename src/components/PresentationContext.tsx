@@ -12,6 +12,7 @@ interface PresentationStep {
   action?: 'click' | 'scroll' | 'highlight' | 'navigate';
   duration?: number;
   position?: 'top' | 'bottom' | 'left' | 'right' | 'center';
+  highlightSelector?: string | null;
 }
 
 interface PresentationContextType {
@@ -26,6 +27,8 @@ interface PresentationContextType {
   currentStepData: PresentationStep | null;
   isAutoPlaying: boolean;
   toggleAutoPlay: () => void;
+  isIntroPlaying: boolean;
+  skipIntro: () => void;
 }
 
 const PresentationContext = createContext<PresentationContextType | null>(null);
@@ -33,74 +36,67 @@ const PresentationContext = createContext<PresentationContextType | null>(null);
 const PRESENTATION_STEPS: PresentationStep[] = [
   {
     id: 'welcome',
-    title: '🎉 Bem-vindo ao Oribeti!',
-    description: 'Sistema completo de gestão para revendedores. Vamos explorar as funcionalidades principais!',
+    title: '🎉 Bem-vindo ao Oribeti',
+    description: 'Sistema de gestão completo para o seu negócio',
     page: '/dashboard',
-    duration: 15000,
-    position: 'center'
+    highlightSelector: null,
+    duration: 15000
   },
   {
     id: 'dashboard-overview',
     title: '📊 Dashboard - Centro de Controlo',
-    description: 'Visão completa do seu negócio: vendas totais, lucros, devedores e muito mais. Tudo numa só tela!',
+    description: 'Visão geral completa do seu negócio em tempo real',
     page: '/dashboard',
-    element: '.grid',
-    duration: 15000,
-    position: 'top'
+    highlightSelector: '.grid.grid-cols-1.md\\:grid-cols-5.gap-6.mb-8',
+    duration: 15000
   },
   {
     id: 'vendas-system',
     title: '💰 Sistema de Vendas Inteligente',
-    description: 'Registe vendas, gerencie pagamentos parciais, e controle automaticamente os valores em dívida.',
+    description: 'Clique em "Adicionar Venda" para registrar uma nova venda. Abaixo vê todas as vendas por cliente organizadas',
     page: '/dashboard/vendas',
-    action: 'navigate',
-    duration: 15000,
-    position: 'center'
+    highlightSelector: 'button:contains("Adicionar Venda"), .bg-gray-800.rounded-lg.p-6',
+    duration: 15000
   },
   {
     id: 'devedores-control',
     title: '⚠️ Controlo Automático de Devedores',
-    description: 'Sistema único que distribui pagamentos entre várias vendas automaticamente. Nunca mais perca dinheiro!',
+    description: 'Vê detalhadamente cada cliente que te deve dinheiro, clicando no cliente',
     page: '/dashboard/devedores',
-    action: 'navigate',
-    duration: 15000,
-    position: 'center'
+    highlightSelector: '.space-y-4',
+    duration: 15000
   },
   {
     id: 'chat-system',
     title: '💬 Chat em Tempo Real',
-    description: 'Comunicação instantânea com a equipa, notificações inteligentes e indicador de escrita.',
+    description: 'Um chat para comunicação de problemas no site',
     page: '/dashboard/chat',
-    action: 'navigate',
-    duration: 15000,
-    position: 'center'
+    highlightSelector: '.flex.flex-col.h-\\[600px\\]',
+    duration: 15000
   },
   {
     id: 'sorteios-engagement',
     title: '🎲 Sorteios para Engajamento',
-    description: 'Funcionalidade exclusiva! Crie sorteios, adicione prémios e aumente o envolvimento dos clientes.',
+    description: 'Funcionalidade exclusiva! Crie sorteios, adicione prémios e aumente o envolvimento dos clientes',
     page: '/dashboard/sorteios',
-    action: 'navigate',
-    duration: 15000,
-    position: 'center'
+    highlightSelector: '.bg-blue-600',
+    duration: 15000
   },
   {
     id: 'notifications-smart',
     title: '🔔 Notificações Inteligentes',
-    description: 'Sistema avançado que alerta sobre vendas pendentes há mais de 2 meses e novas mensagens.',
+    description: 'Sistema completo, moderno e intuitivo. Transforme o seu negócio com tecnologia de ponta!',
     page: '/dashboard',
-    action: 'navigate',
-    element: '[data-notification-widget]',
-    duration: 15000,
-    position: 'left'
+    highlightSelector: '.relative button[aria-label*="notificações"], .bg-red-500',
+    duration: 15000
   },
   {
     id: 'conclusion',
     title: '🚀 Oribeti - O Futuro da Gestão!',
-    description: 'Sistema completo, moderno e intuitivo. Transforme o seu negócio com tecnologia de ponta!',
+    description: 'Sistema criado por Manolo - vendo systems',
     page: '/dashboard',
-    duration: 15000,
-    position: 'center'
+    highlightSelector: null,
+    duration: 15000
   }
 ];
 
@@ -108,16 +104,23 @@ export function PresentationProvider({ children }: { children: React.ReactNode }
   const [isPresenting, setIsPresenting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isIntroPlaying, setIsIntroPlaying] = useState(false);
   const router = useRouter();
 
   const startPresentation = () => {
     setIsPresenting(true);
+    setIsIntroPlaying(true);
     setCurrentStep(0);
     setIsAutoPlaying(true);
   };
 
+  const skipIntro = () => {
+    setIsIntroPlaying(false);
+  };
+
   const stopPresentation = () => {
     setIsPresenting(false);
+    setIsIntroPlaying(false);
     setCurrentStep(0);
     setIsAutoPlaying(false);
   };
@@ -150,10 +153,10 @@ export function PresentationProvider({ children }: { children: React.ReactNode }
 
   // Auto-advance and navigation
   useEffect(() => {
-    if (!isPresenting || !currentStepData) return;
+    if (!isPresenting || !currentStepData || isIntroPlaying) return;
 
-    // Navigate immediately if needed
-    if (currentStepData.action === 'navigate' && currentStepData.page) {
+    // Navigate immediately to the page for this step
+    if (currentStepData.page) {
       console.log(`🚀 Navegando para: ${currentStepData.page}`);
       router.push(currentStepData.page);
     }
@@ -167,7 +170,7 @@ export function PresentationProvider({ children }: { children: React.ReactNode }
 
       return () => clearTimeout(timer);
     }
-  }, [currentStep, isPresenting, isAutoPlaying, currentStepData, router]);
+  }, [currentStep, isPresenting, isAutoPlaying, currentStepData, router, isIntroPlaying]);
 
   const value: PresentationContextType = {
     isPresenting,
@@ -181,6 +184,8 @@ export function PresentationProvider({ children }: { children: React.ReactNode }
     currentStepData,
     isAutoPlaying,
     toggleAutoPlay,
+    isIntroPlaying,
+    skipIntro,
   };
 
   return (
