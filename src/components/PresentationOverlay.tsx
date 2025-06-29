@@ -73,13 +73,13 @@ export default function PresentationOverlay() {
 
   return (
     <>
-      {/* Dark overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-60 z-[9999] pointer-events-none" />
+      {/* Elegant overlay with gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-900/40 via-blue-900/30 to-purple-900/40 backdrop-blur-sm z-[9999] pointer-events-none" />
       
       {/* Main presentation card */}
       <div className={`fixed ${getPositionClasses()} z-[10000] pointer-events-auto`}>
-        <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-1 rounded-2xl shadow-2xl animate-pulse">
-          <div className="bg-white rounded-xl p-6 max-w-md min-w-80">
+        <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 p-1 rounded-3xl shadow-2xl animate-glow">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-lg min-w-96 border border-white/20">
             {/* Progress bar */}
             <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
               <div 
@@ -94,12 +94,12 @@ export default function PresentationOverlay() {
             </div>
 
             {/* Title with animation */}
-            <h3 className="text-xl font-bold text-gray-800 mb-3 text-center animate-bounce">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4 text-center">
               {currentStepData.title}
             </h3>
 
             {/* Description */}
-            <p className="text-gray-600 mb-6 text-center leading-relaxed">
+            <p className="text-gray-700 mb-8 text-center leading-relaxed text-lg font-medium">
               {currentStepData.description}
             </p>
 
@@ -157,17 +157,21 @@ export default function PresentationOverlay() {
         </div>
       </div>
 
-      {/* Floating particles animation */}
+      {/* Elegant floating particles */}
       <div className="fixed inset-0 pointer-events-none z-[9998]">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-blue-400 rounded-full opacity-60 animate-float"
+            className={`absolute rounded-full opacity-30 animate-float ${
+              i % 3 === 0 ? 'w-3 h-3 bg-blue-300' :
+              i % 3 === 1 ? 'w-2 h-2 bg-purple-300' :
+              'w-4 h-4 bg-indigo-200'
+            }`}
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${3 + Math.random() * 2}s`,
+              animationDelay: `${Math.random() * 4}s`,
+              animationDuration: `${4 + Math.random() * 3}s`,
             }}
           />
         ))}
@@ -192,14 +196,14 @@ export default function PresentationOverlay() {
 
         @keyframes spotlightPulse {
           0%, 100% { 
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 
-                        0 0 30px rgba(59, 130, 246, 0.8),
-                        inset 0 0 30px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.4), 
+                        0 0 40px rgba(59, 130, 246, 0.6),
+                        inset 0 0 20px rgba(147, 197, 253, 0.2);
           }
           50% { 
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 
-                        0 0 50px rgba(59, 130, 246, 1),
-                        inset 0 0 50px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.4), 
+                        0 0 60px rgba(59, 130, 246, 0.8),
+                        inset 0 0 30px rgba(147, 197, 253, 0.3);
           }
         }
 
@@ -207,11 +211,11 @@ export default function PresentationOverlay() {
           ${currentStepData.element} {
             position: relative;
             z-index: 10001;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 
-                        0 0 30px rgba(59, 130, 246, 0.8),
-                        inset 0 0 30px rgba(59, 130, 246, 0.3);
-            border-radius: 8px;
-            animation: spotlightPulse 2s infinite;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.4), 
+                        0 0 40px rgba(59, 130, 246, 0.6),
+                        inset 0 0 20px rgba(147, 197, 253, 0.2);
+            border-radius: 12px;
+            animation: spotlightPulse 3s ease-in-out infinite;
           }
         ` : ''}
       `}</style>
