@@ -179,12 +179,122 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       {/* Mobile Navbar - Fixed */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between p-4 bg-gray-800 shadow-lg">
         <span className="text-2xl font-extrabold">Oribeti</span>
-        <button onClick={() => setShowMenu(true)} className="text-white p-2 focus:outline-none">
-          <FaBars className="w-7 h-7" />
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Widget de usuários online - mobile header */}
+          {!modalAberto && (
+            <button
+              className="bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg p-2 flex items-center gap-1 focus:outline-none transition"
+              onClick={() => setShowOnline(v => !v)}
+              title="Usuários online"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <FaUserCircle className="text-lg" />
+              <span className="bg-white text-green-700 rounded-full px-1.5 text-xs font-bold">{onlineUsers.length}</span>
+            </button>
+          )}
+          
+          {/* Widget de notificações - mobile header */}
+          {!modalAberto && (
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-2 flex items-center gap-1 focus:outline-none transition relative"
+              onClick={() => setShowNotificacoes(v => !v)}
+              title="Notificações"
+            >
+              <FaBell className="text-lg" />
+              {totalNaoLidas > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center font-bold">
+                  {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
+                </span>
+              )}
+            </button>
+          )}
+          
+          <button onClick={() => setShowMenu(true)} className="text-white p-2 focus:outline-none">
+            <FaBars className="w-7 h-7" />
+          </button>
+        </div>
       </div>
       {/* Spacer for fixed header */}
       <div className="md:hidden h-16"></div>
+      
+      {/* Dropdowns para widgets mobile */}
+      {/* Dropdown usuários online - mobile */}
+      {!modalAberto && showOnline && (
+        <div className="fixed z-50 top-16 right-4 md:hidden bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto scrollbar-custom animate-fadeIn">
+          <div className="font-bold text-green-400 mb-2 flex items-center gap-2"><FaUserCircle /> Usuários Online</div>
+          {onlineUsers.length === 0 ? (
+            <div className="text-gray-400 text-sm">Ninguém online agora.</div>
+          ) : (
+            <ul className="space-y-2">
+              {onlineUsers.map((u) => (
+                <li key={u.id} className="flex items-center gap-2 p-2 rounded hover:bg-gray-800 transition">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                  <span className="font-semibold text-white">{u.nome}</span>
+                  <span className="text-xs px-2 py-0.5 rounded bg-green-800 text-green-200 ml-auto">{u.tipo}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      
+      {/* Dropdown notificações - mobile */}
+      {!modalAberto && showNotificacoes && (
+        <div className="fixed z-50 top-16 right-4 md:hidden bg-gray-900 border border-blue-700 rounded-xl shadow-2xl min-w-[280px] max-w-sm max-h-80 overflow-y-auto">
+          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+            <div className="font-bold text-blue-400 flex items-center gap-2">
+              <FaBell /> Notificações
+            </div>
+            {totalNaoLidas > 0 && (
+              <button
+                onClick={marcarTodasNotificacoesLidas}
+                className="text-xs text-blue-400 hover:text-blue-300 transition"
+              >
+                Marcar todas como lidas
+              </button>
+            )}
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {notificacoes.length === 0 ? (
+              <div className="p-4 text-gray-400 text-sm text-center">
+                Nenhuma notificação
+              </div>
+            ) : (
+              notificacoes.slice(0, 10).map((notif) => (
+                <div
+                  key={notif.id}
+                  className={`p-3 border-b border-gray-800 hover:bg-gray-800 transition ${
+                    !notif.lida ? 'bg-blue-900/20' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                      !notif.lida ? 'bg-blue-500' : 'bg-gray-600'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm text-white mb-1">
+                        {notif.titulo}
+                      </div>
+                      <div className="text-xs text-gray-300 mb-1">
+                        {notif.mensagem}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {formatarDataNotificacao(notif.criadoEm)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
       {/* Sidebar (drawer no mobile) */}
       <aside className={`
         fixed z-40 top-0 left-0 h-full w-64 bg-gray-800 p-6 flex flex-col gap-8 min-h-screen transition-transform duration-300
@@ -261,6 +371,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       {showMenu && (
         <div className="fixed inset-0 z-30 bg-black bg-opacity-40 md:hidden" onClick={() => setShowMenu(false)}></div>
       )}
+      
+      {/* Overlay para fechar widgets no mobile */}
+      {(showOnline || showNotificacoes) && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={() => {
+          setShowOnline(false);
+          setShowNotificacoes(false);
+        }}></div>
+      )}
       {/* Main Content */}
       <section className="flex-1 p-4 sm:p-6 overflow-x-auto">
         <Transition
@@ -278,44 +396,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           </div>
         </Transition>
       </section>
-      {/* Widget de usuários online - mobile */}
-      {!modalAberto && (
-        <div className="fixed z-50 top-18 right-32 md:hidden flex flex-col items-center gap-2">
-          <button
-            className="bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition"
-            onClick={() => setShowOnline(v => !v)}
-            title="Usuários online"
-          >
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            <FaUserCircle className="text-xl" />
-            <span className="bg-white text-green-700 rounded-full px-2 text-sm font-bold">{onlineUsers.length}</span>
-          </button>
-          {showOnline && (
-            <div className="bg-gray-900 border border-green-700 rounded-xl shadow-2xl p-4 min-w-[220px] max-w-xs max-h-80 overflow-y-auto scrollbar-custom animate-fadeIn mt-2">
-              <div className="font-bold text-green-400 mb-2 flex items-center gap-2"><FaUserCircle /> Usuários Online</div>
-              {onlineUsers.length === 0 ? (
-                <div className="text-gray-400 text-sm">Ninguém online agora.</div>
-              ) : (
-                <ul className="space-y-2">
-                  {onlineUsers.map((u) => (
-                    <li key={u.id} className="flex items-center gap-2 p-2 rounded hover:bg-gray-800 transition">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                      </span>
-                      <span className="font-semibold text-white">{u.nome}</span>
-                      <span className="text-xs px-2 py-0.5 rounded bg-green-800 text-green-200 ml-auto">{u.tipo}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+
       {/* Widget de usuários online - desktop */}
       {!modalAberto && (
         <div className="fixed z-50 bottom-6 right-6 hidden md:flex flex-col items-end gap-2">
@@ -356,73 +437,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         </div>
       )}
       
-      {/* Widget de notificações - mobile */}
-      {!modalAberto && (
-        <div className="fixed z-50 top-18 right-16 md:hidden">
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition relative"
-            onClick={() => setShowNotificacoes(v => !v)}
-            title="Notificações"
-          >
-            <FaBell className="text-xl" />
-            {totalNaoLidas > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
-                {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
-              </span>
-            )}
-          </button>
-          {showNotificacoes && (
-            <div className="absolute top-full right-0 mt-2 bg-gray-900 border border-blue-700 rounded-xl shadow-2xl min-w-[280px] max-w-sm max-h-80 overflow-y-auto">
-              <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-                <div className="font-bold text-blue-400 flex items-center gap-2">
-                  <FaBell /> Notificações
-                </div>
-                {totalNaoLidas > 0 && (
-                  <button
-                    onClick={marcarTodasNotificacoesLidas}
-                    className="text-xs text-blue-400 hover:text-blue-300 transition"
-                  >
-                    Marcar todas como lidas
-                  </button>
-                )}
-              </div>
-              <div className="max-h-64 overflow-y-auto">
-                {notificacoes.length === 0 ? (
-                  <div className="p-4 text-gray-400 text-sm text-center">
-                    Nenhuma notificação
-                  </div>
-                ) : (
-                  notificacoes.slice(0, 10).map((notif) => (
-                    <div
-                      key={notif.id}
-                      className={`p-3 border-b border-gray-800 hover:bg-gray-800 transition ${
-                        !notif.lida ? 'bg-blue-900/20' : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-2">
-                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                          !notif.lida ? 'bg-blue-500' : 'bg-gray-600'
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm text-white mb-1">
-                            {notif.titulo}
-                          </div>
-                          <div className="text-xs text-gray-300 mb-1">
-                            {notif.mensagem}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {formatarDataNotificacao(notif.criadoEm)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+
 
       {/* Widget de notificações - desktop */}
       {!modalAberto && (
