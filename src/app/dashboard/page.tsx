@@ -187,40 +187,35 @@ export default function DashboardPage() {
             <thead>
               <tr>
                 <th className="px-4 py-2 text-left">Nome</th>
-                <th className="px-4 py-2 text-left">Venda</th>
-                <th className="px-4 py-2 text-left">Data</th>
-                <th className="px-4 py-2 text-left">Valor Total</th>
-                <th className="px-4 py-2 text-left">Valor Pago</th>
-                <th className="px-4 py-2 text-left">Em Dívida</th>
+                <th className="px-4 py-2 text-left">Vendas em Dívida</th>
+                <th className="px-4 py-2 text-left">Total em Dívida</th>
                 <th className="px-4 py-2 text-left">Ações</th>
               </tr>
             </thead>
             <tbody>
               {data.clientesDevedores.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-gray-400 px-4 py-2">Nenhum cliente devedor.</td>
+                  <td colSpan={4} className="text-gray-400 px-4 py-2">Nenhum cliente devedor.</td>
                 </tr>
               ) : (
-                data.clientesDevedores.flatMap((c) =>
-                  c.vendas.map((v, idx) => (
-                    <tr key={c.id + '-' + v.vendaId} className="border-b border-gray-800">
-                      <td className="px-4 py-2">{c.nome}</td>
-                      <td className="px-4 py-2">#{v.vendaId}</td>
-                      <td className="px-4 py-2">{new Date(v.data).toLocaleDateString()}</td>
-                      <td className="px-4 py-2">€ {v.valorTotal.toFixed(2)}</td>
-                      <td className="px-4 py-2">€ {v.valorPago.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-yellow-400 font-bold">€ {v.valorEmDivida.toFixed(2)}</td>
+                data.clientesDevedores.map((c) => {
+                  const totalEmDivida = c.vendas.reduce((sum, v) => sum + v.valorEmDivida, 0);
+                  return (
+                    <tr key={c.id} className="border-b border-gray-800">
+                      <td className="px-4 py-2 font-semibold">{c.nome}</td>
+                      <td className="px-4 py-2">{c.vendas.length} venda{c.vendas.length > 1 ? 's' : ''}</td>
+                      <td className="px-4 py-2 text-yellow-400 font-bold">€ {totalEmDivida.toFixed(2)}</td>
                       <td className="px-4 py-2">
                         <button
                           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                          onClick={() => { setVendaSelecionada({ ...v, cliente: c.nome }); setShowVendaModal(true); }}
+                          onClick={() => { setVendaSelecionada({ cliente: c, vendas: c.vendas }); setShowVendaModal(true); }}
                         >
-                          Mais informações
+                          Ver Detalhes
                         </button>
                       </td>
                     </tr>
-                  ))
-                )
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -230,61 +225,88 @@ export default function DashboardPage() {
           {data.clientesDevedores.length === 0 ? (
             <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente devedor.</div>
           ) : (
-            data.clientesDevedores.flatMap((c) =>
-              c.vendas.map((v, idx) => (
-                <div key={c.id + '-' + v.vendaId} className="bg-gray-800 rounded-xl p-4 shadow flex flex-col gap-2">
-                  <div className="flex justify-between items-center mb-2">
+            data.clientesDevedores.map((c) => {
+              const totalEmDivida = c.vendas.reduce((sum, v) => sum + v.valorEmDivida, 0);
+              return (
+                <div key={c.id} className="bg-gray-800 rounded-xl p-4 shadow">
+                  <div className="flex justify-between items-center mb-3">
                     <span className="font-bold text-white text-base">{c.nome}</span>
-                    <span className="text-xs text-gray-400">#{v.vendaId}</span>
+                    <span className="text-yellow-400 font-bold">€ {totalEmDivida.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Data</span>
-                    <span className="text-white">{new Date(v.data).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Valor Total</span>
-                    <span className="text-white font-semibold">€ {v.valorTotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Valor Pago</span>
-                    <span className="text-green-400 font-semibold">€ {v.valorPago.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-gray-400">Em Dívida</span>
-                    <span className="text-yellow-400 font-bold">€ {v.valorEmDivida.toFixed(2)}</span>
+                  <div className="flex justify-between items-center text-sm mb-3">
+                    <span className="text-gray-400">Vendas em dívida:</span>
+                    <span className="text-white">{c.vendas.length} venda{c.vendas.length > 1 ? 's' : ''}</span>
                   </div>
                   <button
-                    className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs shadow w-full"
-                    onClick={() => { setVendaSelecionada({ ...v, cliente: c.nome }); setShowVendaModal(true); }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm shadow w-full"
+                    onClick={() => { setVendaSelecionada({ cliente: c, vendas: c.vendas }); setShowVendaModal(true); }}
                   >
-                    Mais informações
+                    Ver Detalhes
                   </button>
                 </div>
-              ))
-            )
+              );
+            })
           )}
         </div>
       </div>
 
       {showVendaModal && vendaSelecionada && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4" onClick={() => setShowVendaModal(false)}>
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative text-gray-900" onClick={e => e.stopPropagation()}>
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={() => setShowVendaModal(false)}>&times;</button>
-            <h2 className="text-xl font-bold mb-4 text-blue-900">Detalhes da Venda</h2>
-            <div className="mb-2"><b>Cliente:</b> {vendaSelecionada.cliente}</div>
-            <div className="mb-2"><b>Venda:</b> #{vendaSelecionada.vendaId}</div>
-            <div className="mb-2"><b>Data:</b> {new Date(vendaSelecionada.data).toLocaleDateString()}</div>
-            <div className="mb-2"><b>Valor Total:</b> €{vendaSelecionada.valorTotal.toFixed(2)}</div>
-            <div className="mb-2"><b>Valor Pago:</b> €{vendaSelecionada.valorPago.toFixed(2)}</div>
-            <div className="mb-2"><b>Em Dívida:</b> <span className="text-yellow-600 font-bold">€{vendaSelecionada.valorEmDivida.toFixed(2)}</span></div>
-            <div className="mb-2"><b>Observações:</b> <span className="text-gray-900 font-medium">{vendaSelecionada.observacoes || '-'}</span></div>
-            <div className="mt-4">
-              <ListaPagamentos
-                vendaId={vendaSelecionada.vendaId}
-                valorFinal={vendaSelecionada.valorTotal}
-                valorPago={vendaSelecionada.valorPago}
-                onPagamentoAdded={() => setShowVendaModal(false)}
-              />
+            <h2 className="text-xl font-bold mb-4 text-blue-900">Vendas em Dívida - {vendaSelecionada.cliente.nome}</h2>
+            
+            <div className="space-y-4">
+              {vendaSelecionada.vendas.map((venda, index) => (
+                <div key={venda.vendaId} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-semibold text-lg">Venda #{venda.vendaId}</h3>
+                    <span className="text-sm text-gray-600">{new Date(venda.data).toLocaleDateString()}</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Valor Total:</span>
+                      <div className="font-semibold">€ {venda.valorTotal.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Valor Pago:</span>
+                      <div className="font-semibold text-green-600">€ {venda.valorPago.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Em Dívida:</span>
+                      <div className="font-bold text-yellow-600">€ {venda.valorEmDivida.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Pagamentos:</span>
+                      <div className="font-semibold">{venda.pagamentos.length} pagamento{venda.pagamentos.length !== 1 ? 's' : ''}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <ListaPagamentos
+                      vendaId={venda.vendaId}
+                      valorFinal={venda.valorTotal}
+                      valorPago={venda.valorPago}
+                      onPagamentoAdded={() => {
+                        // Recarregar dados do dashboard
+                        fetch("/api/dashboard/summary")
+                          .then((res) => res.json())
+                          .then((d) => setData(d));
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-semibold">Total em Dívida:</span>
+                <span className="text-xl font-bold text-yellow-600">
+                  € {vendaSelecionada.vendas.reduce((sum, v) => sum + v.valorEmDivida, 0).toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
         </div>

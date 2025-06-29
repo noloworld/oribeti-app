@@ -89,9 +89,8 @@ export async function GET() {
     });
     const vendasPorAno = Array.from(vendasPorAnoMap.entries()).map(([ano, total]) => ({ ano, total })).sort((a, b) => b.ano - a.ano).slice(0, 5);
 
-    // Top 5 clientes (quem mais gastou)
+    // Top 5 clientes (quem mais comprou - valor total das vendas)
     const vendasComCliente = await prisma.venda.findMany({
-      where: { status: 'PAGO' },
       include: { 
         cliente: true,
         produtos: true 
