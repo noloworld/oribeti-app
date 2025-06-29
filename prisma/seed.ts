@@ -1,4 +1,4 @@
-import { PrismaClient } from '../src/generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -15,7 +15,21 @@ async function main() {
       tipo: 'ADMIN',
     },
   });
-  console.log('Usuário admin criado!');
+
+  // Criar usuário apresentador
+  const apresentadorHash = await bcrypt.hash('apresentador123', 10);
+  await prisma.user.upsert({
+    where: { email: 'apresentador@oribeti.com' },
+    update: {},
+    create: {
+      nome: 'Apresentador Demo',
+      email: 'apresentador@oribeti.com',
+      senha: apresentadorHash,
+      tipo: 'APRESENTADOR',
+    },
+  });
+
+  console.log('Usuários criados com sucesso!');
 }
 
 main().catch(e => {

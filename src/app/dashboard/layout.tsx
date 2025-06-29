@@ -1,17 +1,22 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes, FaUserCircle, FaHome, FaComments, FaBell } from 'react-icons/fa';
+import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes, FaUserCircle, FaHome, FaComments, FaBell, FaPlay } from 'react-icons/fa';
 import { Transition } from '@headlessui/react';
 import Link from 'next/link';
 import { ModalProvider, useModalAberto } from '../../components/ModalContext';
+import { PresentationProvider, usePresentation } from '../../components/PresentationContext';
+import PresentationOverlay from '../../components/PresentationOverlay';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <ModalProvider>
-      <DashboardContent>
-        {children}
-      </DashboardContent>
+      <PresentationProvider>
+        <DashboardContent>
+          {children}
+        </DashboardContent>
+        <PresentationOverlay />
+      </PresentationProvider>
     </ModalProvider>
   );
 }
@@ -33,6 +38,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const [previousTotalNaoLidas, setPreviousTotalNaoLidas] = useState(0);
   const [shouldAnimateNotification, setShouldAnimateNotification] = useState(false);
   const { modalAberto } = useModalAberto();
+  const { startPresentation, isPresenting } = usePresentation();
 
   useEffect(() => {
     setMounted(true);
@@ -248,6 +254,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           {/* Widget de notificações - mobile header */}
           {!modalAberto && (
             <button
+              data-notification-widget
               className={`bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-2 flex items-center gap-1 focus:outline-none transition relative ${
                 shouldAnimateNotification ? 'animate-shake' : ''
               }`}
@@ -390,11 +397,31 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               </div>
               <div>
                 <div className="font-semibold">{userInfo.nome}</div>
-                <div className="text-xs text-gray-400">{userInfo.tipo === 'ADMIN' ? 'Administrador' : 'Revendedor'}</div>
+                <div className="text-xs text-gray-400">
+                  {userInfo.tipo === 'ADMIN' ? 'Administrador' : 
+                   userInfo.tipo === 'APRESENTADOR' ? 'Apresentador' : 'Revendedor'}
+                </div>
               </div>
             </>
           )}
         </div>
+        
+        {/* Botão de Apresentação para APRESENTADOR */}
+        {userInfo?.tipo === 'APRESENTADOR' && !isPresenting && (
+          <div className="mb-6">
+            <button
+              onClick={startPresentation}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-3 rounded-lg font-bold text-center transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+            >
+              <FaPlay className="text-lg" />
+              Iniciar Apresentação Espetacular
+            </button>
+            <p className="text-xs text-gray-400 mt-2 text-center">
+              Demonstração completa do sistema
+            </p>
+          </div>
+        )}
+        
         <nav className="flex flex-col gap-2 mb-8">
           {menuItems.map(link => (
             <a
@@ -503,6 +530,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       {!modalAberto && (
         <div className="fixed z-50 bottom-20 right-6 hidden md:block">
           <button
+            data-notification-widget
             className={`bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition relative ${
               shouldAnimateNotification ? 'animate-shake' : ''
             }`}

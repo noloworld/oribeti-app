@@ -29,6 +29,7 @@ model User {
 enum UserType {
   ADMIN
   REVENDEDOR
+  APRESENTADOR
 }
 
 model Cliente {
