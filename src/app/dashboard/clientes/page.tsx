@@ -181,10 +181,14 @@ export default function ClientesPage() {
     setShowViewModal(true);
     setModalAberto(true);
     try {
-      const res = await fetch('/api/vendas');
+      const res = await fetch('/api/vendas?all=true');
       const data = await res.json();
+      console.log('Dados da API vendas:', data);
+      console.log('Cliente ID:', cliente.id);
       // Garante que cada venda do cliente aparece como uma linha, mesmo com múltiplos produtos
-      setCompras((data.vendas || data || []).filter((v: any) => v.cliente?.id === cliente.id));
+      const vendasDoCliente = (data.vendas || []).filter((v: any) => v.cliente?.id === cliente.id);
+      console.log('Vendas do cliente:', vendasDoCliente);
+      setCompras(vendasDoCliente);
     } catch {
       setCompras([]);
     }
