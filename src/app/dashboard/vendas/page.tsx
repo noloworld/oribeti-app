@@ -384,10 +384,17 @@ export default function VendasPage() {
     (anoFiltro === 'TODOS' ? true : new Date(v.data).getFullYear().toString() === anoFiltro)
   );
 
-  // Calcular totais das vendas para cards de resumo
-  const totalVendas = vendas.reduce((acc, v) => acc + v.produtos.reduce((pacc, p) => pacc + (p.valorFinal * p.quantidade), 0), 0);
-  const totalRevistaVendas = vendas.reduce((acc, v) => acc + v.produtos.reduce((pacc, p) => pacc + (p.valorRevista * p.quantidade), 0), 0);
-  const lucro = totalVendas - totalRevistaVendas;
+  // Calcular totais das vendas para cards de resumo (usar todasVendas para ter valores completos)
+  const totalVendas = todasVendas.reduce((acc, v) => acc + v.produtos.reduce((pacc, p) => pacc + (p.valorFinal * p.quantidade), 0), 0);
+  
+  // Calcular lucro apenas das vendas pagas (status PAGO ou valor pago >= valor total)
+  const vendasPagas = todasVendas.filter(v => {
+    const valorTotal = v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0);
+    return v.status === 'PAGO' || (v.valorPago || 0) >= valorTotal;
+  });
+  const totalRevistaVendasPagas = vendasPagas.reduce((acc, v) => acc + v.produtos.reduce((pacc, p) => pacc + (p.valorRevista * p.quantidade), 0), 0);
+  const totalFinalVendasPagas = vendasPagas.reduce((acc, v) => acc + v.produtos.reduce((pacc, p) => pacc + (p.valorFinal * p.quantidade), 0), 0);
+  const lucro = totalFinalVendasPagas - totalRevistaVendasPagas;
 
   // Corrigir filtro de clientes em dia e devedores
   const clientesEmDia = vendas.filter(v => v.valorPago >= v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0));
