@@ -39,6 +39,15 @@ body {
   border-radius: 8px;
 }
 
+/* Scrollbar invisível para sidebar móvel */
+.scrollbar-hidden {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
 /* Animações para notificações */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }

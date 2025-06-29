@@ -364,7 +364,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       )}
       {/* Sidebar (drawer no mobile) */}
       <aside className={`
-        fixed z-40 top-0 left-0 h-full w-64 bg-gray-800 p-6 flex flex-col gap-8 min-h-screen transition-transform duration-300
+        fixed z-40 top-0 left-0 h-full w-64 bg-gray-800 p-6 flex flex-col gap-8 min-h-screen transition-transform duration-300 overflow-y-auto scrollbar-hidden
         ${showMenu ? 'translate-x-0' : '-translate-x-full'}
         md:static md:translate-x-0 md:flex
       `} style={{ maxWidth: '100vw' }}>
