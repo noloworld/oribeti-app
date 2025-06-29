@@ -345,11 +345,45 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
         .animate-slideUp { animation: slideUp 0.8s ease-out; }
         .animate-expand { animation: expand 1s ease-out 0.5s forwards; width: 0; }
         .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
-        .animate-shockwave { animation: shockwave 2s ease-out infinite; }
-        .animate-shockwave2 { animation: shockwave2 2.5s ease-out infinite 0.5s; }
         .animate-meteor { animation: meteor 2s linear infinite; }
         .animate-equalizer { animation: equalizer 0.5s ease-in-out infinite alternate; transform-origin: bottom; }
+        .animate-shockwave { animation: shockwave 2s ease-out infinite; }
+        .animate-shockwave2 { animation: shockwave2 2.5s ease-out infinite 0.5s; }
       `}</style>
+    </div>
+  );
+}
+
+// Speech Bubble Component
+function SpeechBubble({ 
+  text, 
+  position, 
+  isVisible 
+}: { 
+  text: string; 
+  position: { x: number; y: number }; 
+  isVisible: boolean;
+}) {
+  if (!isVisible) return null;
+
+  return (
+    <div 
+      className="fixed z-[15000] pointer-events-none animate-bubbleAppear"
+      style={{ 
+        left: `${position.x}px`, 
+        top: `${position.y}px`,
+        transform: 'translate(-50%, -100%)'
+      }}
+    >
+      <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-2xl shadow-2xl max-w-sm">
+        <p className="text-sm font-medium leading-relaxed">{text}</p>
+        {/* Speech bubble tail */}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2">
+          <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[15px] border-l-transparent border-r-transparent border-t-blue-600"></div>
+        </div>
+        {/* Animated border */}
+        <div className="absolute inset-0 rounded-2xl border-2 border-white/30 animate-pulse"></div>
+      </div>
     </div>
   );
 }
@@ -371,9 +405,35 @@ export default function PresentationOverlay() {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [bubblePosition, setBubblePosition] = useState({ x: 0, y: 0 });
+
+  // Calculate bubble position based on highlighted element
+  useEffect(() => {
+    if (!currentStepData?.highlightSelector) return;
+
+    const updateBubblePosition = () => {
+      const element = document.querySelector(currentStepData.highlightSelector!);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        setBubblePosition({
+          x: rect.left + rect.width / 2,
+          y: rect.top - 20
+        });
+      }
+    };
+
+    // Update position after a small delay to ensure element is rendered
+    const timer = setTimeout(updateBubblePosition, 100);
+    window.addEventListener('resize', updateBubblePosition);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateBubblePosition);
+    };
+  }, [currentStepData?.highlightSelector]);
 
   useEffect(() => {
-    if (!isPresenting || !currentStepData) return;
+    if (!isPresenting || !currentStepData || isIntroPlaying) return;
 
     const duration = currentStepData.duration || 3000;
     const interval = 50;
@@ -394,7 +454,7 @@ export default function PresentationOverlay() {
       clearInterval(timer);
       setProgress(0);
     };
-  }, [currentStep, isPresenting, currentStepData]);
+  }, [currentStep, isPresenting, currentStepData, isIntroPlaying]);
 
   const toggleFullscreen = () => {
     if (!isFullscreen) {
@@ -417,8 +477,8 @@ export default function PresentationOverlay() {
 
   return (
     <>
-      {/* Top presentation bar - non-intrusive */}
-      <div className="fixed top-0 left-0 right-0 z-[10000] pointer-events-auto">
+      {/* Top presentation bar - elegant and minimal */}
+      <div className="fixed top-0 left-0 right-0 z-[12000] pointer-events-auto">
         <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 shadow-2xl">
           <div className="px-6 py-4">
             {/* Progress bar */}
@@ -492,29 +552,22 @@ export default function PresentationOverlay() {
         </div>
       </div>
 
-      {/* Subtle background overlay */}
-      <div className="fixed inset-0 bg-blue-900/10 backdrop-blur-[1px] z-[9999] pointer-events-none" />
+      {/* Speech Bubble */}
+      <SpeechBubble
+        text={currentStepData.description}
+        position={bubblePosition}
+        isVisible={!!currentStepData.highlightSelector}
+      />
 
-      {/* Floating arrow pointing to highlighted element */}
-      {currentStepData.highlightSelector && (
-        <div className="fixed z-[10001] pointer-events-none">
-          <div className="animate-bounce">
-            <div className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
-              👆 Veja aqui!
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Elegant floating particles */}
+      {/* Elegant floating particles - reduced opacity */}
       <div className="fixed inset-0 pointer-events-none z-[9998]">
-        {[...Array(12)].map((_, i) => (
+        {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className={`absolute rounded-full opacity-30 animate-float ${
-              i % 3 === 0 ? 'w-3 h-3 bg-blue-300' :
-              i % 3 === 1 ? 'w-2 h-2 bg-purple-300' :
-              'w-4 h-4 bg-indigo-200'
+            className={`absolute rounded-full opacity-10 animate-float ${
+              i % 3 === 0 ? 'w-2 h-2 bg-blue-300' :
+              i % 3 === 1 ? 'w-1 h-1 bg-purple-300' :
+              'w-3 h-3 bg-indigo-200'
             }`}
             style={{
               left: `${Math.random() * 100}%`,
@@ -536,11 +589,11 @@ export default function PresentationOverlay() {
         @keyframes float {
           0%, 100% {
             transform: translateY(0px) rotate(0deg);
-            opacity: 0.6;
+            opacity: 0.3;
           }
           50% {
             transform: translateY(-20px) rotate(180deg);
-            opacity: 1;
+            opacity: 0.6;
           }
         }
         
@@ -548,25 +601,39 @@ export default function PresentationOverlay() {
           animation: float 4s ease-in-out infinite;
         }
 
-        @keyframes spotlightPulse {
+        @keyframes bubbleAppear {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -100%) scale(0.5);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(-50%, -100%) scale(1);
+          }
+        }
+
+        .animate-bubbleAppear {
+          animation: bubbleAppear 0.5s ease-out forwards;
+        }
+
+        @keyframes elementHighlight {
           0%, 100% { 
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-            border: 3px solid rgba(59, 130, 246, 0.6);
+            transform: scale(1);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
           }
           50% { 
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
-            border: 3px solid rgba(59, 130, 246, 0.9);
+            transform: scale(1.05);
+            box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.6);
           }
         }
 
         ${currentStepData?.highlightSelector ? `
           ${currentStepData.highlightSelector} {
-            position: relative;
-            z-index: 10001;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4) !important;
-            border: 3px solid rgba(59, 130, 246, 0.6) !important;
+            position: relative !important;
+            z-index: 11000 !important;
             border-radius: 12px !important;
-            animation: spotlightPulse 3s ease-in-out infinite !important;
+            animation: elementHighlight 2s ease-in-out infinite !important;
+            transition: all 0.3s ease !important;
           }
         ` : ''}
       `}</style>

@@ -40,55 +40,55 @@ const PRESENTATION_STEPS: PresentationStep[] = [
     description: 'Sistema de gestão completo para o seu negócio',
     page: '/dashboard',
     highlightSelector: null,
-    duration: 15000
+    duration: 8000
   },
   {
     id: 'dashboard-overview',
     title: '📊 Dashboard - Centro de Controlo',
     description: 'Visão geral completa do seu negócio em tempo real',
     page: '/dashboard',
-    highlightSelector: '.grid.grid-cols-1.md\\:grid-cols-5.gap-6.mb-8',
-    duration: 15000
+    highlightSelector: '.grid-cols-1.md\\:grid-cols-5',
+    duration: 12000
   },
   {
     id: 'vendas-system',
     title: '💰 Sistema de Vendas Inteligente',
     description: 'Clique em "Adicionar Venda" para registrar uma nova venda. Abaixo vê todas as vendas por cliente organizadas',
     page: '/dashboard/vendas',
-    highlightSelector: 'button:contains("Adicionar Venda"), .bg-gray-800.rounded-lg.p-6',
-    duration: 15000
+    highlightSelector: 'button[class*="bg-blue"], .bg-gray-800',
+    duration: 18000
   },
   {
     id: 'devedores-control',
     title: '⚠️ Controlo Automático de Devedores',
     description: 'Vê detalhadamente cada cliente que te deve dinheiro, clicando no cliente',
     page: '/dashboard/devedores',
-    highlightSelector: '.space-y-4',
-    duration: 15000
+    highlightSelector: '[class*="space-y-4"]',
+    duration: 14000
   },
   {
     id: 'chat-system',
     title: '💬 Chat em Tempo Real',
     description: 'Um chat para comunicação de problemas no site',
     page: '/dashboard/chat',
-    highlightSelector: '.flex.flex-col.h-\\[600px\\]',
-    duration: 15000
+    highlightSelector: '[class*="h-[600px]"], [class*="flex-col"]',
+    duration: 12000
   },
   {
     id: 'sorteios-engagement',
     title: '🎲 Sorteios para Engajamento',
     description: 'Funcionalidade exclusiva! Crie sorteios, adicione prémios e aumente o envolvimento dos clientes',
     page: '/dashboard/sorteios',
-    highlightSelector: '.bg-blue-600',
-    duration: 15000
+    highlightSelector: '[class*="bg-blue-600"], .bg-blue-600',
+    duration: 16000
   },
   {
     id: 'notifications-smart',
     title: '🔔 Notificações Inteligentes',
-    description: 'Sistema completo, moderno e intuitivo. Transforme o seu negócio com tecnologia de ponta!',
+    description: 'Sistema de notificações inteligente integrado com o chat e os devedores à mais de dois meses',
     page: '/dashboard',
-    highlightSelector: '.relative button[aria-label*="notificações"], .bg-red-500',
-    duration: 15000
+    highlightSelector: '.bg-red-500, [class*="bg-red"]',
+    duration: 14000
   },
   {
     id: 'conclusion',
@@ -96,7 +96,7 @@ const PRESENTATION_STEPS: PresentationStep[] = [
     description: 'Sistema criado por Manolo - vendo systems',
     page: '/dashboard',
     highlightSelector: null,
-    duration: 15000
+    duration: 10000
   }
 ];
 
