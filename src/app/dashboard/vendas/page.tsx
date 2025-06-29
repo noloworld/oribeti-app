@@ -432,34 +432,54 @@ export default function VendasPage() {
     }
     setAbaterLoading(true);
     try {
-      // Encontrar a venda mais antiga em aberto
-      const vendaEmAberto = cliente.vendas.slice().reverse().find((v: any) => v.valorEmDivida > 0);
-      if (!vendaEmAberto) {
+      // Encontrar todas as vendas em aberto ordenadas da mais antiga para a mais recente
+      const vendasEmAberto = cliente.vendas
+        .filter((v: any) => v.valorEmDivida > 0)
+        .slice()
+        .reverse(); // Mais antiga primeiro
+      
+      if (vendasEmAberto.length === 0) {
         setAbaterErro('Nenhuma venda em aberto encontrada.');
         setAbaterLoading(false);
         return;
       }
-      // Chamar API de pagamentos
-      const res = await fetch('/api/pagamentos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          vendaId: vendaEmAberto.id,
-          valor: valor,
-          data: new Date().toISOString().split('T')[0],
-          observacoes: 'Abatimento direto pelo painel de devedores',
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAbaterErro(data.error || 'Erro ao abater dívida.');
-        setAbaterLoading(false);
-        return;
+
+      let valorRestante = valor;
+      let pagamentosRealizados = 0;
+
+      // Distribuir o valor entre as vendas em aberto, começando pela mais antiga
+      for (const venda of vendasEmAberto) {
+        if (valorRestante <= 0) break;
+
+        const valorParaEstaVenda = Math.min(valorRestante, venda.valorEmDivida);
+        
+        // Criar pagamento para esta venda
+        const res = await fetch('/api/pagamentos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vendaId: venda.id,
+            valor: valorParaEstaVenda,
+            data: new Date().toISOString().split('T')[0],
+            observacoes: `Abatimento direto pelo painel de devedores${vendasEmAberto.length > 1 ? ` (${pagamentosRealizados + 1}/${vendasEmAberto.length})` : ''}`,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          setAbaterErro(data.error || 'Erro ao abater dívida.');
+          setAbaterLoading(false);
+          return;
+        }
+
+        valorRestante -= valorParaEstaVenda;
+        pagamentosRealizados++;
       }
+
       setAbaterClienteId(null);
       setValorAbater('');
       setAbaterErro('');
-      toast.success('Dívida abatida com sucesso!');
+      toast.success(`Dívida abatida com sucesso! ${pagamentosRealizados} pagamento(s) realizado(s).`);
       fetchVendas();
       // Atualizar todasVendas também
       fetch('/api/vendas?all=true')
