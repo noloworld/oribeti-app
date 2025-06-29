@@ -201,7 +201,7 @@ export default function ChatPage() {
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-            <span className="ml-2">Carregando mensagens...</span>
+            <span className="ml-2">A carregar mensagens...</span>
           </div>
         ) : mensagens.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">

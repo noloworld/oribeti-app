@@ -126,7 +126,7 @@ const SorteiosPage = () => {
         body: JSON.stringify({ clienteId: Number(clienteId), numero: Number(numero) }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao adicionar participante');
+      if (!res.ok) throw new Error(data.error || 'Erro ao acrescentar participante');
       setShowParticipanteModal(false);
       fetchSorteios();
     } catch (err: any) {
@@ -199,7 +199,7 @@ const SorteiosPage = () => {
 
   // Função para remover sorteio arquivado
   const handleRemoverSorteio = async (sorteioId: number) => {
-    if (!window.confirm('Tem certeza que deseja remover este sorteio arquivado? Essa ação não pode ser desfeita.')) return;
+    if (!window.confirm('Tem a certeza que deseja remover este sorteio arquivado? Esta acção não pode ser desfeita.')) return;
     try {
       const res = await fetch(`/api/sorteios/${sorteioId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Erro ao remover sorteio');
@@ -243,7 +243,7 @@ const SorteiosPage = () => {
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
             onClick={() => setShowModal(true)}
           >
-            + Adicionar Sorteio
+            + Acrescentar Sorteio
           </button>
         )}
       </div>
@@ -290,7 +290,7 @@ const SorteiosPage = () => {
                         className="bg-green-100 text-green-700 rounded-md px-3 py-1 font-semibold hover:bg-green-200 transition"
                         onClick={() => abrirModalParticipante(sorteio)}
                       >
-                        Adicionar Cliente
+                        Acrescentar Cliente
                       </button>
                       <button
                         className="bg-yellow-100 text-yellow-800 rounded-md px-3 py-1 font-semibold hover:bg-yellow-200 transition"
@@ -384,7 +384,7 @@ const SorteiosPage = () => {
                               className="bg-green-100 text-green-700 rounded-md px-3 py-1 font-semibold hover:bg-green-200 transition"
                               onClick={() => abrirModalParticipante(sorteio)}
                             >
-                              Adicionar Cliente
+                              Acrescentar Cliente
                             </button>
                             <button
                               className="bg-yellow-100 text-yellow-800 rounded-md px-3 py-1 font-semibold hover:bg-yellow-200 transition"
@@ -414,7 +414,7 @@ const SorteiosPage = () => {
             >
               &times;
             </button>
-            <h3 className="text-xl font-bold mb-4">Adicionar Sorteio</h3>
+            <h3 className="text-xl font-bold mb-4">Acrescentar Sorteio</h3>
             <form onSubmit={handleCriarSorteio}>
               <input
                 type="text"
@@ -459,7 +459,7 @@ const SorteiosPage = () => {
                   className="bg-blue-100 text-blue-700 rounded px-3 py-1 font-semibold hover:bg-blue-200 transition"
                   onClick={() => setPremios([...premios, ''])}
                 >
-                  + Adicionar Prêmio
+                  + Acrescentar Prémio
                 </button>
               </div>
               {erroCriar && <div className="text-red-500 mb-2">{erroCriar}</div>}
@@ -468,7 +468,7 @@ const SorteiosPage = () => {
                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition w-full"
                 disabled={criando}
               >
-                {criando ? 'Criando...' : 'Criar Sorteio'}
+                {criando ? 'A criar...' : 'Criar Sorteio'}
               </button>
             </form>
           </div>
@@ -485,7 +485,7 @@ const SorteiosPage = () => {
             >
               &times;
             </button>
-            <h3 className="text-xl font-bold mb-4">Adicionar Participante</h3>
+            <h3 className="text-xl font-bold mb-4">Acrescentar Participante</h3>
             <form onSubmit={handleAdicionarParticipante}>
               <label className="block mb-2 text-black">Cliente</label>
               <select
@@ -515,7 +515,7 @@ const SorteiosPage = () => {
                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition w-full"
                 disabled={adicionando}
               >
-                {adicionando ? 'Adicionando...' : 'Adicionar Participante'}
+                {adicionando ? 'A acrescentar...' : 'Acrescentar Participante'}
               </button>
             </form>
           </div>
