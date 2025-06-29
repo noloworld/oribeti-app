@@ -98,6 +98,8 @@ export default function VendasPage() {
   const [abaterErro, setAbaterErro] = useState<string>('');
   // Novo estado para expandir cliente em dia
   const [clienteEmDiaExpandido, setClienteEmDiaExpandido] = useState<number | null>(null);
+  // Adicionar estado para nome do cliente no modal
+  const [clienteModalNome, setClienteModalNome] = useState<string | null>(null);
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -363,6 +365,8 @@ export default function VendasPage() {
   function handleCloseModal() {
     setShowModal(false);
     setModalAberto(false);
+    setEditVenda(null);
+    setClienteModalNome(null);
   }
   function handleCloseEditModal() {
     setShowEditModal(false);
@@ -498,7 +502,9 @@ export default function VendasPage() {
           <span className="text-sm font-medium text-gray-600">Valor Devedores</span>
           <span className="text-xl sm:text-2xl font-bold text-red-700">
             {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(
-              devedores.reduce((acc, v) => acc + (v.produtos.reduce((pacc, p) => pacc + (p.valorFinal * p.quantidade), 0) - (v.valorPago || 0)), 0)
+              todasVendas
+                .filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) - (v.valorPago || 0)) > 0)
+                .reduce((acc, v) => acc + (v.produtos.reduce((pacc, p) => pacc + (p.valorFinal * p.quantidade), 0) - (v.valorPago || 0)), 0)
             )}
           </span>
         </div>
@@ -517,164 +523,131 @@ export default function VendasPage() {
         </button>
       </div>
 
-      {/* Tabelas de Clientes em Dia e Devedores */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-        {/* Clientes em Dia */}
-        <div>
-          <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
-            <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
-            Clientes em Dia
-          </h2>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">CLIENTE</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">TOTAL PAGO</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">DATA</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">AÇÕES</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {clientesEmDiaAgrupados.length === 0 && (
-                    <tr><td colSpan={4} className="text-center text-gray-400 py-4">Nenhum cliente em dia</td></tr>
-                  )}
-                  {clientesEmDiaAgrupados.map((cliente) => (
+      {/* Tabelas de Vendas Clientes */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
+          <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+          Vendas Clientes
+        </h2>
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-800">
+                <tr>
+                  <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">CLIENTE</th>
+                  <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">TOTAL PAGO</th>
+                  <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">EM DÍVIDA</th>
+                  <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">AÇÕES</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {/* Unificar clientes em dia e devedores */}
+                {(() => {
+                  type ClienteAgrupado = {
+                    id: number;
+                    nome: string;
+                    vendas: any[];
+                    totalPago: number;
+                    totalEmDivida: number;
+                  };
+                  const clientesMap: Record<number, ClienteAgrupado> = {};
+                  todasVendas.forEach((venda) => {
+                    const id = venda.cliente.id;
+                    if (!clientesMap[id]) {
+                      clientesMap[id] = {
+                        id,
+                        nome: venda.cliente.nome,
+                        vendas: [],
+                        totalPago: 0,
+                        totalEmDivida: 0,
+                      };
+                    }
+                    const valorTotal = venda.produtos.reduce((a: number, p: any) => a + (p.valorFinal * p.quantidade), 0);
+                    clientesMap[id].vendas.push({ ...venda, valorTotal, valorEmDivida: Math.max(0, valorTotal - (venda.valorPago || 0)) });
+                    clientesMap[id].totalPago += venda.valorPago || 0;
+                    clientesMap[id].totalEmDivida += Math.max(0, valorTotal - (venda.valorPago || 0));
+                  });
+                  const clientesArr: ClienteAgrupado[] = Object.values(clientesMap);
+                  if (clientesArr.length === 0) {
+                    return (
+                      <tr><td colSpan={4} className="text-center text-gray-400 py-4">Nenhum cliente com vendas</td></tr>
+                    );
+                  }
+                  return clientesArr.map((cliente: ClienteAgrupado) => (
                     <React.Fragment key={cliente.id}>
-                      <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setClienteEmDiaExpandido(cliente.id === clienteEmDiaExpandido ? null : cliente.id)}>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{cliente.nome}</td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-green-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalPago)}</td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">{cliente.vendas[0] ? new Date(cliente.vendas[0].data).toLocaleDateString('pt-PT') : ''}</td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap"></td>
-                      </tr>
-                      {clienteEmDiaExpandido === cliente.id && (
-                        <tr>
-                          <td colSpan={4} className="bg-gray-800 p-4">
-                            <div className="space-y-4">
-                              {cliente.vendas.map((venda) => (
-                                <div key={venda.id} className="rounded-lg border border-gray-700 bg-gray-900 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow">
-                                  <div className="flex-1">
-                                    <div className="text-white font-semibold text-base mb-1">{venda.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}</div>
-                                    <div className="text-gray-400 text-sm mb-1">Data: {new Date(venda.data).toLocaleDateString('pt-PT')}</div>
-                                  </div>
-                                  <div className="flex flex-col items-end md:items-center gap-2 min-w-[120px]">
-                                    <div className="text-lg font-bold text-green-400">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorPago)}</div>
-                                    <div className="flex gap-2 mt-1">
-                                      <button className="text-blue-400 hover:text-blue-200" title="Visualizar" onClick={() => handleVisualizarVenda(venda)}>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                      </button>
-                                      <button className="text-green-400 hover:text-green-200" title="Imprimir" onClick={() => handlePrintVenda(venda)}>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg>
-                                      </button>
-                                      <button className="text-red-400 hover:text-red-200" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        {/* Clientes Devedores */}
-        <div>
-          <h2 className="text-xl font-bold text-red-700 mb-4 flex items-center gap-2">
-            <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
-            Clientes Devedores
-          </h2>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">CLIENTE</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">EM DÍVIDA</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">DATA</th>
-                    <th className="px-2 sm:px-4 py-2 text-left text-white font-bold text-base">AÇÕES</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {clientesDevedores.length === 0 && (
-                    <tr><td colSpan={4} className="text-center text-gray-400 py-4">Nenhum devedor</td></tr>
-                  )}
-                  {clientesDevedores.map((cliente) => (
-                    <React.Fragment key={cliente.id}>
-                      <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setClienteExpandido(cliente.id === clienteExpandido ? null : cliente.id)}>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900">{cliente.nome}</td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-red-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-gray-700 hidden md:table-cell">{cliente.vendas[0] ? new Date(cliente.vendas[0].data).toLocaleDateString('pt-PT') : ''}</td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
-                          {abaterClienteId === cliente.id ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                min="0.01"
-                                max={cliente.totalEmDivida}
-                                step="0.01"
-                                value={valorAbater}
-                                onChange={e => setValorAbater(e.target.value)}
-                                className="w-24 px-2 py-1 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none"
-                                placeholder={`até €${cliente.totalEmDivida.toFixed(2)}`}
-                                disabled={abaterLoading}
-                              />
-                              <button
-                                className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded font-semibold"
-                                onClick={() => handleAbaterDivida(cliente)}
-                                disabled={abaterLoading}
-                              >OK</button>
-                              <button
-                                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded font-semibold"
-                                onClick={() => { setAbaterClienteId(null); setValorAbater(''); setAbaterErro(''); }}
-                                disabled={abaterLoading}
-                              >Cancelar</button>
-                              {abaterErro && <span className="text-red-400 text-xs ml-2">{abaterErro}</span>}
-                            </div>
+                      <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setClienteExpandido(clienteExpandido === cliente.id ? null : cliente.id)}>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900 flex items-center gap-2">
+                          {cliente.nome}
+                          {clienteExpandido === cliente.id ? (
+                            <span className="ml-2">▼</span>
                           ) : (
-                            <button
-                              className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded font-semibold"
-                              onClick={e => { e.stopPropagation(); setAbaterClienteId(cliente.id); setValorAbater(''); setAbaterErro(''); }}
-                            >Abater</button>
+                            <span className="ml-2">▶</span>
                           )}
                         </td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-green-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalPago)}</td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                          {cliente.totalEmDivida > 0 && (
+                            <div>
+                              <span className="text-yellow-500 font-bold">Em Dívida</span>
+                              <div className="text-yellow-600 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</div>
+                              <button
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded font-semibold mt-1"
+                                onClick={e => { e.stopPropagation(); setAbaterClienteId(cliente.id); setValorAbater(''); setAbaterErro(''); }}
+                              >Abater</button>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                          <button
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold"
+                            onClick={e => { e.stopPropagation(); setShowModal(true); setForm(f => ({ ...f, clienteId: cliente.id.toString() })); setClienteModalNome(cliente.nome); }}
+                          >Adicionar venda</button>
+                        </td>
                       </tr>
+                      {/* Expandir vendas detalhadas */}
                       {clienteExpandido === cliente.id && (
                         <tr>
-                          <td colSpan={4} className="bg-gray-800 p-4">
-                            <div className="space-y-4">
-                              {cliente.vendas.map((venda) => (
-                                <div key={venda.id} className="rounded-lg border border-gray-700 bg-gray-900 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow">
-                                  <div className="flex-1">
-                                    <div className="text-white font-semibold text-base mb-1">{venda.produtos.map((p: any) => `${p.nomeProduto} (x${p.quantidade})`).join(', ')}</div>
-                                    <div className="text-gray-400 text-sm mb-1">Data: {new Date(venda.data).toLocaleDateString('pt-PT')}</div>
-                                  </div>
-                                  <div className="flex flex-col items-end md:items-center gap-2 min-w-[120px]">
-                                    <div className="text-lg font-bold text-red-400">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorEmDivida)}</div>
-                                    <div className="flex gap-2 mt-1">
-                                      <button className="text-red-400 hover:text-red-200" title="Eliminar" onClick={() => { setVendaToDelete(venda); setShowDeleteModal(true); }}>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                      </button>
+                          <td colSpan={4} className="bg-gray-50 p-0">
+                            <div className="p-4">
+                              <div className="space-y-2">
+                                {cliente.vendas
+                                  .slice()
+                                  .sort((a: any, b: any) => {
+                                    // Pendentes primeiro
+                                    const aPendente = a.valorEmDivida > 0;
+                                    const bPendente = b.valorEmDivida > 0;
+                                    if (aPendente === bPendente) return new Date(b.data).getTime() - new Date(a.data).getTime();
+                                    return aPendente ? -1 : 1;
+                                  })
+                                  .map((venda: any) => (
+                                    <div key={venda.id} className="flex items-center justify-between bg-white rounded shadow px-4 py-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`inline-block w-3 h-3 rounded-full ${venda.valorEmDivida > 0 ? 'bg-yellow-400' : 'bg-green-500'}`}></span>
+                                        <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
+                                        <span className="text-gray-600">{(venda.produtos as any[]).map((p: any) => p.nomeProduto).join(', ')}</span>
+                                        <span className="ml-2 text-sm text-gray-500">{venda.valorEmDivida > 0 ? 'Pendente' : 'Pago'}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {venda.valorEmDivida === 0 && (
+                                          <>
+                                            <button title="Visualizar" onClick={e => { e.stopPropagation(); handleVisualizarVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                                            <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
+                                          </>
+                                        )}
+                                        <button title="Eliminar" onClick={e => { e.stopPropagation(); setVendaToDelete(venda); setShowDeleteModal(true); }} className="text-red-600 hover:text-red-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                                      </div>
                                     </div>
-                                  </div>
-                                </div>
-                              ))}
+                                  ))}
+                              </div>
                             </div>
                           </td>
                         </tr>
                       )}
                     </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  ));
+                })()}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -690,20 +663,22 @@ export default function VendasPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Cliente</label>
-                  <select
-                    value={form.clienteId || ''}
-                    onChange={(e) => setForm({ ...form, clienteId: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    required
-                    onBlur={() => setTouched(true)}
-                  >
-                    <option value="">Selecione um cliente</option>
-                    {clientes.map((cliente) => (
-                      <option key={cliente.id} value={cliente.id}>
-                        {cliente.nome}
-                      </option>
-                    ))}
-                  </select>
+                  {clienteModalNome ? (
+                    <input type="text" value={clienteModalNome} disabled className="w-full px-3 py-2 rounded bg-gray-200 text-gray-700 border border-gray-300" />
+                  ) : (
+                    <select
+                      name="clienteId"
+                      value={form.clienteId}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 rounded bg-gray-200 text-gray-700 border border-gray-300"
+                      required
+                    >
+                      <option value="">Selecione um cliente</option>
+                      {clientes.map((c) => (
+                        <option key={c.id} value={c.id}>{c.nome}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 <div>
