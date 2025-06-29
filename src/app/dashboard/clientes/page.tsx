@@ -523,15 +523,24 @@ export default function ClientesPage() {
                           <td className="px-4 py-2 text-gray-400" colSpan={5}>Nenhuma compra encontrada.</td>
                         </tr>
                       ) : (
-                        compras.map((v, idx) => (
-                          <tr key={v.id || idx} className="border-t border-gray-700">
-                            <td className="px-4 py-2">{new Date(v.data).toLocaleDateString()}</td>
-                            <td className="px-4 py-2">{v.nomeProduto}</td>
-                            <td className="px-4 py-2">€{v.valorRevista.toFixed(2)}</td>
-                            <td className="px-4 py-2">€{v.valorFinal.toFixed(2)}</td>
-                            <td className="px-4 py-2">{v.status}</td>
-                          </tr>
-                        ))
+                        compras.map((v: any, idx: number) => {
+                          // Se v.produtos existir, é uma venda com múltiplos produtos
+                          const produtos = v.produtos ? v.produtos.map((p: any) => p.nomeProduto).join(', ') : v.nomeProduto;
+                          const valorRevista = v.produtos ? v.produtos.reduce((acc: number, p: any) => acc + (p.valorRevista * p.quantidade), 0) : v.valorRevista;
+                          const valorFinal = v.produtos ? v.produtos.reduce((acc: number, p: any) => acc + (p.valorFinal * p.quantidade), 0) : v.valorFinal;
+                          const status = v.status === 'PAGO' || v.status === 'Pago' ? 'Pago' : 'Pendente';
+                          return (
+                            <tr key={v.id || idx} className="border-t border-gray-700">
+                              <td className="px-4 py-2">{new Date(v.data).toLocaleDateString()}</td>
+                              <td className="px-4 py-2">{produtos}</td>
+                              <td className="px-4 py-2">€{valorRevista?.toFixed(2)}</td>
+                              <td className="px-4 py-2">€{valorFinal?.toFixed(2)}</td>
+                              <td className="px-4 py-2">
+                                <span className={`font-bold px-2 py-1 rounded ${status === 'Pago' ? 'bg-green-700 text-white' : 'bg-yellow-500 text-white'}`}>{status}</span>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
