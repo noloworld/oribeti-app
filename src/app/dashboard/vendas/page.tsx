@@ -484,7 +484,7 @@ export default function VendasPage() {
         {/* Total de Vendas */}
         <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
           <span className="text-sm font-medium text-gray-600">Total de Vendas</span>
-          <span className="text-xl sm:text-2xl font-bold text-blue-700">{vendas.length}</span>
+          <span className="text-xl sm:text-2xl font-bold text-blue-700">{todasVendas.length}</span>
         </div>
         {/* Valor Total de Vendas */}
         <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">

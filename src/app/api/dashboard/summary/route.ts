@@ -9,14 +9,24 @@ export async function GET() {
     // Total de vendas
     const totalVendas = await prisma.venda.count();
 
-    // Total ganho (somente vendas pagas)
-    const vendasPagas = await prisma.venda.findMany({ 
-      where: { status: 'PAGO' },
+    // Total vendido (valor total de todas as vendas)
+    const todasVendas = await prisma.venda.findMany({
       include: { produtos: true }
     });
-    const totalGanho = vendasPagas.reduce((acc, v) => {
+    const totalVendido = todasVendas.reduce((acc, v) => {
       const valorVenda = v.produtos.reduce((sum, p) => sum + (p.valorFinal * (p.quantidade || 1)), 0);
       return acc + valorVenda;
+    }, 0);
+
+    // Total ganho/lucro (somente vendas pagas)
+    const vendasPagas = todasVendas.filter(v => {
+      const valorTotal = v.produtos.reduce((sum, p) => sum + (p.valorFinal * (p.quantidade || 1)), 0);
+      return v.status === 'PAGO' || (v.valorPago || 0) >= valorTotal;
+    });
+    const totalGanho = vendasPagas.reduce((acc, v) => {
+      const valorFinal = v.produtos.reduce((sum, p) => sum + (p.valorFinal * (p.quantidade || 1)), 0);
+      const valorRevista = v.produtos.reduce((sum, p) => sum + (p.valorRevista * (p.quantidade || 1)), 0);
+      return acc + (valorFinal - valorRevista); // Lucro = valorFinal - valorRevista
     }, 0);
 
     // Clientes devedores (clientes com vendas pendentes)
@@ -104,6 +114,7 @@ export async function GET() {
     return NextResponse.json({
       totalClientes,
       totalVendas,
+      totalVendido,
       totalGanho,
       clientesDevedores,
       vendasPorMes,
@@ -115,6 +126,7 @@ export async function GET() {
     return NextResponse.json({
       totalClientes: 0,
       totalVendas: 0,
+      totalVendido: 0,
       totalGanho: 0,
       clientesDevedores: [],
       vendasPorMes: [],

@@ -17,6 +17,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 interface DashboardData {
   totalClientes: number;
   totalVendas: number;
+  totalVendido: number;
   totalGanho: number;
   clientesDevedores: Array<{
     id: number;
@@ -100,7 +101,7 @@ export default function DashboardPage() {
       )}
 
       {/* Cards de totais */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-blue-700 text-white rounded-lg p-4 shadow flex flex-col items-center">
           <div className="text-lg font-semibold">Total de Clientes</div>
           <div className="text-3xl font-bold mt-2">{data.totalClientes}</div>
@@ -108,6 +109,10 @@ export default function DashboardPage() {
         <div className="bg-green-700 text-white rounded-lg p-4 shadow flex flex-col items-center">
           <div className="text-lg font-semibold">Total de Vendas</div>
           <div className="text-3xl font-bold mt-2">{data.totalVendas}</div>
+        </div>
+        <div className="bg-indigo-700 text-white rounded-lg p-4 shadow flex flex-col items-center">
+          <div className="text-lg font-semibold">Total Vendido</div>
+          <div className="text-3xl font-bold mt-2">€ {data.totalVendido.toFixed(2)}</div>
         </div>
         <div className="bg-purple-700 text-white rounded-lg p-4 shadow flex flex-col items-center">
           <div className="text-lg font-semibold">Total Ganho</div>
