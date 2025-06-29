@@ -20,6 +20,8 @@ model User {
   tipo      UserType @default(REVENDEDOR)
   criadoEm  DateTime @default(now())
   lastOnline DateTime? // Data/hora do último acesso online
+  isTyping  Boolean  @default(false) // Se o usuário está escrevendo no chat
+  lastTyping DateTime? // Última vez que começou a escrever
   mensagens ChatMensagem[]
   notificacoes Notificacao[]
 }

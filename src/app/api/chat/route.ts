@@ -59,9 +59,39 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // Buscar usuários que estão escrevendo (excluindo o usuário atual)
+    // Limpar typing status antigo (mais de 10 segundos)
+    const tenSecondsAgo = new Date(Date.now() - 10000);
+    await prisma.user.updateMany({
+      where: {
+        isTyping: true,
+        lastTyping: {
+          lt: tenSecondsAgo
+        }
+      },
+      data: {
+        isTyping: false
+      }
+    });
+
+    const usuariosEscrevendo = await prisma.user.findMany({
+      where: {
+        isTyping: true,
+        id: {
+          not: user.id
+        }
+      },
+      select: {
+        id: true,
+        nome: true,
+        tipo: true
+      }
+    });
+
     return NextResponse.json({
       mensagens: mensagens.reverse(), // Inverter para mostrar mais antigas primeiro
-      total: await prisma.chatMensagem.count()
+      total: await prisma.chatMensagem.count(),
+      usuariosEscrevendo
     });
   } catch (error) {
     console.error('Erro ao buscar mensagens:', error);
@@ -127,9 +157,47 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Parar de escrever após enviar mensagem
+    await prisma.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        isTyping: false,
+        lastTyping: null
+      }
+    });
+
     return NextResponse.json(novaMensagem);
   } catch (error) {
     console.error('Erro ao enviar mensagem:', error);
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+  }
+}
+
+// PUT - Atualizar status de typing
+export async function PUT(request: NextRequest) {
+  try {
+    const user = getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
+    const { isTyping } = await request.json();
+
+    await prisma.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        isTyping: Boolean(isTyping),
+        lastTyping: isTyping ? new Date() : null
+      }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao atualizar typing status:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 } 

@@ -30,6 +30,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const [notificacoes, setNotificacoes] = useState<any[]>([]);
   const [showNotificacoes, setShowNotificacoes] = useState(false);
   const [totalNaoLidas, setTotalNaoLidas] = useState(0);
+  const [previousTotalNaoLidas, setPreviousTotalNaoLidas] = useState(0);
+  const [shouldAnimateNotification, setShouldAnimateNotification] = useState(false);
   const { modalAberto } = useModalAberto();
 
   useEffect(() => {
@@ -89,8 +91,18 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         const res = await fetch('/api/notificacoes');
         if (!res.ok) return;
         const data = await res.json();
+        const newTotal = data.totalNaoLidas || 0;
+        
+        // Se há novas notificações, ativar animação
+        if (newTotal > totalNaoLidas && totalNaoLidas > 0) {
+          setShouldAnimateNotification(true);
+          // Remover animação após 1 segundo
+          setTimeout(() => setShouldAnimateNotification(false), 1000);
+        }
+        
         setNotificacoes(data.notificacoes || []);
-        setTotalNaoLidas(data.totalNaoLidas || 0);
+        setPreviousTotalNaoLidas(totalNaoLidas);
+        setTotalNaoLidas(newTotal);
       } catch {}
     }
     
@@ -112,7 +124,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       clearInterval(interval);
       clearInterval(intervalVendas);
     };
-  }, []);
+  }, [totalNaoLidas]);
 
   async function handleLogout() {
     setLogoutMsg('Logout realizado com sucesso!');
@@ -199,13 +211,17 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           {/* Widget de notificações - mobile header */}
           {!modalAberto && (
             <button
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-2 flex items-center gap-1 focus:outline-none transition relative"
+              className={`bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-2 flex items-center gap-1 focus:outline-none transition relative ${
+                shouldAnimateNotification ? 'animate-shake' : ''
+              }`}
               onClick={() => setShowNotificacoes(v => !v)}
               title="Notificações"
             >
-              <FaBell className="text-lg" />
+              <FaBell className={`text-lg ${shouldAnimateNotification ? 'animate-pulse-grow' : ''}`} />
               {totalNaoLidas > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center font-bold">
+                <span className={`absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center font-bold ${
+                  shouldAnimateNotification ? 'animate-bounce-in' : ''
+                }`}>
                   {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
                 </span>
               )}
@@ -443,13 +459,17 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       {!modalAberto && (
         <div className="fixed z-50 bottom-20 right-6 hidden md:block">
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition relative"
+            className={`bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition relative ${
+              shouldAnimateNotification ? 'animate-shake' : ''
+            }`}
             onClick={() => setShowNotificacoes(v => !v)}
             title="Notificações"
           >
-            <FaBell className="text-xl" />
+            <FaBell className={`text-xl ${shouldAnimateNotification ? 'animate-pulse-grow' : ''}`} />
             {totalNaoLidas > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
+              <span className={`absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold ${
+                shouldAnimateNotification ? 'animate-bounce-in' : ''
+              }`}>
                 {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
               </span>
             )}
