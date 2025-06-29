@@ -33,28 +33,28 @@ const PRESENTATION_STEPS: PresentationStep[] = [
   {
     id: 'welcome',
     title: '🎉 Bem-vindo ao Oribeti',
-    description: 'Sistema de gestão completo para o seu negócio',
+    description: 'Sistema de gestão para o meu mini negócio',
     page: '/dashboard',
     duration: 8000
   },
   {
     id: 'dashboard-overview',
     title: '📊 Dashboard - Centro de Controlo',
-    description: 'Visão geral completa do seu negócio em tempo real',
+    description: 'Visão geral completa do meu negócio em tempo real',
     page: '/dashboard',
     duration: 12000
   },
   {
     id: 'vendas-system',
-    title: '💰 Sistema de Vendas Inteligente',
-    description: 'Gerencie todas as suas vendas e pagamentos de forma inteligente',
+    title: '💰 Sistema de Vendas',
+    description: 'Gerencia todas as tuas vendas e pagamentos de forma inteligente',
     page: '/dashboard/vendas',
     duration: 15000
   },
   {
     id: 'devedores-control',
-    title: '⚠️ Controlo Automático de Devedores',
-    description: 'Acompanhe clientes em dívida e gerencie cobranças automaticamente',
+    title: '⚠️ Devedores',
+    description: 'Acompanha clientes em dívida e gerencia cobranças automaticamente quando te pagam',
     page: '/dashboard/devedores',
     duration: 12000
   },
@@ -67,8 +67,8 @@ const PRESENTATION_STEPS: PresentationStep[] = [
   },
   {
     id: 'sorteios-engagement',
-    title: '🎲 Sorteios para Engajamento',
-    description: 'Crie sorteios e aumente o envolvimento dos seus clientes',
+    title: '🎲 Sorteios',
+    description: 'Cria sorteios de natal, páscoa, etc...',
     page: '/dashboard/sorteios',
     duration: 12000
   },
@@ -82,7 +82,7 @@ const PRESENTATION_STEPS: PresentationStep[] = [
   {
     id: 'conclusion',
     title: '🚀 Oribeti - O Futuro da Gestão!',
-    description: 'Sistema criado por Manolo - vendo systems',
+    description: 'Sistema criado por Manolo - Vendo Systems',
     page: '/dashboard',
     duration: 8000
   }

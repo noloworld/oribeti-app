@@ -94,7 +94,7 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
                 APRESENTAÇÃO
               </div>
               <div className="text-xl md:text-3xl font-light tracking-widest animate-typewriter">
-                ESPETACULAR
+                GERAL
               </div>
             </div>
           </div>
@@ -124,10 +124,10 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center animate-finalReveal">
               <div className="text-4xl md:text-7xl font-black mb-4 md:mb-6 bg-gradient-to-r from-yellow-300 via-red-500 to-purple-600 bg-clip-text text-transparent animate-rainbow">
-                PREPARE-SE
+                PREPARE-TE
               </div>
               <div className="text-2xl md:text-4xl font-bold text-white animate-bounce">
-                PARA O FUTURO!
+                POIS VAIS ENTRAR NUMA NAVE ESPACIAL!
               </div>
               {/* Epic Shockwave */}
               <div className="absolute inset-0 border-2 md:border-4 border-white rounded-full animate-shockwave"></div>
@@ -168,8 +168,8 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
           className="absolute bottom-4 md:bottom-8 right-4 md:right-8 px-4 py-2 md:px-6 md:py-3 bg-white/10 hover:bg-white/20 text-white text-sm md:text-base rounded-lg backdrop-blur-sm transition-all duration-300 animate-fadeIn"
           style={{ animationDelay: '2s' }}
         >
-          <span className="hidden md:inline">Pular Intro →</span>
-          <span className="md:hidden">Pular →</span>
+          <span className="hidden md:inline">Sair →</span>
+          <span className="md:hidden">Sair →</span>
         </button>
       </div>
 

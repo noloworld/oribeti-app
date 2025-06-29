@@ -88,7 +88,7 @@ export default function VendasPage() {
   ]);
   // Estados para modais de ações
   const [vendaSelecionada, setVendaSelecionada] = useState<Venda | null>(null);
-  const [showVisualizarModal, setShowVisualizarModal] = useState(false);
+  const [showVerModal, setShowVerModal] = useState(false);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
   const [touched, setTouched] = useState(false);
   const [clienteExpandido, setClienteExpandido] = useState<number | null>(null);
@@ -401,12 +401,12 @@ export default function VendasPage() {
   const devedores = vendas.filter(v => v.valorPago < v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0));
 
   // Handlers para abrir/fechar modais
-  function handleVisualizarVenda(venda: Venda) {
+  function handleVerVenda(venda: Venda) {
     setVendaSelecionada(venda);
-    setShowVisualizarModal(true);
+    setShowVerModal(true);
   }
-  function handleFecharVisualizar() {
-    setShowVisualizarModal(false);
+  function handleFecharVer() {
+    setShowVerModal(false);
     setVendaSelecionada(null);
   }
   function handleAbrirPagamento(venda: Venda) {
@@ -547,7 +547,7 @@ export default function VendasPage() {
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          Adicionar Venda
+                          Acrescentar Venda
         </button>
       </div>
 
@@ -629,7 +629,7 @@ export default function VendasPage() {
                           <button
                             className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold"
                             onClick={e => { e.stopPropagation(); setShowModal(true); setForm(f => ({ ...f, clienteId: cliente.id.toString() })); setClienteModalNome(cliente.nome); }}
-                          >Adicionar venda</button>
+                          >Acrescentar venda</button>
                         </td>
                       </tr>
                       {/* Expandir vendas detalhadas */}
@@ -661,7 +661,7 @@ export default function VendasPage() {
                                       <div className="flex items-center gap-2">
                                         {venda.valorEmDivida === 0 && (
                                           <>
-                                            <button title="Visualizar" onClick={e => { e.stopPropagation(); handleVisualizarVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                                            <button title="Ver" onClick={e => { e.stopPropagation(); handleVerVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
                                             <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
                                           </>
                                         )}
@@ -744,7 +744,7 @@ export default function VendasPage() {
                   <button
                     className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold text-sm"
                     onClick={e => { e.stopPropagation(); setShowModal(true); setForm(f => ({ ...f, clienteId: cliente.id.toString() })); setClienteModalNome(cliente.nome); }}
-                  >Adicionar venda</button>
+                  >Acrescentar venda</button>
                 </div>
                 {/* Expandir vendas detalhadas */}
                 {clienteExpandido === cliente.id && (
@@ -771,7 +771,7 @@ export default function VendasPage() {
                             <div className="flex gap-2 ml-2">
                               {venda.valorEmDivida === 0 && (
                                 <>
-                                  <button title="Visualizar" onClick={e => { e.stopPropagation(); handleVisualizarVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                                  <button title="Ver" onClick={e => { e.stopPropagation(); handleVerVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
                                   <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
                                 </>
                               )}
@@ -1005,10 +1005,10 @@ export default function VendasPage() {
       </Transition.Root>
 
       {/* Modais no final do componente */}
-      {showVisualizarModal && vendaSelecionada && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4" onClick={handleFecharVisualizar}>
+      {showVerModal && vendaSelecionada && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4" onClick={handleFecharVer}>
           <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900" onClick={e => e.stopPropagation()}>
-            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={handleFecharVisualizar}>&times;</button>
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={handleFecharVer}>&times;</button>
             <div className="mb-5">
               <h2 className="text-2xl font-extrabold text-blue-900 mb-1 flex items-center gap-2">Detalhes da Venda</h2>
               <div className="border-b border-gray-200 mb-4"></div>

@@ -81,13 +81,13 @@ export default function PagamentoModal({
       
       if (!res.ok) {
         console.log('Erro na API:', data.error);
-        toast.error(data.error || 'Erro ao adicionar pagamento.');
+        toast.error(data.error || 'Erro ao acrescentar pagamento.');
         setLoading(false);
         return;
       }
 
       console.log('Pagamento criado com sucesso, fechando modal...');
-      toast.success('Pagamento adicionado com sucesso!');
+      toast.success('Pagamento acrescentado com sucesso!');
       setForm({
         valor: '',
         data: new Date().toISOString().split('T')[0],
@@ -96,8 +96,8 @@ export default function PagamentoModal({
       onPagamentoAdded();
       onClose();
     } catch (error) {
-      console.error('Erro ao adicionar pagamento:', error);
-      toast.error('Erro ao adicionar pagamento.');
+      console.error('Erro ao acrescentar pagamento:', error);
+      toast.error('Erro ao acrescentar pagamento.');
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ export default function PagamentoModal({
               disabled={loading}
               aria-label="Fechar"
             >×</button>
-            <h2 className="text-xl font-bold text-white mb-4">Adicionar Pagamento</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Acrescentar Pagamento</h2>
             <div className="bg-yellow-600 text-white p-3 rounded mb-4">
               <div className="text-sm font-medium">Valor em dívida: €{valorEmDivida.toFixed(2)}</div>
               <div className="text-xs">Valor máximo para este pagamento</div>
@@ -197,7 +197,7 @@ export default function PagamentoModal({
                   className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-medium"
                   disabled={loading}
                 >
-                  {loading ? 'Salvando...' : 'Adicionar Pagamento'}
+                  {loading ? 'A guardar...' : 'Acrescentar Pagamento'}
                 </button>
               </div>
             </form>

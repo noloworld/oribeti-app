@@ -49,7 +49,7 @@ export default function ListaPagamentos({
   }, [vendaId]);
 
   const handleDeletePagamento = async (pagamentoId: number) => {
-    if (!confirm('Tem certeza que deseja deletar este pagamento?')) return;
+    if (!confirm('Tem a certeza que deseja eliminar este pagamento?')) return;
 
     try {
       const res = await fetch('/api/pagamentos', {
@@ -60,15 +60,15 @@ export default function ListaPagamentos({
 
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || 'Erro ao deletar pagamento.');
+        toast.error(data.error || 'Erro ao eliminar pagamento.');
         return;
       }
 
-      toast.success('Pagamento deletado com sucesso!');
+      toast.success('Pagamento eliminado com sucesso!');
       fetchPagamentos();
       onPagamentoAdded();
     } catch {
-      toast.error('Erro ao deletar pagamento.');
+      toast.error('Erro ao eliminar pagamento.');
     }
   };
 
@@ -95,7 +95,7 @@ export default function ListaPagamentos({
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || 'Erro ao adicionar pagamento.');
+        toast.error(data.error || 'Erro ao acrescentar pagamento.');
         setLoadingNovo(false);
         return;
       }
@@ -103,16 +103,16 @@ export default function ListaPagamentos({
       setShowInput(false);
       fetchPagamentos();
       onPagamentoAdded();
-      toast.success('Pagamento adicionado!');
+      toast.success('Pagamento acrescentado!');
     } catch {
-      toast.error('Erro ao adicionar pagamento.');
+      toast.error('Erro ao acrescentar pagamento.');
     } finally {
       setLoadingNovo(false);
     }
   };
 
   if (loading) {
-    return <div className="text-gray-400 text-center py-4">Carregando pagamentos...</div>;
+    return <div className="text-gray-400 text-center py-4">A carregar pagamentos...</div>;
   }
 
   return (
@@ -168,7 +168,7 @@ export default function ListaPagamentos({
               onClick={() => setShowInput(true)}
               className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium"
             >
-              + Adicionar Pagamento
+              + Acrescentar Pagamento
             </button>
           )}
           {showInput && (
@@ -191,7 +191,7 @@ export default function ListaPagamentos({
                 className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium"
                 disabled={loadingNovo}
               >
-                {loadingNovo ? 'Guardando...' : 'Guardar'}
+                {loadingNovo ? 'A guardar...' : 'Guardar'}
               </button>
               <button
                 type="button"
@@ -229,7 +229,7 @@ export default function ListaPagamentos({
                 <button
                   onClick={() => handleDeletePagamento(pagamento.id)}
                   className="ml-3 text-red-400 hover:text-red-300 text-sm"
-                  title="Deletar pagamento"
+                  title="Eliminar pagamento"
                 >
                   ×
                 </button>
