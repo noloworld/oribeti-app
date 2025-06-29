@@ -26,9 +26,9 @@ export async function GET(req: Request) {
       where: { id: payload.id },
       select: { id: true, nome: true, email: true, tipo: true },
     });
-    if (!user) return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 });
+    if (!user) return NextResponse.json({ error: 'Utilizador não encontrado.' }, { status: 404 });
     return NextResponse.json(user);
   } catch {
-    return NextResponse.json({ error: 'Erro ao buscar usuário logado.' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao buscar utilizador logado.' }, { status: 500 });
   }
 } 

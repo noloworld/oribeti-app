@@ -13,11 +13,11 @@ export async function POST(req: Request) {
     }
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return NextResponse.json({ error: 'Usuário ou senha inválidos.' }, { status: 401 });
+      return NextResponse.json({ error: 'Utilizador ou palavra-passe inválidos.' }, { status: 401 });
     }
     const senhaOk = await bcrypt.compare(senha, user.senha);
     if (!senhaOk) {
-      return NextResponse.json({ error: 'Usuário ou senha inválidos.' }, { status: 401 });
+      return NextResponse.json({ error: 'Utilizador ou palavra-passe inválidos.' }, { status: 401 });
     }
     
     // Atualizar lastOnline

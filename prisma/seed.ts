@@ -16,7 +16,7 @@ async function main() {
     },
   });
 
-  // Criar usuário apresentador
+  // Criar utilizador apresentador
   const apresentadorHash = await bcrypt.hash('apresentador123', 10);
   await prisma.user.upsert({
     where: { email: 'apresentador@oribeti.com' },
@@ -29,7 +29,7 @@ async function main() {
     },
   });
 
-  console.log('Usuários criados com sucesso!');
+  console.log('Utilizadores criados com sucesso!');
 }
 
 main().catch(e => {
