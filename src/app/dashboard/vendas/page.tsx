@@ -888,18 +888,9 @@ export default function VendasPage() {
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                   >
-                    {isPrestacoes ? '✓ Pagamento Prestações' : 'Pagamento Prestações'}
+                    Pagamento Prestações
                   </button>
-                  {!isPrestacoes && (
-                    <span className="text-green-400 text-sm">Pagamento total à vista</span>
-                  )}
                 </div>
-                {!isPrestacoes && (
-                  <div>
-                    <label className="block text-gray-300 mb-1">Valor Pago (€)</label>
-                    <input type="number" name="valorPago" min="0" step="0.01" value={form.valorPago} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none" placeholder="0,00" />
-                  </div>
-                )}
                 {!isFormValid() && touched && (
                   <div className="text-red-500 text-sm font-semibold mb-2">Preencha primeiro os campos acima</div>
                 )}
