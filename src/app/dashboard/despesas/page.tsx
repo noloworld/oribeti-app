@@ -79,10 +79,10 @@ export default function DespesasPage() {
         fetchDespesas();
       } else {
         const data = await res.json();
-        toast.error(data.error || "Erro ao adicionar despesa");
+        toast.error(data.error || "Erro ao acrescentar despesa");
       }
     } catch {
-      toast.error("Erro ao adicionar despesa");
+      toast.error("Erro ao acrescentar despesa");
     }
   }
 
@@ -217,7 +217,7 @@ export default function DespesasPage() {
           onClick={handleAddOpen}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium"
         >
-          Adicionar nova despesa
+                      Acrescentar nova despesa
         </button>
       </div>
       {/* Tabela tradicional para desktop */}
@@ -233,7 +233,7 @@ export default function DespesasPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="text-center py-8">Carregando...</td></tr>
+              <tr><td colSpan={4} className="text-center py-8">A carregar...</td></tr>
             ) : despesasArray.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-8">Nenhuma despesa encontrada.</td></tr>
             ) : (

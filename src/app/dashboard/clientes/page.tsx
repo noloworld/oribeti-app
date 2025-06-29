@@ -69,7 +69,7 @@ export default function ClientesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setPendingToast({ type: 'error', message: data.error || 'Erro ao adicionar cliente.' });
+        setPendingToast({ type: 'error', message: data.error || 'Erro ao acrescentar cliente.' });
         setLoading(false);
         return;
       }
@@ -77,7 +77,7 @@ export default function ClientesPage() {
       setPendingToast({ type: 'success', message: 'Cliente adicionado com sucesso!' });
       fetchClientes();
     } catch {
-      setPendingToast({ type: 'error', message: 'Erro ao adicionar cliente.' });
+      setPendingToast({ type: 'error', message: 'Erro ao acrescentar cliente.' });
     } finally {
       setLoading(false);
     }
@@ -242,7 +242,7 @@ export default function ClientesPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          <button onClick={handleAddOpen} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Adicionar cliente</button>
+          <button onClick={handleAddOpen} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Acrescentar cliente</button>
         </div>
       </div>
       {/* Tabela tradicional para desktop */}
@@ -362,7 +362,7 @@ export default function ClientesPage() {
         >
           <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
             <div className="bg-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md relative pointer-events-auto" onClick={e => e.stopPropagation()}>
-              <h2 className="text-xl font-bold mb-4">Adicionar Cliente</h2>
+              <h2 className="text-xl font-bold mb-4">Acrescentar Cliente</h2>
               <form onSubmit={handleAddSave} className="flex flex-col gap-4">
                 <div>
                   <label className="block text-gray-300 mb-1">Nome</label>
@@ -382,7 +382,7 @@ export default function ClientesPage() {
                 </div>
                 <div className="flex justify-end gap-2 mt-2">
                   <button type="button" onClick={handleAddModalClose} className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white">Cancelar</button>
-                  <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
+                  <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium" disabled={loading}>{loading ? 'A guardar...' : 'Guardar'}</button>
                 </div>
               </form>
               <button onClick={handleAddModalClose} className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">×</button>

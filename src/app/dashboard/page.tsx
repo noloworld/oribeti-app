@@ -60,7 +60,7 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-300">Carregando dashboard...</div>;
+    return <div className="p-8 text-center text-gray-300">A carregar dashboard...</div>;
   }
   if (!data) {
     return <div className="p-8 text-center text-red-500">Erro ao carregar dados do dashboard.</div>;

@@ -37,11 +37,11 @@ export default function DefinicoesPage() {
       setCarregando(true);
       try {
         const res = await fetch('/api/usuarios');
-        if (!res.ok) throw new Error('Erro ao buscar usuários');
+        if (!res.ok) throw new Error('Erro ao buscar utilizadores');
         const data = await res.json();
         setUsuarios(data);
       } catch (err) {
-        toast.error('Erro ao buscar usuários');
+        toast.error('Erro ao buscar utilizadores');
       } finally {
         setCarregando(false);
       }
@@ -53,12 +53,12 @@ export default function DefinicoesPage() {
     async function fetchMeuUsuario() {
       try {
         const res = await fetch('/api/auth/me');
-        if (!res.ok) throw new Error('Erro ao buscar usuário logado');
+        if (!res.ok) throw new Error('Erro ao buscar utilizador logado');
         const data = await res.json();
         setMeuUsuario(data);
         setFormEdit({ nome: data.nome, email: data.email, senha: '' });
       } catch (err) {
-        toast.error('Erro ao buscar usuário logado');
+        toast.error('Erro ao buscar utilizador logado');
       }
     }
     fetchMeuUsuario();
@@ -121,20 +121,20 @@ export default function DefinicoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || 'Erro ao adicionar usuário');
+        toast.error(data.error || 'Erro ao acrescentar utilizador');
         return;
       }
       setUsuarios([data, ...usuarios]);
       setNovoUsuario({ nome: '', email: '', senha: '', tipo: 'Revendedor' });
-      toast.success('Usuário adicionado com sucesso!');
+      toast.success('Utilizador acrescentado com sucesso!');
     } catch (err) {
-      toast.error('Erro ao adicionar usuário');
+      toast.error('Erro ao acrescentar utilizador');
     } finally {
       setCarregando(false);
     }
   }
   async function handleRemoverUsuario(id: number) {
-    if (!window.confirm('Tem certeza que deseja remover este usuário?')) return;
+    if (!window.confirm('Tem a certeza que deseja remover este utilizador?')) return;
     setCarregando(true);
     try {
       const res = await fetch('/api/usuarios', {
@@ -144,13 +144,13 @@ export default function DefinicoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || 'Erro ao remover usuário');
+        toast.error(data.error || 'Erro ao remover utilizador');
         return;
       }
       setUsuarios(usuarios.filter(u => u.id !== id));
-      toast.success('Usuário removido com sucesso!');
+      toast.success('Utilizador removido com sucesso!');
     } catch (err) {
-      toast.error('Erro ao remover usuário');
+      toast.error('Erro ao remover utilizador');
     } finally {
       setCarregando(false);
     }
@@ -341,7 +341,7 @@ export default function DefinicoesPage() {
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium mt-2"
               disabled={editando}
             >
-              {editando ? 'Salvando...' : 'Salvar alterações'}
+                              {editando ? 'A guardar...' : 'Guardar alterações'}
             </button>
           </form>
         </section>
@@ -349,7 +349,7 @@ export default function DefinicoesPage() {
           <section className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-4 w-full md:w-1/2 max-w-lg">
             <div className="flex items-center gap-2 mb-2">
               <FaUserPlus className="text-lg text-green-400" />
-              <span className="font-semibold">Gerenciar usuários/revendedores</span>
+              <span className="font-semibold">Gerir utilizadores/revendedores</span>
             </div>
             <form onSubmit={handleAddUsuario} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-x-2 mb-4 w-full flex-wrap">
               <input
@@ -382,7 +382,7 @@ export default function DefinicoesPage() {
                 disabled={carregando}
               />
               <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded w-auto min-w-[110px]" disabled={carregando}>
-                {carregando ? 'Adicionando...' : 'Adicionar'}
+                {carregando ? 'A acrescentar...' : 'Acrescentar'}
               </button>
             </form>
             <div className="overflow-x-auto scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
@@ -411,7 +411,7 @@ export default function DefinicoesPage() {
             </div>
             <div className="block md:hidden space-y-8">
               {usuarios.length === 0 ? (
-                <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum usuário encontrado.</div>
+                <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum utilizador encontrado.</div>
               ) : (
                 usuarios.map((usuario, idx) => (
                   <div key={usuario.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
