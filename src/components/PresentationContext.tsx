@@ -150,23 +150,23 @@ export function PresentationProvider({ children }: { children: React.ReactNode }
 
   // Auto-advance and navigation
   useEffect(() => {
-    if (!isPresenting || !isAutoPlaying || !currentStepData) return;
+    if (!isPresenting || !currentStepData) return;
 
-    const timer = setTimeout(() => {
-      // Navigate if needed
-      if (currentStepData.action === 'navigate' && currentStepData.page) {
-        router.push(currentStepData.page);
-      }
+    // Navigate immediately if needed
+    if (currentStepData.action === 'navigate' && currentStepData.page) {
+      console.log(`🚀 Navegando para: ${currentStepData.page}`);
+      router.push(currentStepData.page);
+    }
 
-      // Auto advance after duration
-      if (currentStepData.duration) {
-        setTimeout(() => {
-          nextStep();
-        }, 1000); // Small delay after navigation
-      }
-    }, currentStepData.duration || 3000);
+    // Auto advance only if autoplay is enabled
+    if (isAutoPlaying && currentStepData.duration) {
+      const timer = setTimeout(() => {
+        console.log(`⏭️ Avançando para próximo passo após ${currentStepData.duration}ms`);
+        nextStep();
+      }, currentStepData.duration);
 
-    return () => clearTimeout(timer);
+      return () => clearTimeout(timer);
+    }
   }, [currentStep, isPresenting, isAutoPlaying, currentStepData, router]);
 
   const value: PresentationContextType = {

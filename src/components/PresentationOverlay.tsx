@@ -55,72 +55,55 @@ export default function PresentationOverlay() {
 
   if (!isPresenting || !currentStepData) return null;
 
-  const getPositionClasses = () => {
-    switch (currentStepData.position) {
-      case 'top':
-        return 'top-4 left-1/2 transform -translate-x-1/2';
-      case 'bottom':
-        return 'bottom-4 left-1/2 transform -translate-x-1/2';
-      case 'left':
-        return 'left-4 top-1/2 transform -translate-y-1/2';
-      case 'right':
-        return 'right-4 top-1/2 transform -translate-y-1/2';
-      case 'center':
-      default:
-        return 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
-    }
-  };
-
   return (
     <>
-      {/* Elegant overlay with gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-gray-900/40 via-blue-900/30 to-purple-900/40 backdrop-blur-sm z-[9999] pointer-events-none" />
-      
-      {/* Main presentation card */}
-      <div className={`fixed ${getPositionClasses()} z-[10000] pointer-events-auto`}>
-        <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 p-1 rounded-3xl shadow-2xl animate-glow">
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-lg min-w-96 border border-white/20">
+      {/* Top presentation bar - non-intrusive */}
+      <div className="fixed top-0 left-0 right-0 z-[10000] pointer-events-auto">
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 shadow-2xl">
+          <div className="px-6 py-4">
             {/* Progress bar */}
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+            <div className="w-full bg-white/20 rounded-full h-1 mb-3">
               <div 
-                className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-100"
+                className="bg-white h-1 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
 
-            {/* Step counter */}
-            <div className="text-xs text-gray-500 mb-2 text-center">
-              Passo {currentStep + 1} de {steps.length}
-            </div>
+            <div className="flex items-center justify-between text-white">
+              {/* Left: Step info */}
+              <div className="flex items-center gap-4">
+                <div className="text-sm font-medium opacity-90">
+                  Passo {currentStep + 1} de {steps.length}
+                </div>
+                <div className="text-lg font-bold">
+                  {currentStepData.title}
+                </div>
+              </div>
 
-            {/* Title with animation */}
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4 text-center">
-              {currentStepData.title}
-            </h3>
+              {/* Center: Description */}
+              <div className="flex-1 mx-8 text-center">
+                <p className="text-white/90 font-medium">
+                  {currentStepData.description}
+                </p>
+              </div>
 
-            {/* Description */}
-            <p className="text-gray-700 mb-8 text-center leading-relaxed text-lg font-medium">
-              {currentStepData.description}
-            </p>
+              {/* Right: Controls */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={previousStep}
+                  disabled={currentStep === 0}
+                  className="p-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-white/30 rounded-lg transition-all"
+                  title="Anterior"
+                >
+                  <FaChevronLeft className="w-4 h-4" />
+                </button>
 
-            {/* Controls */}
-            <div className="flex justify-between items-center">
-              <button
-                onClick={previousStep}
-                disabled={currentStep === 0}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 rounded-lg transition-all"
-              >
-                <FaChevronLeft className="w-3 h-3" />
-                Anterior
-              </button>
-
-              <div className="flex gap-2">
                 <button
                   onClick={toggleAutoPlay}
                   className={`p-2 rounded-lg transition-all ${
                     isAutoPlaying 
-                      ? 'bg-orange-100 hover:bg-orange-200 text-orange-600' 
-                      : 'bg-green-100 hover:bg-green-200 text-green-600'
+                      ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-200' 
+                      : 'bg-green-500/20 hover:bg-green-500/30 text-green-200'
                   }`}
                   title={isAutoPlaying ? 'Pausar' : 'Reproduzir'}
                 >
@@ -128,34 +111,40 @@ export default function PresentationOverlay() {
                 </button>
 
                 <button
-                  onClick={toggleFullscreen}
-                  className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-all"
-                  title="Ecrã completo"
-                >
-                  {isFullscreen ? <FaCompress className="w-4 h-4" /> : <FaExpand className="w-4 h-4" />}
-                </button>
-
-                <button
                   onClick={stopPresentation}
-                  className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-all"
+                  className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-all"
                   title="Parar apresentação"
                 >
                   <FaStop className="w-4 h-4" />
                 </button>
-              </div>
 
-              <button
-                onClick={nextStep}
-                disabled={currentStep === steps.length - 1}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:text-gray-500 text-white rounded-lg transition-all"
-              >
-                Próximo
-                <FaChevronRight className="w-3 h-3" />
-              </button>
+                <button
+                  onClick={nextStep}
+                  disabled={currentStep === steps.length - 1}
+                  className="p-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-white/30 rounded-lg transition-all"
+                  title="Próximo"
+                >
+                  <FaChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Subtle background overlay */}
+      <div className="fixed inset-0 bg-blue-900/10 backdrop-blur-[1px] z-[9999] pointer-events-none" />
+
+      {/* Floating arrow pointing to highlighted element */}
+      {currentStepData.element && (
+        <div className="fixed z-[10001] pointer-events-none">
+          <div className="animate-bounce">
+            <div className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+              👆 Veja aqui!
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Elegant floating particles */}
       <div className="fixed inset-0 pointer-events-none z-[9998]">
@@ -179,6 +168,11 @@ export default function PresentationOverlay() {
 
       {/* All custom styles in one block */}
       <style jsx global>{`
+        /* Add padding to body when presentation is active */
+        body {
+          padding-top: 80px !important;
+        }
+
         @keyframes float {
           0%, 100% {
             transform: translateY(0px) rotate(0deg);
@@ -196,14 +190,12 @@ export default function PresentationOverlay() {
 
         @keyframes spotlightPulse {
           0%, 100% { 
-            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.4), 
-                        0 0 40px rgba(59, 130, 246, 0.6),
-                        inset 0 0 20px rgba(147, 197, 253, 0.2);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+            border: 3px solid rgba(59, 130, 246, 0.6);
           }
           50% { 
-            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.4), 
-                        0 0 60px rgba(59, 130, 246, 0.8),
-                        inset 0 0 30px rgba(147, 197, 253, 0.3);
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
+            border: 3px solid rgba(59, 130, 246, 0.9);
           }
         }
 
@@ -211,11 +203,10 @@ export default function PresentationOverlay() {
           ${currentStepData.element} {
             position: relative;
             z-index: 10001;
-            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.4), 
-                        0 0 40px rgba(59, 130, 246, 0.6),
-                        inset 0 0 20px rgba(147, 197, 253, 0.2);
-            border-radius: 12px;
-            animation: spotlightPulse 3s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4) !important;
+            border: 3px solid rgba(59, 130, 246, 0.6) !important;
+            border-radius: 12px !important;
+            animation: spotlightPulse 3s ease-in-out infinite !important;
           }
         ` : ''}
       `}</style>
