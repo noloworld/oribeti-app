@@ -523,8 +523,8 @@ export default function VendasPage() {
         </button>
       </div>
 
-      {/* Tabelas de Vendas Clientes */}
-      <div className="mb-8">
+      {/* Tabelas de Vendas Clientes - DESKTOP */}
+      <div className="mb-8 hidden sm:block">
         <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
           <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
           Vendas Clientes
@@ -625,6 +625,9 @@ export default function VendasPage() {
                                         <span className={`inline-block w-3 h-3 rounded-full ${venda.valorEmDivida > 0 ? 'bg-yellow-400' : 'bg-green-500'}`}></span>
                                         <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
                                         <span className="text-gray-600">{(venda.produtos as any[]).map((p: any) => p.nomeProduto).join(', ')}</span>
+                                        <span className="ml-2 font-bold text-blue-700">
+                                          {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorTotal)}
+                                        </span>
                                         <span className="ml-2 text-sm text-gray-500">{venda.valorEmDivida > 0 ? 'Pendente' : 'Pago'}</span>
                                       </div>
                                       <div className="flex items-center gap-2">
@@ -649,6 +652,113 @@ export default function VendasPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      {/* Cards de Vendas Clientes - MOBILE */}
+      <div className="mb-8 block sm:hidden">
+        <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
+          <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+          Vendas Clientes
+        </h2>
+        <div className="space-y-4">
+          {(() => {
+            type ClienteAgrupado = {
+              id: number;
+              nome: string;
+              vendas: any[];
+              totalPago: number;
+              totalEmDivida: number;
+            };
+            const clientesMap: Record<number, ClienteAgrupado> = {};
+            todasVendas.forEach((venda) => {
+              const id = venda.cliente.id;
+              if (!clientesMap[id]) {
+                clientesMap[id] = {
+                  id,
+                  nome: venda.cliente.nome,
+                  vendas: [],
+                  totalPago: 0,
+                  totalEmDivida: 0,
+                };
+              }
+              const valorTotal = venda.produtos.reduce((a: number, p: any) => a + (p.valorFinal * p.quantidade), 0);
+              clientesMap[id].vendas.push({ ...venda, valorTotal, valorEmDivida: Math.max(0, valorTotal - (venda.valorPago || 0)) });
+              clientesMap[id].totalPago += venda.valorPago || 0;
+              clientesMap[id].totalEmDivida += Math.max(0, valorTotal - (venda.valorPago || 0));
+            });
+            const clientesArr: ClienteAgrupado[] = Object.values(clientesMap);
+            if (clientesArr.length === 0) {
+              return (
+                <div className="text-center text-gray-400 py-4">Nenhum cliente com vendas</div>
+              );
+            }
+            return clientesArr.map((cliente: ClienteAgrupado) => (
+              <div key={cliente.id} className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-gray-900 text-lg flex-1">{cliente.nome}</div>
+                  <button
+                    className="ml-2 text-gray-600 focus:outline-none"
+                    onClick={() => setClienteExpandido(clienteExpandido === cliente.id ? null : cliente.id)}
+                  >
+                    {clienteExpandido === cliente.id ? '▲' : '▼'}
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="text-green-700 font-bold text-base">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalPago)}</div>
+                  {cliente.totalEmDivida > 0 && (
+                    <div className="text-yellow-600 font-bold text-base flex items-center gap-1">
+                      <span>Em Dívida</span>
+                      <span>{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</span>
+                      <button
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs font-semibold ml-2"
+                        onClick={e => { e.stopPropagation(); setAbaterClienteId(cliente.id); setValorAbater(''); setAbaterErro(''); }}
+                      >Abater</button>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2">
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold text-sm"
+                    onClick={e => { e.stopPropagation(); setShowModal(true); setForm(f => ({ ...f, clienteId: cliente.id.toString() })); setClienteModalNome(cliente.nome); }}
+                  >Adicionar venda</button>
+                </div>
+                {/* Expandir vendas detalhadas */}
+                {clienteExpandido === cliente.id && (
+                  <div className="mt-4 space-y-2">
+                    {cliente.vendas
+                      .slice()
+                      .sort((a: any, b: any) => {
+                        const aPendente = a.valorEmDivida > 0;
+                        const bPendente = b.valorEmDivida > 0;
+                        if (aPendente === bPendente) return new Date(b.data).getTime() - new Date(a.data).getTime();
+                        return aPendente ? -1 : 1;
+                      })
+                      .map((venda: any) => (
+                        <div key={venda.id} className="rounded border p-3 flex flex-col bg-gray-50">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`inline-block w-3 h-3 rounded-full ${venda.valorEmDivida > 0 ? 'bg-yellow-400' : 'bg-green-500'}`}></span>
+                            <span className="font-semibold text-sm">{new Date(venda.data).toLocaleDateString()}</span>
+                            <span className="text-gray-600 text-sm">{(venda.produtos as any[]).map((p: any) => p.nomeProduto).join(', ')}</span>
+                            <span className="ml-2 font-bold text-blue-700 text-sm">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorTotal)}</span>
+                            <span className="ml-2 text-xs text-gray-500">{venda.valorEmDivida > 0 ? 'Pendente' : 'Pago'}</span>
+                          </div>
+                          <div className="flex gap-2 mt-1">
+                            {venda.valorEmDivida === 0 && (
+                              <>
+                                <button title="Visualizar" onClick={e => { e.stopPropagation(); handleVisualizarVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                                <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
+                              </>
+                            )}
+                            <button title="Eliminar" onClick={e => { e.stopPropagation(); setVendaToDelete(venda); setShowDeleteModal(true); }} className="text-red-600 hover:text-red-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            ));
+          })()}
         </div>
       </div>
 
