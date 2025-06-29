@@ -183,7 +183,8 @@ export default function ClientesPage() {
     try {
       const res = await fetch('/api/vendas');
       const data = await res.json();
-      setCompras((data || []).filter((v: any) => v.cliente?.id === cliente.id));
+      // Garante que cada venda do cliente aparece como uma linha, mesmo com múltiplos produtos
+      setCompras((data.vendas || data || []).filter((v: any) => v.cliente?.id === cliente.id));
     } catch {
       setCompras([]);
     }
