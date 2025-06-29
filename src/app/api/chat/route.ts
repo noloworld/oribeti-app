@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'segredo-super-seguro';
+
+function getUserFromRequest(request: NextRequest) {
+  try {
+    const cookie = request.headers.get('cookie') || '';
+    const match = cookie.match(/auth-token=([^;]+)/);
+    if (!match) return null;
+    const token = match[1];
+    const payload = jwt.verify(token, JWT_SECRET) as any;
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 // GET - Buscar mensagens do chat
 export async function GET(request: NextRequest) {
   try {
-    // Temporário: usar ID fixo até implementar auth corretamente
-    const userId = 1;
+    const user = getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -32,7 +50,7 @@ export async function GET(request: NextRequest) {
     await prisma.chatMensagem.updateMany({
       where: {
         userId: {
-          not: userId
+          not: user.id
         },
         lida: false
       },
@@ -54,9 +72,10 @@ export async function GET(request: NextRequest) {
 // POST - Enviar nova mensagem
 export async function POST(request: NextRequest) {
   try {
-    // Temporário: usar ID fixo até implementar auth corretamente
-    const userId = 1;
-    const userName = 'Admin';
+    const user = getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
 
     const { mensagem } = await request.json();
 
@@ -67,7 +86,7 @@ export async function POST(request: NextRequest) {
     // Criar mensagem
     const novaMensagem = await prisma.chatMensagem.create({
       data: {
-        userId: userId,
+        userId: user.id,
         mensagem: mensagem.trim()
       },
       include: {
@@ -85,7 +104,7 @@ export async function POST(request: NextRequest) {
     const outrosUsuarios = await prisma.user.findMany({
       where: {
         id: {
-          not: userId
+          not: user.id
         }
       },
       select: {
@@ -99,10 +118,10 @@ export async function POST(request: NextRequest) {
           userId: otherUser.id,
           tipo: 'NOVA_MENSAGEM',
           titulo: 'Nova mensagem no chat',
-          mensagem: `${userName}: ${mensagem.substring(0, 50)}${mensagem.length > 50 ? '...' : ''}`,
+          mensagem: `${user.nome}: ${mensagem.substring(0, 50)}${mensagem.length > 50 ? '...' : ''}`,
           dadosExtra: {
             mensagemId: novaMensagem.id,
-            remetente: userName
+            remetente: user.nome
           }
         }))
       });
