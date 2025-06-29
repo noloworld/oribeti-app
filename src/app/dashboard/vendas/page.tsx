@@ -694,15 +694,10 @@ export default function VendasPage() {
               );
             }
             return clientesArr.map((cliente: ClienteAgrupado) => (
-              <div key={cliente.id} className="bg-white rounded-lg shadow p-4">
+              <div key={cliente.id} className="bg-white rounded-lg shadow p-4 cursor-pointer select-none" onClick={() => setClienteExpandido(clienteExpandido === cliente.id ? null : cliente.id)}>
                 <div className="flex items-center justify-between">
                   <div className="font-bold text-gray-900 text-lg flex-1">{cliente.nome}</div>
-                  <button
-                    className="ml-2 text-gray-600 focus:outline-none"
-                    onClick={() => setClienteExpandido(clienteExpandido === cliente.id ? null : cliente.id)}
-                  >
-                    {clienteExpandido === cliente.id ? '▲' : '▼'}
-                  </button>
+                  <span className="ml-2 text-gray-600">{clienteExpandido === cliente.id ? '▲' : '▼'}</span>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <div className="text-green-700 font-bold text-base">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalPago)}</div>
@@ -735,22 +730,25 @@ export default function VendasPage() {
                         return aPendente ? -1 : 1;
                       })
                       .map((venda: any) => (
-                        <div key={venda.id} className="rounded border p-3 flex flex-col bg-gray-50">
-                          <div className="flex items-center gap-2 mb-1">
+                        <div key={venda.id} className="rounded border p-3 bg-gray-50 flex flex-col gap-1">
+                          <div className="flex items-center gap-3">
                             <span className={`inline-block w-3 h-3 rounded-full ${venda.valorEmDivida > 0 ? 'bg-yellow-400' : 'bg-green-500'}`}></span>
-                            <span className="font-semibold text-sm">{new Date(venda.data).toLocaleDateString()}</span>
-                            <span className="text-gray-600 text-sm">{(venda.produtos as any[]).map((p: any) => p.nomeProduto).join(', ')}</span>
-                            <span className="ml-2 font-bold text-blue-700 text-sm">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorTotal)}</span>
-                            <span className="ml-2 text-xs text-gray-500">{venda.valorEmDivida > 0 ? 'Pendente' : 'Pago'}</span>
-                          </div>
-                          <div className="flex gap-2 mt-1">
-                            {venda.valorEmDivida === 0 && (
-                              <>
-                                <button title="Visualizar" onClick={e => { e.stopPropagation(); handleVisualizarVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
-                                <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
-                              </>
-                            )}
-                            <button title="Eliminar" onClick={e => { e.stopPropagation(); setVendaToDelete(venda); setShowDeleteModal(true); }} className="text-red-600 hover:text-red-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                            <div className="flex-1 flex flex-col">
+                              <span className="text-gray-900 font-medium text-sm">{(venda.produtos as any[]).map((p: any) => p.nomeProduto).join(', ')}</span>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="font-bold text-blue-700 text-base">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorTotal)}</span>
+                                <span className={`text-xs font-semibold ml-2 ${venda.valorEmDivida > 0 ? 'text-yellow-600' : 'text-green-700'}`}>{venda.valorEmDivida > 0 ? 'Pendente' : 'Pago'}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 ml-2">
+                              {venda.valorEmDivida === 0 && (
+                                <>
+                                  <button title="Visualizar" onClick={e => { e.stopPropagation(); handleVisualizarVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                                  <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
+                                </>
+                              )}
+                              <button title="Eliminar" onClick={e => { e.stopPropagation(); setVendaToDelete(venda); setShowDeleteModal(true); }} className="text-red-600 hover:text-red-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                            </div>
                           </div>
                         </div>
                       ))}
