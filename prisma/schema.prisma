@@ -20,6 +20,8 @@ model User {
   tipo      UserType @default(REVENDEDOR)
   criadoEm  DateTime @default(now())
   lastOnline DateTime? // Data/hora do último acesso online
+  mensagens ChatMensagem[]
+  notificacoes Notificacao[]
 }
 
 enum UserType {
@@ -124,4 +126,31 @@ model PremioSorteio {
   sorteioId  Int
   descricao  String
   sorteio    Sorteio  @relation(fields: [sorteioId], references: [id], onDelete: Cascade)
+}
+
+model ChatMensagem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mensagem  String
+  criadoEm  DateTime @default(now())
+  lida      Boolean  @default(false)
+}
+
+model Notificacao {
+  id        Int               @id @default(autoincrement())
+  userId    Int
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tipo      TipoNotificacao
+  titulo    String
+  mensagem  String
+  lida      Boolean           @default(false)
+  criadoEm  DateTime          @default(now())
+  dadosExtra Json?            // Para armazenar dados extras como vendaId, etc.
+}
+
+enum TipoNotificacao {
+  NOVA_MENSAGEM
+  VENDA_PENDENTE_ANTIGA
+  SISTEMA
 }

@@ -1,104 +1,12 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes, FaUserCircle, FaHome } from 'react-icons/fa';
+import { FaChartPie, FaShoppingCart, FaGift, FaUsers, FaExclamationTriangle, FaMoneyBillWave, FaCog, FaBars, FaTimes, FaUserCircle, FaHome, FaComments, FaBell } from 'react-icons/fa';
 import { Transition } from '@headlessui/react';
 import Link from 'next/link';
 import { ModalProvider, useModalAberto } from '../../components/ModalContext';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [logoutMsg, setLogoutMsg] = useState('');
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [userInfo, setUserInfo] = useState<{ nome: string; tipo: string } | null>(null);
-  const [numDevedores, setNumDevedores] = useState(0);
-  const [showMenu, setShowMenu] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
-  const [showOnline, setShowOnline] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (!res.ok) return;
-        const data = await res.json();
-        setUserInfo({ nome: data.nome, tipo: data.tipo });
-      } catch {}
-    }
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    async function fetchDevedores() {
-      try {
-        const res = await fetch('/api/vendas');
-        if (!res.ok) return;
-        const data = await res.json();
-        setNumDevedores((data || []).filter((v: any) => v.status === 'PENDENTE').length);
-      } catch {}
-    }
-    fetchDevedores();
-    // Escuta evento customizado para atualizar badge
-    function handleDevedoresUpdate() {
-      fetchDevedores();
-    }
-    window.addEventListener('devedoresUpdate', handleDevedoresUpdate);
-    return () => {
-      window.removeEventListener('devedoresUpdate', handleDevedoresUpdate);
-    };
-  }, []);
-
-  useEffect(() => {
-    let interval: any;
-    async function fetchOnline() {
-      try {
-        const res = await fetch('/api/usuarios?online=1');
-        if (!res.ok) return;
-        const data = await res.json();
-        setOnlineUsers(data);
-      } catch {}
-    }
-    fetchOnline();
-    interval = setInterval(fetchOnline, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  async function handleLogout() {
-    setLogoutMsg('Logout realizado com sucesso!');
-    setLoggingOut(true);
-    await fetch('/api/auth/logout', { method: 'POST' });
-    setTimeout(() => {
-      router.push('/login');
-    }, 1200);
-  }
-
-  const menuItems = [
-    { href: '/dashboard', label: 'Resumo Geral', icon: <FaHome className="text-lg mr-2" /> },
-    { href: '/dashboard/vendas', label: 'Registo Vendas', icon: <FaShoppingCart className="text-lg mr-2" /> },
-    { href: '/dashboard/clientes', label: 'Clientes', icon: <FaUsers className="text-lg mr-2" /> },
-    { href: '/dashboard/devedores', label: 'Devedores', icon: <FaExclamationTriangle className="text-lg mr-2" /> },
-    { href: '/dashboard/despesas', label: 'Despesas', icon: <FaMoneyBillWave className="text-lg mr-2" /> },
-    { href: '/dashboard/sorteios', label: 'Sorteios', icon: <FaGift className="text-lg mr-2" /> },
-    { href: '/dashboard/definicoes', label: 'Definições', icon: <FaCog className="text-lg mr-2" /> },
-  ];
-
-  function normalizePath(path: string) {
-    return path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
-  }
-
-  function isActive(link: { href: string; label: string }) {
-    const current = normalizePath(pathname);
-    const target = normalizePath(link.href);
-    if (target === '/dashboard') return current === '/dashboard';
-    return current === target || current.startsWith(target + '/');
-  }
-
   return (
     <ModalProvider>
       <DashboardContent>
@@ -119,6 +27,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const [showMenu, setShowMenu] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
   const [showOnline, setShowOnline] = useState(false);
+  const [notificacoes, setNotificacoes] = useState<any[]>([]);
+  const [showNotificacoes, setShowNotificacoes] = useState(false);
+  const [totalNaoLidas, setTotalNaoLidas] = useState(0);
   const { modalAberto } = useModalAberto();
 
   useEffect(() => {
@@ -172,6 +83,37 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    async function fetchNotificacoes() {
+      try {
+        const res = await fetch('/api/notificacoes');
+        if (!res.ok) return;
+        const data = await res.json();
+        setNotificacoes(data.notificacoes || []);
+        setTotalNaoLidas(data.totalNaoLidas || 0);
+      } catch {}
+    }
+    
+    async function verificarVendasAntigas() {
+      try {
+        await fetch('/api/notificacoes/verificar-vendas-antigas', { method: 'POST' });
+      } catch {}
+    }
+
+    fetchNotificacoes();
+    verificarVendasAntigas(); // Verificar na inicialização
+    
+    // Polling para atualizar notificações a cada 30 segundos
+    const interval = setInterval(fetchNotificacoes, 30000);
+    // Verificar vendas antigas a cada 2 horas
+    const intervalVendas = setInterval(verificarVendasAntigas, 2 * 60 * 60 * 1000);
+    
+    return () => {
+      clearInterval(interval);
+      clearInterval(intervalVendas);
+    };
+  }, []);
+
   async function handleLogout() {
     setLogoutMsg('Logout realizado com sucesso!');
     setLoggingOut(true);
@@ -181,6 +123,35 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     }, 1200);
   }
 
+  async function marcarTodasNotificacoesLidas() {
+    try {
+      const res = await fetch('/api/notificacoes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marcarTodasLidas: true })
+      });
+      if (res.ok) {
+        setTotalNaoLidas(0);
+        setNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
+      }
+    } catch {}
+  }
+
+  function formatarDataNotificacao(data: string) {
+    const date = new Date(data);
+    const agora = new Date();
+    const diffMs = agora.getTime() - date.getTime();
+    const diffMinutos = Math.floor(diffMs / (1000 * 60));
+    const diffHoras = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMinutos < 1) return 'agora';
+    if (diffMinutos < 60) return `${diffMinutos}min`;
+    if (diffHoras < 24) return `${diffHoras}h`;
+    if (diffDias < 7) return `${diffDias}d`;
+    return date.toLocaleDateString('pt-PT');
+  }
+
   const menuItems = [
     { href: '/dashboard', label: 'Resumo Geral', icon: <FaHome className="text-lg mr-2" /> },
     { href: '/dashboard/vendas', label: 'Registo Vendas', icon: <FaShoppingCart className="text-lg mr-2" /> },
@@ -188,6 +159,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { href: '/dashboard/devedores', label: 'Devedores', icon: <FaExclamationTriangle className="text-lg mr-2" /> },
     { href: '/dashboard/despesas', label: 'Despesas', icon: <FaMoneyBillWave className="text-lg mr-2" /> },
     { href: '/dashboard/sorteios', label: 'Sorteios', icon: <FaGift className="text-lg mr-2" /> },
+    { href: '/dashboard/chat', label: 'Chat', icon: <FaComments className="text-lg mr-2" /> },
     { href: '/dashboard/definicoes', label: 'Definições', icon: <FaCog className="text-lg mr-2" /> },
   ];
 
@@ -378,6 +350,142 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                   ))}
                 </ul>
               )}
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Widget de notificações - mobile */}
+      {!modalAberto && (
+        <div className="fixed z-50 top-2 right-2 md:hidden">
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition relative"
+            onClick={() => setShowNotificacoes(v => !v)}
+            title="Notificações"
+          >
+            <FaBell className="text-xl" />
+            {totalNaoLidas > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
+                {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
+              </span>
+            )}
+          </button>
+          {showNotificacoes && (
+            <div className="absolute top-full right-0 mt-2 bg-gray-900 border border-blue-700 rounded-xl shadow-2xl min-w-[280px] max-w-sm max-h-80 overflow-y-auto">
+              <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+                <div className="font-bold text-blue-400 flex items-center gap-2">
+                  <FaBell /> Notificações
+                </div>
+                {totalNaoLidas > 0 && (
+                  <button
+                    onClick={marcarTodasNotificacoesLidas}
+                    className="text-xs text-blue-400 hover:text-blue-300 transition"
+                  >
+                    Marcar todas como lidas
+                  </button>
+                )}
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {notificacoes.length === 0 ? (
+                  <div className="p-4 text-gray-400 text-sm text-center">
+                    Nenhuma notificação
+                  </div>
+                ) : (
+                  notificacoes.slice(0, 10).map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`p-3 border-b border-gray-800 hover:bg-gray-800 transition ${
+                        !notif.lida ? 'bg-blue-900/20' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                          !notif.lida ? 'bg-blue-500' : 'bg-gray-600'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm text-white mb-1">
+                            {notif.titulo}
+                          </div>
+                          <div className="text-xs text-gray-300 mb-1">
+                            {notif.mensagem}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {formatarDataNotificacao(notif.criadoEm)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Widget de notificações - desktop */}
+      {!modalAberto && (
+        <div className="fixed z-50 bottom-20 right-6 hidden md:block">
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-3 flex items-center gap-2 focus:outline-none transition relative"
+            onClick={() => setShowNotificacoes(v => !v)}
+            title="Notificações"
+          >
+            <FaBell className="text-xl" />
+            {totalNaoLidas > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
+                {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
+              </span>
+            )}
+          </button>
+          {showNotificacoes && (
+            <div className="absolute bottom-full right-0 mb-2 bg-gray-900 border border-blue-700 rounded-xl shadow-2xl min-w-[320px] max-w-sm max-h-80 overflow-y-auto">
+              <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+                <div className="font-bold text-blue-400 flex items-center gap-2">
+                  <FaBell /> Notificações
+                </div>
+                {totalNaoLidas > 0 && (
+                  <button
+                    onClick={marcarTodasNotificacoesLidas}
+                    className="text-xs text-blue-400 hover:text-blue-300 transition"
+                  >
+                    Marcar todas como lidas
+                  </button>
+                )}
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {notificacoes.length === 0 ? (
+                  <div className="p-4 text-gray-400 text-sm text-center">
+                    Nenhuma notificação
+                  </div>
+                ) : (
+                  notificacoes.slice(0, 10).map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`p-3 border-b border-gray-800 hover:bg-gray-800 transition ${
+                        !notif.lida ? 'bg-blue-900/20' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                          !notif.lida ? 'bg-blue-500' : 'bg-gray-600'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm text-white mb-1">
+                            {notif.titulo}
+                          </div>
+                          <div className="text-xs text-gray-300 mb-1">
+                            {notif.mensagem}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {formatarDataNotificacao(notif.criadoEm)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           )}
         </div>
