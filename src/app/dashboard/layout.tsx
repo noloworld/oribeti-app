@@ -92,16 +92,18 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         if (!res.ok) return;
         const data = await res.json();
         const newTotal = data.totalNaoLidas || 0;
+        const currentTotal = totalNaoLidas;
         
         // Se há novas notificações, ativar animação
-        if (newTotal > totalNaoLidas && totalNaoLidas > 0) {
+        if (newTotal > currentTotal && mounted) {
+          console.log(`🔔 Nova notificação detectada! ${currentTotal} → ${newTotal}`);
           setShouldAnimateNotification(true);
-          // Remover animação após 1 segundo
-          setTimeout(() => setShouldAnimateNotification(false), 1000);
+          // Remover animação após 1.2 segundos
+          setTimeout(() => setShouldAnimateNotification(false), 1200);
         }
         
         setNotificacoes(data.notificacoes || []);
-        setPreviousTotalNaoLidas(totalNaoLidas);
+        setPreviousTotalNaoLidas(currentTotal);
         setTotalNaoLidas(newTotal);
       } catch {}
     }
@@ -112,19 +114,26 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       } catch {}
     }
 
-    fetchNotificacoes();
-    verificarVendasAntigas(); // Verificar na inicialização
+    if (mounted) {
+      fetchNotificacoes();
+      verificarVendasAntigas(); // Verificar na inicialização
+    }
     
-    // Polling para atualizar notificações a cada 30 segundos
-    const interval = setInterval(fetchNotificacoes, 30000);
+    // Polling para atualizar notificações a cada 5 segundos (mais responsivo)
+    const interval = setInterval(() => {
+      if (mounted) fetchNotificacoes();
+    }, 5000);
+    
     // Verificar vendas antigas a cada 2 horas
-    const intervalVendas = setInterval(verificarVendasAntigas, 2 * 60 * 60 * 1000);
+    const intervalVendas = setInterval(() => {
+      if (mounted) verificarVendasAntigas();
+    }, 2 * 60 * 60 * 1000);
     
     return () => {
       clearInterval(interval);
       clearInterval(intervalVendas);
     };
-  }, [totalNaoLidas]);
+  }, [mounted]);
 
   async function handleLogout() {
     setLogoutMsg('Logout realizado com sucesso!');
@@ -147,6 +156,34 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         setNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
       }
     } catch {}
+  }
+
+  async function handleNotificationClick(notificacao: any) {
+    // Marcar notificação como lida
+    try {
+      await fetch('/api/notificacoes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [notificacao.id] })
+      });
+      
+      // Atualizar estado local apenas se não estava lida
+      if (!notificacao.lida) {
+        setNotificacoes(prev => 
+          prev.map(n => n.id === notificacao.id ? { ...n, lida: true } : n)
+        );
+        setTotalNaoLidas(prev => Math.max(0, prev - 1));
+      }
+    } catch {}
+
+    // Fechar dropdown de notificações
+    setShowNotificacoes(false);
+
+    // Redirecionar baseado no tipo de notificação
+    if (notificacao.tipo === 'NOVA_MENSAGEM') {
+      router.push('/dashboard/chat');
+    }
+    // Adicionar mais tipos de redirecionamento no futuro se necessário
   }
 
   function formatarDataNotificacao(data: string) {
@@ -285,23 +322,30 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               notificacoes.slice(0, 10).map((notif) => (
                 <div
                   key={notif.id}
-                  className={`p-3 border-b border-gray-800 hover:bg-gray-800 transition ${
+                  onClick={() => handleNotificationClick(notif)}
+                  className={`p-3 border-b border-gray-800 hover:bg-gray-700 transition cursor-pointer ${
                     !notif.lida ? 'bg-blue-900/20' : ''
-                  }`}
+                  } ${notif.tipo === 'NOVA_MENSAGEM' ? 'hover:bg-blue-800/30' : ''}`}
                 >
                   <div className="flex items-start gap-2">
                     <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                       !notif.lida ? 'bg-blue-500' : 'bg-gray-600'
                     }`} />
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm text-white mb-1">
+                      <div className="font-semibold text-sm text-white mb-1 flex items-center gap-2">
                         {notif.titulo}
+                        {notif.tipo === 'NOVA_MENSAGEM' && (
+                          <FaComments className="text-blue-400 text-xs" />
+                        )}
                       </div>
                       <div className="text-xs text-gray-300 mb-1">
                         {notif.mensagem}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {formatarDataNotificacao(notif.criadoEm)}
+                      <div className="text-xs text-gray-500 flex items-center justify-between">
+                        <span>{formatarDataNotificacao(notif.criadoEm)}</span>
+                        {notif.tipo === 'NOVA_MENSAGEM' && (
+                          <span className="text-blue-400 text-xs">Clique para ver</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -498,23 +542,30 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                   notificacoes.slice(0, 10).map((notif) => (
                     <div
                       key={notif.id}
-                      className={`p-3 border-b border-gray-800 hover:bg-gray-800 transition ${
+                      onClick={() => handleNotificationClick(notif)}
+                      className={`p-3 border-b border-gray-800 hover:bg-gray-700 transition cursor-pointer ${
                         !notif.lida ? 'bg-blue-900/20' : ''
-                      }`}
+                      } ${notif.tipo === 'NOVA_MENSAGEM' ? 'hover:bg-blue-800/30' : ''}`}
                     >
                       <div className="flex items-start gap-2">
                         <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                           !notif.lida ? 'bg-blue-500' : 'bg-gray-600'
                         }`} />
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm text-white mb-1">
+                          <div className="font-semibold text-sm text-white mb-1 flex items-center gap-2">
                             {notif.titulo}
+                            {notif.tipo === 'NOVA_MENSAGEM' && (
+                              <FaComments className="text-blue-400 text-xs" />
+                            )}
                           </div>
                           <div className="text-xs text-gray-300 mb-1">
                             {notif.mensagem}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {formatarDataNotificacao(notif.criadoEm)}
+                          <div className="text-xs text-gray-500 flex items-center justify-between">
+                            <span>{formatarDataNotificacao(notif.criadoEm)}</span>
+                            {notif.tipo === 'NOVA_MENSAGEM' && (
+                              <span className="text-blue-400 text-xs">Clique para ver</span>
+                            )}
                           </div>
                         </div>
                       </div>
