@@ -98,8 +98,35 @@ export default function VendasPage() {
   const [abaterErro, setAbaterErro] = useState<string>('');
   // Novo estado para expandir cliente em dia
   const [clienteEmDiaExpandido, setClienteEmDiaExpandido] = useState<number | null>(null);
+  // Estado para paginação das vendas
+  const [paginaAtualVendas, setPaginaAtualVendas] = useState<Record<number, number>>({});
   // Adicionar estado para nome do cliente no modal
   const [clienteModalNome, setClienteModalNome] = useState<string | null>(null);
+
+  // Função para paginação das vendas
+  const getVendasPaginadas = (vendas: any[], clienteId: number) => {
+    const vendasPorPagina = 7;
+    const paginaAtual = paginaAtualVendas[clienteId] || 1;
+    const inicio = (paginaAtual - 1) * vendasPorPagina;
+    const fim = inicio + vendasPorPagina;
+    const vendasPaginadas = vendas.slice(inicio, fim);
+    const totalPaginas = Math.ceil(vendas.length / vendasPorPagina);
+    
+    return {
+      vendas: vendasPaginadas,
+      paginaAtual,
+      totalPaginas,
+      temMaisVendas: vendas.length > vendasPorPagina
+    };
+  };
+
+  // Função para mudar página
+  const mudarPagina = (clienteId: number, novaPagina: number) => {
+    setPaginaAtualVendas(prev => ({
+      ...prev,
+      [clienteId]: novaPagina
+    }));
+  };
 
   // Buscar clientes ao abrir o modal
   useEffect(() => {
@@ -601,7 +628,20 @@ export default function VendasPage() {
                       <tr><td colSpan={4} className="text-center text-gray-400 py-4">Nenhum cliente com vendas</td></tr>
                     );
                   }
-                  return clientesArr.map((cliente: ClienteAgrupado) => (
+                  return clientesArr.map((cliente: ClienteAgrupado) => {
+                    // Preparar dados de paginação para este cliente
+                    const vendasOrdenadas = cliente.vendas
+                      .slice()
+                      .sort((a: any, b: any) => {
+                        const aPendente = a.valorEmDivida > 0;
+                        const bPendente = b.valorEmDivida > 0;
+                        if (aPendente === bPendente) return new Date(b.data).getTime() - new Date(a.data).getTime();
+                        return aPendente ? -1 : 1;
+                      });
+                    
+                    const { vendas: vendasPaginadas, paginaAtual, totalPaginas, temMaisVendas } = getVendasPaginadas(vendasOrdenadas, cliente.id);
+                    
+                    return (
                     <React.Fragment key={cliente.id}>
                       <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setClienteExpandido(clienteExpandido === cliente.id ? null : cliente.id)}>
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap font-medium text-gray-900 flex items-center gap-2">
@@ -615,11 +655,13 @@ export default function VendasPage() {
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-green-700 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalPago)}</td>
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
                           {cliente.totalEmDivida > 0 && (
-                            <div>
-                              <span className="text-yellow-500 font-bold">Em Dívida</span>
-                              <div className="text-yellow-600 font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</div>
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-lg shadow-lg text-center">
+                                <div className="text-sm font-medium">Em Dívida</div>
+                                <div className="text-lg font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</div>
+                              </div>
                               <button
-                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded font-semibold mt-1"
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded font-semibold transition-colors"
                                 onClick={e => { e.stopPropagation(); setAbaterClienteId(cliente.id); setValorAbater(''); setAbaterErro(''); }}
                               >Abater</button>
                             </div>
@@ -638,44 +680,59 @@ export default function VendasPage() {
                           <td colSpan={4} className="bg-gray-50 p-0">
                             <div className="p-4">
                               <div className="space-y-2">
-                                {cliente.vendas
-                                  .slice()
-                                  .sort((a: any, b: any) => {
-                                    // Pendentes primeiro
-                                    const aPendente = a.valorEmDivida > 0;
-                                    const bPendente = b.valorEmDivida > 0;
-                                    if (aPendente === bPendente) return new Date(b.data).getTime() - new Date(a.data).getTime();
-                                    return aPendente ? -1 : 1;
-                                  })
-                                  .map((venda: any) => (
-                                    <div key={venda.id} className="flex items-center justify-between bg-white rounded shadow px-4 py-2">
-                                      <div className="flex items-center gap-2">
-                                        <span className={`inline-block w-3 h-3 rounded-full ${venda.valorEmDivida > 0 ? 'bg-yellow-400' : 'bg-green-500'}`}></span>
-                                        <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
-                                        <span className="text-gray-600">{(venda.produtos as any[]).map((p: any) => p.nomeProduto).join(', ')}</span>
-                                        <span className="ml-2 font-bold text-blue-700">
-                                          {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorTotal)}
-                                        </span>
-                                        <span className="ml-2 text-sm text-gray-500">{venda.valorEmDivida > 0 ? 'Pendente' : 'Pago'}</span>
+                                {vendasPaginadas.map((venda: any) => (
+                                      <div key={venda.id} className="flex items-center justify-between bg-white rounded shadow px-4 py-2">
+                                        <div className="flex items-center gap-2">
+                                          <span className={`inline-block w-3 h-3 rounded-full ${venda.valorEmDivida > 0 ? 'bg-yellow-400' : 'bg-green-500'}`}></span>
+                                          <span className="font-semibold">{new Date(venda.data).toLocaleDateString()}</span>
+                                          <span className="text-gray-600">{(venda.produtos as any[]).map((p: any) => p.nomeProduto).join(', ')}</span>
+                                          <span className="ml-2 font-bold text-blue-700">
+                                            {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(venda.valorTotal)}
+                                          </span>
+                                          <span className="ml-2 text-sm text-gray-500">{venda.valorEmDivida > 0 ? 'Pendente' : 'Pago'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          {venda.valorEmDivida === 0 && (
+                                            <>
+                                              <button title="Ver" onClick={e => { e.stopPropagation(); handleVerVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                                              <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
+                                            </>
+                                          )}
+                                          <button title="Eliminar" onClick={e => { e.stopPropagation(); setVendaToDelete(venda); setShowDeleteModal(true); }} className="text-red-600 hover:text-red-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                                        </div>
                                       </div>
-                                      <div className="flex items-center gap-2">
-                                        {venda.valorEmDivida === 0 && (
-                                          <>
-                                            <button title="Ver" onClick={e => { e.stopPropagation(); handleVerVenda(venda); }} className="text-blue-600 hover:text-blue-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
-                                            <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
-                                          </>
-                                        )}
-                                        <button title="Eliminar" onClick={e => { e.stopPropagation(); setVendaToDelete(venda); setShowDeleteModal(true); }} className="text-red-600 hover:text-red-800"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-                                      </div>
-                                    </div>
-                                  ))}
+                                ))}
+                                
+                                {/* Paginação */}
+                                {temMaisVendas && (
+                                  <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t">
+                                    <button
+                                      onClick={() => mudarPagina(cliente.id, Math.max(1, paginaAtual - 1))}
+                                      disabled={paginaAtual === 1}
+                                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                                    >
+                                      ← Anterior
+                                    </button>
+                                    <span className="text-sm text-gray-600">
+                                      Página {paginaAtual} de {totalPaginas}
+                                    </span>
+                                    <button
+                                      onClick={() => mudarPagina(cliente.id, Math.min(totalPaginas, paginaAtual + 1))}
+                                      disabled={paginaAtual === totalPaginas}
+                                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                                    >
+                                      Seguinte →
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </td>
                         </tr>
                       )}
                     </React.Fragment>
-                  ));
+                    );
+                  });
                 })()}
               </tbody>
             </table>
@@ -730,11 +787,13 @@ export default function VendasPage() {
                 <div className="flex flex-wrap gap-2 mt-2">
                   <div className="text-green-700 font-bold text-base">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalPago)}</div>
                   {cliente.totalEmDivida > 0 && (
-                    <div className="text-yellow-600 font-bold text-base flex items-center gap-1">
-                      <span>Em Dívida</span>
-                      <span>{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-lg shadow-md text-center">
+                        <div className="text-xs font-medium">Em Dívida</div>
+                        <div className="text-sm font-bold">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(cliente.totalEmDivida)}</div>
+                      </div>
                       <button
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs font-semibold ml-2"
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs font-semibold transition-colors"
                         onClick={e => { e.stopPropagation(); setAbaterClienteId(cliente.id); setValorAbater(''); setAbaterErro(''); }}
                       >Abater</button>
                     </div>
@@ -749,15 +808,7 @@ export default function VendasPage() {
                 {/* Expandir vendas detalhadas */}
                 {clienteExpandido === cliente.id && (
                   <div className="mt-4 space-y-2">
-                    {cliente.vendas
-                      .slice()
-                      .sort((a: any, b: any) => {
-                        const aPendente = a.valorEmDivida > 0;
-                        const bPendente = b.valorEmDivida > 0;
-                        if (aPendente === bPendente) return new Date(b.data).getTime() - new Date(a.data).getTime();
-                        return aPendente ? -1 : 1;
-                      })
-                      .map((venda: any) => (
+                    {vendasPaginadas.map((venda: any) => (
                         <div key={venda.id} className="rounded border p-3 bg-gray-50 flex flex-col gap-1">
                           <div className="flex items-center gap-3">
                             <span className={`inline-block w-3 h-3 rounded-full ${venda.valorEmDivida > 0 ? 'bg-yellow-400' : 'bg-green-500'}`}></span>
@@ -779,7 +830,30 @@ export default function VendasPage() {
                             </div>
                           </div>
                         </div>
-                      ))}
+                    ))}
+                    
+                    {/* Paginação Móvel */}
+                    {temMaisVendas && (
+                      <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t">
+                        <button
+                          onClick={() => mudarPagina(cliente.id, Math.max(1, paginaAtual - 1))}
+                          disabled={paginaAtual === 1}
+                          className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                        >
+                          ← Anterior
+                        </button>
+                        <span className="text-sm text-gray-600">
+                          {paginaAtual}/{totalPaginas}
+                        </span>
+                        <button
+                          onClick={() => mudarPagina(cliente.id, Math.min(totalPaginas, paginaAtual + 1))}
+                          disabled={paginaAtual === totalPaginas}
+                          className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                        >
+                          Seguinte →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
