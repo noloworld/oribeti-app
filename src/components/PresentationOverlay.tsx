@@ -75,7 +75,7 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
       <div className="relative z-20 flex flex-col items-center justify-center h-full text-white px-4">
         
         {/* Phase 1: Logo Epic Entrance */}
-        {phase >= 1 && (
+        {phase === 1 && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center animate-logoEntrance">
               <div className="text-5xl md:text-8xl font-black mb-3 md:mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-pulse">
@@ -87,7 +87,7 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
         )}
 
         {/* Phase 2: Epic Text Reveal */}
-        {phase >= 2 && (
+        {phase === 2 && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center animate-textReveal">
               <div className="text-3xl md:text-6xl font-bold mb-4 md:mb-8 animate-glow">
@@ -101,7 +101,7 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
         )}
 
         {/* Phase 3: Particle Explosion */}
-        {phase >= 3 && (
+        {phase === 3 && (
           <>
             {[...Array(window.innerWidth < 768 ? 30 : 50)].map((_, i) => (
               <div
@@ -120,7 +120,7 @@ function HollywoodIntro({ onSkip }: { onSkip: () => void }) {
         )}
 
         {/* Phase 4: Final Epic Text */}
-        {phase >= 4 && (
+        {phase === 4 && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center animate-finalReveal">
               <div className="text-4xl md:text-7xl font-black mb-4 md:mb-6 bg-gradient-to-r from-yellow-300 via-red-500 to-purple-600 bg-clip-text text-transparent animate-rainbow">
