@@ -452,6 +452,7 @@ export default function VendasPage() {
       setAbaterClienteId(null);
       setValorAbater('');
       setAbaterErro('');
+      toast.success('Dívida abatida com sucesso!');
       fetchVendas();
       // Atualizar todasVendas também
       fetch('/api/vendas?all=true')
@@ -1049,6 +1050,86 @@ export default function VendasPage() {
           valorPago={vendaSelecionada.valorPago}
           onPagamentoAdded={() => { fetchVendas(); handleFecharPagamento(); }}
         />
+      )}
+
+      {/* Modal de Abater Dívida */}
+      {abaterClienteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Abater Dívida</h2>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Valor a abater (€)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={valorAbater}
+                onChange={(e) => setValorAbater(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="0,00"
+                autoFocus
+              />
+              {abaterErro && (
+                <p className="mt-2 text-sm text-red-600">{abaterErro}</p>
+              )}
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setAbaterClienteId(null);
+                  setValorAbater('');
+                  setAbaterErro('');
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                disabled={abaterLoading}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const clienteParaAbater = (() => {
+                    type ClienteAgrupado = {
+                      id: number;
+                      nome: string;
+                      vendas: any[];
+                      totalPago: number;
+                      totalEmDivida: number;
+                    };
+                    const clientesMap: Record<number, ClienteAgrupado> = {};
+                    todasVendas.forEach((venda) => {
+                      const id = venda.cliente.id;
+                      if (!clientesMap[id]) {
+                        clientesMap[id] = {
+                          id,
+                          nome: venda.cliente.nome,
+                          vendas: [],
+                          totalPago: 0,
+                          totalEmDivida: 0,
+                        };
+                      }
+                      const valorTotal = venda.produtos.reduce((a: number, p: any) => a + (p.valorFinal * p.quantidade), 0);
+                      clientesMap[id].vendas.push({ ...venda, valorTotal, valorEmDivida: Math.max(0, valorTotal - (venda.valorPago || 0)) });
+                      clientesMap[id].totalPago += venda.valorPago || 0;
+                      clientesMap[id].totalEmDivida += Math.max(0, valorTotal - (venda.valorPago || 0));
+                    });
+                    return clientesMap[abaterClienteId];
+                  })();
+                  if (clienteParaAbater) {
+                    handleAbaterDivida(clienteParaAbater);
+                  }
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 border border-transparent rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                disabled={abaterLoading || !valorAbater}
+              >
+                {abaterLoading ? 'Abatendo...' : 'Abater'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
