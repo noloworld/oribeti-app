@@ -232,21 +232,21 @@ export default function ClientesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-fade-in-up">
         <h1 className="text-2xl font-bold">Clientes</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
           <input
             type="text"
             placeholder="Procurar cliente..."
-            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring focus:border-green-500"
+            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring focus:border-green-500 transition-all duration-300 hover:border-green-400"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          <button onClick={handleAddOpen} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Acrescentar cliente</button>
+          <button onClick={handleAddOpen} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg">Acrescentar cliente</button>
         </div>
       </div>
       {/* Tabela tradicional para desktop */}
-      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block">
+      <div className="overflow-x-auto rounded-lg shadow scrollbar-custom max-h-[40vh] md:max-h-96 hidden md:block animate-fade-in-up" style={{animationDelay: '0.2s'}}>
         <table className="w-full table-auto bg-gray-800 text-white">
           <thead>
             <tr>
@@ -271,10 +271,10 @@ export default function ClientesPage() {
                   <td className="px-2 py-2 break-words max-w-[120px] align-middle hidden sm:table-cell">{cliente.morada}</td>
                   <td className="px-2 py-2 align-middle">
                     <div className="flex flex-col md:flex-row gap-2 w-max">
-                      <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Editar</button>
-                      <button onClick={() => handleDelete(cliente.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">Eliminar</button>
-                      <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">Ver cliente</button>
-                      <button onClick={() => handlePrint(cliente)} className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm">Imprimir</button>
+                      <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105">Editar</button>
+                      <button onClick={() => handleDelete(cliente.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105">Eliminar</button>
+                      <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105">Ver cliente</button>
+                      <button onClick={() => handlePrint(cliente)} className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105">Imprimir</button>
                     </div>
                   </td>
                 </tr>
@@ -284,12 +284,12 @@ export default function ClientesPage() {
         </table>
       </div>
       {/* Cards responsivos para mobile */}
-      <div className="block md:hidden space-y-8">
+      <div className="block md:hidden space-y-8 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
         {paginatedClientes.length === 0 ? (
           <div className="text-gray-400 text-center py-3 bg-gray-800 rounded-lg text-sm">Nenhum cliente registado.</div>
         ) : (
           paginatedClientes.map((cliente, idx) => (
-            <div key={cliente.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto`}>
+            <div key={cliente.id} className={`bg-gray-${idx % 2 === 0 ? '800' : '900'} rounded-xl p-5 shadow-2xl flex flex-col gap-3 max-w-[95vw] mx-auto animate-fade-in-up transition-all duration-300 hover:scale-102`} style={{animationDelay: `${0.1 * idx}s`}}>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-400">Nome</span>
                 <span className="font-bold text-base text-white">{cliente.nome}</span>
@@ -307,10 +307,10 @@ export default function ClientesPage() {
                 <span className="font-semibold">{cliente.morada}</span>
               </div>
               <div className="flex gap-3 mt-4">
-                <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Editar</button>
-                <button onClick={() => handleDelete(cliente.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Eliminar</button>
-                <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Ver cliente</button>
-                <button onClick={() => handlePrint(cliente)} className="bg-green-700 hover:bg-green-800 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow">Imprimir</button>
+                <button onClick={() => handleEditOpen(cliente)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow transition-all duration-200 hover:scale-105">Editar</button>
+                <button onClick={() => handleDelete(cliente.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow transition-all duration-200 hover:scale-105">Eliminar</button>
+                <button onClick={() => handleViewCliente(cliente)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow transition-all duration-200 hover:scale-105">Ver cliente</button>
+                <button onClick={() => handlePrint(cliente)} className="bg-green-700 hover:bg-green-800 text-white px-3 py-2 rounded text-xs min-w-[70px] shadow transition-all duration-200 hover:scale-105">Imprimir</button>
               </div>
             </div>
           ))
@@ -318,21 +318,21 @@ export default function ClientesPage() {
       </div>
       {/* Paginação moderna centralizada */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
+        <div className="flex justify-center items-center gap-2 mt-6 animate-fade-in-up" style={{animationDelay: '0.4s'}}>
           <button
-            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50 pagination-btn"
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
           >«</button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <button
               key={p}
-              className={`px-3 py-1 rounded text-sm ${p === currentPage ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
+              className={`px-3 py-1 rounded text-sm pagination-btn ${p === currentPage ? 'bg-green-600 text-white font-bold' : 'bg-gray-700 text-white'}`}
               onClick={() => setCurrentPage(p)}
             >{p}</button>
           ))}
           <button
-            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50"
+            className="px-3 py-1 rounded bg-gray-700 text-white text-sm disabled:opacity-50 pagination-btn"
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
           >»</button>

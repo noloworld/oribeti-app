@@ -721,8 +721,8 @@ export default function VendasPage() {
                       {clienteExpandido === cliente.id && (
                         <tr>
                           <td colSpan={4} className="bg-gray-50 p-0">
-                            <div className="p-4">
-                              <div className="space-y-2">
+                            <div className="p-4 collapse-enter">
+                              <div className="space-y-2 pagination-content">
                                 {vendasPaginadas.map((venda: any) => (
                                       <div key={venda.id} className="flex items-center justify-between bg-white rounded shadow px-4 py-2">
                                         <div className="flex items-center gap-2">
@@ -752,7 +752,7 @@ export default function VendasPage() {
                                     <button
                                       onClick={() => mudarPagina(cliente.id, Math.max(1, paginaAtual - 1))}
                                       disabled={paginaAtual === 1}
-                                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded pagination-btn"
                                     >
                                       ← Anterior
                                     </button>
@@ -762,7 +762,7 @@ export default function VendasPage() {
                                     <button
                                       onClick={() => mudarPagina(cliente.id, Math.min(totalPaginas, paginaAtual + 1))}
                                       disabled={paginaAtual === totalPaginas}
-                                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded pagination-btn"
                                     >
                                       Seguinte →
                                     </button>
@@ -872,7 +872,8 @@ export default function VendasPage() {
                 </div>
                 {/* Expandir vendas detalhadas */}
                 {clienteExpandido === cliente.id && (
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-4 space-y-2 collapse-enter">
+                    <div className="pagination-content">
                     {vendasPaginadas.map((venda: any) => (
                         <div key={venda.id} className="rounded border p-3 bg-gray-50">
                           <div className="flex items-start gap-3">
@@ -918,7 +919,7 @@ export default function VendasPage() {
                         <button
                           onClick={() => mudarPagina(cliente.id, Math.max(1, paginaAtual - 1))}
                           disabled={paginaAtual === 1}
-                          className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                          className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded pagination-btn"
                         >
                           ← Anterior
                         </button>
@@ -928,12 +929,13 @@ export default function VendasPage() {
                         <button
                           onClick={() => mudarPagina(cliente.id, Math.min(totalPaginas, paginaAtual + 1))}
                           disabled={paginaAtual === totalPaginas}
-                          className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                          className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded pagination-btn"
                         >
                           Seguinte →
                         </button>
                       </div>
                     )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -943,10 +945,10 @@ export default function VendasPage() {
         </div>
       </div>
 
-      {/* Modal de Venda */}
-      {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={handleCloseModal}>
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" onClick={e => e.stopPropagation()}>
+              {/* Modal de Venda */}
+       {showModal && (
+         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 modal-enter" onClick={handleCloseModal}>
+           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white modal-content-enter" onClick={e => e.stopPropagation()}>
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 {editVenda ? 'Editar Venda' : 'Nova Venda'}
@@ -1160,9 +1162,9 @@ export default function VendasPage() {
       </Transition.Root>
 
       {/* Modais no final do componente */}
-      {showVerModal && vendaSelecionada && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4" onClick={handleFecharVer}>
-          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900" onClick={e => e.stopPropagation()}>
+             {showVerModal && vendaSelecionada && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4 modal-enter" onClick={handleFecharVer}>
+           <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-gray-900 modal-content-enter" onClick={e => e.stopPropagation()}>
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" onClick={handleFecharVer}>&times;</button>
             <div className="mb-5">
               <h2 className="text-2xl font-extrabold text-blue-900 mb-1 flex items-center gap-2">Detalhes da Venda</h2>

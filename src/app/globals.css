@@ -253,3 +253,119 @@ body {
 .animate-loading {
   animation: loading 1s linear infinite;
 }
+
+/* Animações para modais */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes backdropFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Animações para colapses */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    max-height: 1000px;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Classes para modais */
+.modal-enter {
+  animation: backdropFadeIn 0.3s ease-out;
+}
+
+.modal-exit {
+  animation: backdropFadeOut 0.2s ease-in;
+}
+
+.modal-content-enter {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-content-exit {
+  animation: modalFadeOut 0.2s ease-in;
+}
+
+/* Classes para colapses */
+.collapse-enter {
+  animation: slideDown 0.4s ease-out;
+  overflow: hidden;
+}
+
+.collapse-exit {
+  animation: slideUp 0.3s ease-in;
+  overflow: hidden;
+}
+
+/* Transições suaves para paginação */
+.pagination-content {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.pagination-content.changing {
+  opacity: 0.5;
+  transform: translateX(10px);
+}
+
+/* Hover effects para botões de paginação */
+.pagination-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.pagination-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
