@@ -156,10 +156,11 @@ export default function DevedoresPage() {
             <div key={cliente.id} className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
               {/* Cabeçalho do Cliente */}
               <div 
-                className="p-6 cursor-pointer hover:bg-gray-700 transition-colors"
+                className="p-4 sm:p-6 cursor-pointer hover:bg-gray-700 transition-colors"
                 onClick={() => toggleCliente(cliente.id)}
               >
-                <div className="flex items-center justify-between">
+                {/* Layout Desktop */}
+                <div className="hidden sm:flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
@@ -185,6 +186,38 @@ export default function DevedoresPage() {
                     <div className="flex items-center justify-end mt-2">
                       <FaHistory className="w-4 h-4 text-blue-400 mr-1" />
                       <span className="text-sm text-blue-400">Ver histórico</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Layout Mobile */}
+                <div className="block sm:hidden">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <FaUser className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-white truncate">{cliente.nome}</h3>
+                      <div className="text-lg font-bold text-white mt-1">
+                        €{cliente.estatisticas.totalDevido.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-gray-400 mb-2">Total em dívida</div>
+                      
+                      {/* Estatísticas Mobile */}
+                      <div className="space-y-1 text-sm text-gray-300 mb-3">
+                        <div>Total de vendas: {cliente.estatisticas.totalVendas}</div>
+                        <div>Em aberto: {cliente.estatisticas.vendasEmAberto}</div>
+                        <div>Pagas parcelado: {cliente.estatisticas.vendasPagasParcelado}</div>
+                      </div>
+                      
+                      {/* Ver histórico sempre visível no mobile */}
+                      <div className="flex items-center">
+                        <FaHistory className="w-4 h-4 text-blue-400 mr-2" />
+                        <span className="text-sm text-blue-400 font-medium">Ver histórico</span>
+                        <span className="ml-2 text-gray-400">{clienteExpandido === cliente.id ? '▲' : '▼'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
