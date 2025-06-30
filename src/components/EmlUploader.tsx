@@ -28,153 +28,145 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
       console.log('🔍 Iniciando extração de dados...');
       console.log('📄 Conteúdo HTML (primeiros 500 chars):', htmlContent.substring(0, 500));
       
+      if (!htmlContent || htmlContent.length === 0) {
+        console.log('❌ HTML Content está vazio');
+        return null;
+      }
+      
       // Criar um parser DOM
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlContent, 'text/html');
       
-      // Procurar por padrões comuns nos e-mails da Boticário
+      // Procurar por padrões específicos do e-mail da Boticário
       const produtos: Produto[] = [];
       
-             // Estratégia 1: Procurar tabelas com produtos
-       const tables = doc.querySelectorAll('table');
-       let produtosEncontrados = false;
-       
-       console.log(`📊 Encontradas ${tables.length} tabelas no HTML`);
-       
-       for (const table of tables) {
-        const rows = table.querySelectorAll('tr');
+      // Estratégia específica para o formato Boticário que vimos no EML
+      console.log('🎯 Usando estratégia específica para Boticário...');
+      
+      // Filtrar apenas a seção relevante do HTML (após "Detalhes da Encomenda")
+      const secaoDetalhes = htmlContent.split('Detalhes da Encomenda')[1];
+      if (!secaoDetalhes) {
+        console.log('❌ Seção "Detalhes da Encomenda" não encontrada');
+      } else {
+        console.log('✅ Seção "Detalhes da Encomenda" encontrada');
         
-        for (const row of rows) {
-          const cells = row.querySelectorAll('td, th');
+        // Regex mais específica para extrair produtos da tabela
+        // Formato: Código | Quantidade | Produto | Tipo | Valor Unit. | Total
+        const produtoRegex = /<tr[^>]*class="Q_dadosItem[^"]*"[^>]*>[\s\S]*?<td[^>]*>([^<]+)<\/td>[\s\S]*?<td[^>]*>(\d+)<\/td>[\s\S]*?<td[^>]*>([^<]+)<\/td>[\s\S]*?<td[^>]*>Venda<\/td>[\s\S]*?<td[^>]*>([\d,]+)<\/td>[\s\S]*?<td[^>]*>([\d,]+)<\/td>[\s\S]*?<\/tr>/gi;
+        
+        let match;
+        while ((match = produtoRegex.exec(secaoDetalhes)) !== null) {
+          const codigo = match[1].replace(/&nbsp;/g, ' ').trim();
+          const quantidade = match[2];
+          const nome = match[3].trim();
+          const precoUnitario = match[4].replace(',', '.');
+          const precoTotal = match[5].replace(',', '.');
           
-                     // Procurar por linhas que contenham informações de produtos
-           if (cells.length >= 3) {
-             const textos = Array.from(cells).map(cell => cell.textContent?.trim() || '');
-             
-             // Pular cabeçalhos
-             if (textos.some(t => t.toLowerCase().includes('produto') || t.toLowerCase().includes('quantidade') || t.toLowerCase().includes('preço'))) {
-               continue;
-             }
-             
-             // Procurar padrões que indiquem produto, quantidade e preço
-             const nomeMatch = textos.find(t => 
-               t.length > 3 && 
-               !t.match(/^\d+$/) && 
-               !t.match(/^[€$]\d/) &&
-               !t.toLowerCase().includes('total') &&
-               !t.toLowerCase().includes('subtotal')
-             );
-             
-             const quantidadeMatch = textos.find(t => t.match(/^\d+$/) && parseInt(t) > 0 && parseInt(t) < 100);
-             
-             // Procurar preços - preferir preços menores (unitários) sobre maiores (subtotais)
-             const precosEncontrados = textos
-               .filter(t => 
-                 t.match(/[€$]\s*\d+[.,]\d{2}/) || 
-                 t.match(/\d+[.,]\d{2}\s*[€$]/) ||
-                 t.match(/^\d+[.,]\d{2}$/)
-               )
-               .map(t => ({
-                 texto: t,
-                 valor: parseFloat(t.replace(/[€$]/g, '').replace(/[^\d.,]/g, '').replace(',', '.'))
-               }))
-               .sort((a, b) => a.valor - b.valor); // Ordenar por valor crescente
-             
-             const precoMatch = precosEncontrados.length > 0 ? precosEncontrados[0].texto : null;
-             
-             if (nomeMatch && quantidadeMatch && precoMatch) {
-               // Limpar o preço
-               const precoLimpo = precoMatch
-                 .replace(/[€$]/g, '')
-                 .replace(/[^\d.,]/g, '')
-                 .replace(',', '.')
-                 .trim();
-               
-               if (parseFloat(precoLimpo) > 0) {
-                 produtos.push({
-                   nome: nomeMatch,
-                   quantidade: quantidadeMatch,
-                   preco: precoLimpo
-                 });
-                 produtosEncontrados = true;
-               }
-             }
+          // Filtrar produtos válidos (excluir texto de cabeçalhos, criptografia, etc.)
+          if (nome && 
+              nome.length > 5 && 
+              !nome.includes('cipher') && 
+              !nome.includes('TLS') && 
+              !nome.includes('AES') && 
+              !nome.includes('RSA') &&
+              !nome.includes('ECDHE') &&
+              parseFloat(precoUnitario) > 0) {
+            
+            produtos.push({
+              nome: nome,
+              quantidade: quantidade,
+              preco: precoUnitario
+            });
+            
+            console.log(`📦 Produto encontrado: ${nome} | Qtd: ${quantidade} | Preço: €${precoUnitario}`);
           }
         }
-      }
-      
-             // Estratégia 2: Procurar por padrões de texto se não encontrou na tabela
-       if (!produtosEncontrados) {
-         console.log('📝 Não encontrou produtos em tabelas, tentando parsing de texto...');
-         const bodyText = doc.body?.textContent || htmlContent;
-         
-         console.log('📄 Texto do corpo (primeiros 500 chars):', bodyText.substring(0, 500));
-         
-         // Procurar por padrões como "Produto X - Qtd: Y - Preço: Z"
-         const linhas = bodyText.split('\n');
         
-        for (const linha of linhas) {
-          const linhaTrim = linha.trim();
+        // Se a regex específica não funcionou, tentar uma mais simples
+        if (produtos.length === 0) {
+          console.log('🔄 Regex específica não encontrou produtos, tentando regex alternativa...');
           
-          // Padrões comuns de e-mails de encomenda
-          const patterns = [
-            /(.+?)\s*[-–]\s*(?:Qtd|Quantidade):\s*(\d+)\s*[-–]\s*(?:Preço|Valor):\s*[€$]?\s*(\d+[.,]\d{2})/i,
-            /(.+?)\s*\|\s*(\d+)\s*\|\s*[€$]?\s*(\d+[.,]\d{2})/,
-            /(.+?)\s*x\s*(\d+)\s*[€$]?\s*(\d+[.,]\d{2})/i
-          ];
+          // Regex mais simples para linhas de tabela com 6 colunas
+          const regexAlternativa = /<td[^>]*>(\d+(?:&nbsp;)*\d*)<\/td>\s*<td[^>]*>(\d+)<\/td>\s*<td[^>]*>([^<]+)<\/td>\s*<td[^>]*>Venda<\/td>\s*<td[^>]*>([\d,]+)<\/td>\s*<td[^>]*>([\d,]+)<\/td>/gi;
           
-          for (const pattern of patterns) {
-            const match = linhaTrim.match(pattern);
-            if (match) {
-              const [, nome, quantidade, preco] = match;
-              const precoLimpo = preco.replace(',', '.');
+          while ((match = regexAlternativa.exec(secaoDetalhes)) !== null) {
+            const codigo = match[1].replace(/&nbsp;/g, ' ').trim();
+            const quantidade = match[2];
+            const nome = match[3].trim();
+            const precoUnitario = match[4].replace(',', '.');
+            const precoTotal = match[5].replace(',', '.');
+            
+            // Filtrar produtos válidos
+            if (nome && 
+                nome.length > 5 && 
+                !nome.includes('cipher') && 
+                !nome.includes('TLS') && 
+                !nome.includes('AES') && 
+                !nome.includes('RSA') &&
+                !nome.includes('ECDHE') &&
+                parseFloat(precoUnitario) > 0) {
               
-              if (nome.length > 2 && parseFloat(precoLimpo) > 0) {
-                produtos.push({
-                  nome: nome.trim(),
-                  quantidade: quantidade,
-                  preco: precoLimpo
-                });
-              }
+              produtos.push({
+                nome: nome,
+                quantidade: quantidade,
+                preco: precoUnitario
+              });
+              
+              console.log(`📦 Produto alternativo: ${nome} | Qtd: ${quantidade} | Preço: €${precoUnitario}`);
             }
           }
         }
       }
       
-             // Estratégia 3: Fallback mais genérico se ainda não encontrou produtos
-       if (produtos.length === 0) {
-         console.log('🔄 Tentando estratégia genérica...');
-         
-         // Procurar por qualquer linha que contenha números e símbolos de moeda
-         const todasLinhas = (doc.body?.textContent || htmlContent).split(/[\n\r]+/);
-         
-         for (const linha of todasLinhas) {
-           const linhaTrim = linha.trim();
-           if (linhaTrim.length < 5) continue;
-           
-           // Procurar padrões mais flexíveis
-           const precoRegex = /(?:€|EUR|\$|USD)?\s*(\d+[.,]\d{2})\s*(?:€|EUR|\$|USD)?/g;
-           const quantidadeRegex = /(?:qtd|quantidade|qty|x)\s*:?\s*(\d+)/gi;
-           
-           const precos = [...linhaTrim.matchAll(precoRegex)];
-           const quantidades = [...linhaTrim.matchAll(quantidadeRegex)];
-           
-           if (precos.length > 0) {
-             // Tentar extrair nome do produto (texto antes do primeiro número/preço)
-             const textoAntes = linhaTrim.split(/\d/)[0].trim();
-             if (textoAntes.length > 3) {
-               const preco = precos[0][1].replace(',', '.');
-               const quantidade = quantidades.length > 0 ? quantidades[0][1] : '1';
-               
-               produtos.push({
-                 nome: textoAntes.replace(/[^\w\s]/g, '').trim(),
-                 quantidade: quantidade,
-                 preco: preco
-               });
-             }
-           }
-         }
-       }
+      // Estratégia de fallback mais rigorosa: Procurar apenas na seção de produtos
+      if (produtos.length === 0) {
+        console.log('📝 Não encontrou produtos com regex, tentando parsing rigoroso de texto...');
+        
+        // Procurar apenas na seção de detalhes da encomenda
+        const secaoDetalhes = htmlContent.split('Detalhes da Encomenda')[1];
+        if (secaoDetalhes) {
+          // Remover HTML tags para análise de texto puro
+          const textoLimpo = secaoDetalhes.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+          const linhas = textoLimpo.split(/(?:\n|\r\n|\r)/);
+          
+          console.log('📄 Analisando texto da seção de produtos...');
+          
+          for (const linha of linhas) {
+            const linhaTrim = linha.trim();
+            
+            // Procurar linhas que tenham formato: Código Quantidade Produto Venda Preço Preço
+            // Ex: "47 321 1 Sérum de Alta Potência Ácido Mandélico + Tranexâmico 5% Botik 30ml Venda 14,69 14,69"
+            const match = linhaTrim.match(/^(\d+\s*\d*)\s+(\d+)\s+(.+?)\s+Venda\s+([\d,]+)\s+([\d,]+)$/);
+            
+            if (match) {
+              const codigo = match[1].trim();
+              const quantidade = match[2];
+              const nome = match[3].trim();
+              const precoUnitario = match[4].replace(',', '.');
+              const precoTotal = match[5].replace(',', '.');
+              
+              // Filtrar produtos válidos
+              if (nome && 
+                  nome.length > 10 && 
+                  !nome.includes('cipher') && 
+                  !nome.includes('TLS') && 
+                  !nome.includes('AES') && 
+                  !nome.includes('RSA') &&
+                  !nome.includes('ECDHE') &&
+                  parseFloat(precoUnitario) > 0) {
+                
+                produtos.push({
+                  nome: nome,
+                  quantidade: quantidade,
+                  preco: precoUnitario
+                });
+                
+                console.log(`📦 Produto texto: ${nome} | Qtd: ${quantidade} | Preço: €${precoUnitario}`);
+              }
+            }
+          }
+        }
+      }
        
        console.log(`✅ Total de produtos encontrados: ${produtos.length}`);
        produtos.forEach((p, i) => {
@@ -209,12 +201,15 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
 
   // Função para processar o ficheiro .eml
   async function processarFicheiroEml(file: File): Promise<DadosEncomenda | null> {
+    console.log('📧 Iniciando processamento do ficheiro EML...');
     return new Promise((resolve) => {
       const reader = new FileReader();
       
       reader.onload = (e) => {
+        console.log('📖 FileReader.onload executado');
         try {
           const conteudo = e.target?.result as string;
+          console.log('📄 Conteúdo lido, tamanho:', conteudo?.length || 0, 'caracteres');
           
           console.log('📧 Processando ficheiro .eml...');
           console.log('📄 Tamanho do ficheiro:', conteudo.length, 'caracteres');
@@ -222,17 +217,17 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
           // Procurar pelo conteúdo HTML no ficheiro .eml
           let htmlContent = '';
           
-          // Estratégia 1: Procurar por Content-Type: text/html
+          // Estratégia 1: Procurar por conteúdo base64 (específico para Boticário)
           const linhas = conteudo.split('\n');
-          let dentroHtml = false;
-          let htmlLines: string[] = [];
+          let dentroBase64 = false;
+          let base64Lines: string[] = [];
           
           for (let i = 0; i < linhas.length; i++) {
             const linha = linhas[i];
             
-            // Detectar início do conteúdo HTML
-            if (linha.includes('Content-Type: text/html') || linha.includes('content-type: text/html')) {
-              dentroHtml = true;
+            // Detectar início do conteúdo base64
+            if (linha.includes('Content-Transfer-Encoding: base64')) {
+              dentroBase64 = true;
               // Pular cabeçalhos até encontrar linha vazia
               for (let j = i + 1; j < linhas.length; j++) {
                 if (linhas[j].trim() === '') {
@@ -243,17 +238,31 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
               continue;
             }
             
-            // Detectar fim do conteúdo HTML (próximo boundary)
-            if (dentroHtml && linha.includes('--') && linha.includes('boundary')) {
-              break;
-            }
-            
-            if (dentroHtml) {
-              htmlLines.push(linha);
+            // Se estamos dentro do base64 e encontramos uma linha que não é base64, parar
+            if (dentroBase64) {
+              // Verificar se a linha parece base64 (só letras, números, +, /, =)
+              if (linha.match(/^[A-Za-z0-9+/=]*$/)) {
+                base64Lines.push(linha);
+              } else if (linha.trim() === '') {
+                // Linha vazia, continuar
+                continue;
+              } else {
+                // Linha que não é base64, parar
+                break;
+              }
             }
           }
           
-          htmlContent = htmlLines.join('\n');
+          if (base64Lines.length > 0) {
+            console.log('🔍 Encontrado conteúdo base64:', base64Lines.length, 'linhas');
+            try {
+              const base64Content = base64Lines.join('');
+              htmlContent = atob(base64Content);
+              console.log('✅ Base64 decodificado com sucesso, tamanho:', htmlContent.length, 'caracteres');
+            } catch (error) {
+              console.error('❌ Erro ao decodificar base64:', error);
+            }
+          }
           
           console.log('🔍 HTML extraído (Estratégia 1):', htmlContent.length, 'caracteres');
           
@@ -301,29 +310,42 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
         }
       };
       
-      reader.onerror = () => {
+      reader.onerror = (error) => {
+        console.error('💥 Erro no FileReader:', error);
         resolve(null);
       };
       
+      console.log('📚 Tentando ler ficheiro com UTF-8...');
       reader.readAsText(file, 'utf-8');
     });
   }
 
   // Handler para upload do ficheiro
   async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    console.log('🚀 Iniciando upload do ficheiro...');
+    
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('❌ Nenhum ficheiro selecionado');
+      return;
+    }
+    
+    console.log('📁 Ficheiro selecionado:', file.name, 'Tamanho:', file.size, 'bytes');
     
     // Verificar extensão do ficheiro
     if (!file.name.toLowerCase().endsWith('.eml')) {
+      console.log('❌ Extensão inválida:', file.name);
       toast.error('Por favor, selecione um ficheiro .eml');
       return;
     }
     
+    console.log('✅ Extensão válida, iniciando processamento...');
     setLoading(true);
     
     try {
+      console.log('🔄 Chamando processarFicheiroEml...');
       const dados = await processarFicheiroEml(file);
+      console.log('📊 Dados retornados:', dados);
       
       if (!dados || dados.produtos.length === 0) {
         console.log('❌ Falha na extração de dados');
@@ -331,13 +353,16 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
         return;
       }
       
+      console.log('✅ Dados extraídos com sucesso:', dados.produtos.length, 'produtos');
       setPreviewData(dados);
       toast.success(`${dados.produtos.length} produto(s) encontrado(s)!`);
       
-    } catch (error) {
-      console.error('Erro:', error);
-      toast.error('Erro ao processar o ficheiro .eml');
-    } finally {
+            } catch (error) {
+          console.error('💥 Erro no handleFileUpload:', error);
+          console.error('💥 Stack trace:', error instanceof Error ? error.stack : 'Stack não disponível');
+          toast.error('Erro ao processar o ficheiro .eml');
+        } finally {
+      console.log('🏁 Finalizando upload...');
       setLoading(false);
       // Limpar o input para permitir upload do mesmo ficheiro novamente
       if (fileInputRef.current) {
