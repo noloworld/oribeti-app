@@ -247,6 +247,22 @@ export default function VendasPage() {
       toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
+
+    // Verificar se o cliente já tem vendas (apenas quando não é um acréscimo direto)
+    if (!clienteModalNome) { // clienteModalNome só é definido quando vem dos botões "Acrescentar venda"
+      const clienteId = Number(form.clienteId);
+      const clienteJaTemVendas = todasVendas.some(venda => venda.cliente.id === clienteId);
+      
+      if (clienteJaTemVendas) {
+        const nomeCliente = clientes.find(c => c.id === clienteId)?.nome || 'Cliente';
+        toast.error(`O cliente ${nomeCliente} já tem vendas registadas. Para adicionar uma nova venda a este cliente, use o botão "Acrescentar venda" na tabela de clientes.`, {
+          duration: 6000,
+        });
+        setLoading(false);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       // Calcular valor pago corretamente
@@ -273,6 +289,7 @@ export default function VendasPage() {
       setShowModal(false);
       setModalAberto(false);
       setForm({ clienteId: '', nomeProduto: '', quantidade: 1, valorRevista: 0, valorFinal: 0, valorPago: 0, observacoes: '', data: '', status: 'PENDENTE' });
+      setProdutos([{ nomeProduto: '', quantidade: 1, valorRevista: '', valorFinal: '' }]); // Reset dos produtos
       setIsPrestacoes(false); // Reset do estado de prestações
       setTouched(false);
       fetchVendas();
@@ -382,6 +399,11 @@ export default function VendasPage() {
   function handleOpenModal() {
     setShowModal(true);
     setModalAberto(true);
+    setForm({ clienteId: '', nomeProduto: '', quantidade: 1, valorRevista: 0, valorFinal: 0, valorPago: 0, observacoes: '', data: '', status: 'PENDENTE' });
+    setProdutos([{ nomeProduto: '', quantidade: 1, valorRevista: '', valorFinal: '' }]);
+    setIsPrestacoes(false);
+    setTouched(false);
+    setClienteModalNome(null);
   }
   function handleOpenEditModal(venda: Venda) {
     setEditVenda(venda);
@@ -394,6 +416,10 @@ export default function VendasPage() {
     setModalAberto(false);
     setEditVenda(null);
     setClienteModalNome(null);
+    setForm({ clienteId: '', nomeProduto: '', quantidade: 1, valorRevista: 0, valorFinal: 0, valorPago: 0, observacoes: '', data: '', status: 'PENDENTE' });
+    setProdutos([{ nomeProduto: '', quantidade: 1, valorRevista: '', valorFinal: '' }]);
+    setIsPrestacoes(false);
+    setTouched(false);
   }
   function handleCloseEditModal() {
     setShowEditModal(false);
@@ -568,7 +594,15 @@ export default function VendasPage() {
       {/* Botão Adicionar Venda */}
       <div className="mb-6">
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            setShowModal(true);
+            setModalAberto(true);
+            setForm({ clienteId: '', nomeProduto: '', quantidade: 1, valorRevista: 0, valorFinal: 0, valorPago: 0, observacoes: '', data: '', status: 'PENDENTE' });
+            setProdutos([{ nomeProduto: '', quantidade: 1, valorRevista: '', valorFinal: '' }]);
+            setIsPrestacoes(false);
+            setTouched(false);
+            setClienteModalNome(null);
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -670,7 +704,16 @@ export default function VendasPage() {
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
                           <button
                             className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold"
-                            onClick={e => { e.stopPropagation(); setShowModal(true); setForm(f => ({ ...f, clienteId: cliente.id.toString() })); setClienteModalNome(cliente.nome); }}
+                            onClick={e => { 
+                              e.stopPropagation(); 
+                              setShowModal(true); 
+                              setModalAberto(true);
+                              setForm({ clienteId: cliente.id.toString(), nomeProduto: '', quantidade: 1, valorRevista: 0, valorFinal: 0, valorPago: 0, observacoes: '', data: '', status: 'PENDENTE' });
+                              setProdutos([{ nomeProduto: '', quantidade: 1, valorRevista: '', valorFinal: '' }]);
+                              setIsPrestacoes(false);
+                              setTouched(false);
+                              setClienteModalNome(cliente.nome); 
+                            }}
                           >Acrescentar venda</button>
                         </td>
                       </tr>
@@ -815,7 +858,16 @@ export default function VendasPage() {
                 <div className="mt-2">
                   <button
                     className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold text-sm"
-                    onClick={e => { e.stopPropagation(); setShowModal(true); setForm(f => ({ ...f, clienteId: cliente.id.toString() })); setClienteModalNome(cliente.nome); }}
+                    onClick={e => { 
+                      e.stopPropagation(); 
+                      setShowModal(true); 
+                      setModalAberto(true);
+                      setForm({ clienteId: cliente.id.toString(), nomeProduto: '', quantidade: 1, valorRevista: 0, valorFinal: 0, valorPago: 0, observacoes: '', data: '', status: 'PENDENTE' });
+                      setProdutos([{ nomeProduto: '', quantidade: 1, valorRevista: '', valorFinal: '' }]);
+                      setIsPrestacoes(false);
+                      setTouched(false);
+                      setClienteModalNome(cliente.nome); 
+                    }}
                   >Acrescentar venda</button>
                 </div>
                 {/* Expandir vendas detalhadas */}

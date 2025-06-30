@@ -12,9 +12,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <ModalProvider>
       <PresentationProvider>
-        <DashboardContent>
-          {children}
-        </DashboardContent>
+      <DashboardContent>
+        {children}
+      </DashboardContent>
         <PresentationOverlay />
       </PresentationProvider>
     </ModalProvider>
@@ -272,10 +272,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             </button>
           )}
           
-          <button onClick={() => setShowMenu(true)} className="text-white p-2 focus:outline-none">
-            <FaBars className="w-7 h-7" />
-          </button>
-        </div>
+        <button onClick={() => setShowMenu(true)} className="text-white p-2 focus:outline-none">
+          <FaBars className="w-7 h-7" />
+        </button>
+      </div>
       </div>
       {/* Spacer for fixed header */}
       <div className="md:hidden h-16"></div>
@@ -543,7 +543,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 shouldAnimateNotification ? 'animate-bounce-in' : ''
               }`}>
                 {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
-              </span>
+            </span>
             )}
           </button>
           {showNotificacoes && (
@@ -566,7 +566,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                   <div className="p-4 text-gray-400 text-sm text-center">
                     Nenhuma notificação
                   </div>
-                ) : (
+              ) : (
                   notificacoes.slice(0, 10).map((notif) => (
                     <div
                       key={notif.id}

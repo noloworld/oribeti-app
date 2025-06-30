@@ -535,15 +535,15 @@ export default function ClientesPage() {
                           const valorFinal = v.produtos ? v.produtos.reduce((acc: number, p: any) => acc + (p.valorFinal * p.quantidade), 0) : v.valorFinal;
                           const status = v.status === 'PAGO' || v.status === 'Pago' ? 'Pago' : 'Pendente';
                           return (
-                            <tr key={v.id || idx} className="border-t border-gray-700">
-                              <td className="px-4 py-2">{new Date(v.data).toLocaleDateString()}</td>
+                          <tr key={v.id || idx} className="border-t border-gray-700">
+                            <td className="px-4 py-2">{new Date(v.data).toLocaleDateString()}</td>
                               <td className="px-4 py-2">{produtos}</td>
                               <td className="px-4 py-2">€{valorRevista?.toFixed(2)}</td>
                               <td className="px-4 py-2">€{valorFinal?.toFixed(2)}</td>
                               <td className="px-4 py-2">
                                 <span className={`font-bold px-2 py-1 rounded ${status === 'Pago' ? 'bg-green-700 text-white' : 'bg-yellow-500 text-white'}`}>{status}</span>
                               </td>
-                            </tr>
+                          </tr>
                           );
                         })
                       )}

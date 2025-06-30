@@ -343,19 +343,19 @@ export default function DespesasPage() {
                     onClick={() => setDespesaExpandida(despesaExpandida === despesa.id ? null : despesa.id)}
                   >
                     <td className="px-4 py-2 font-mono text-sm">#{despesa.id}</td>
-                    <td className="px-4 py-2">{despesa.nome}</td>
+                  <td className="px-4 py-2">{despesa.nome}</td>
                     <td className="px-4 py-2 font-bold">€{Number(despesa.valor).toFixed(2)}</td>
-                    <td className="px-4 py-2">{despesa.data.slice(0, 10)}</td>
+                  <td className="px-4 py-2">{despesa.data.slice(0, 10)}</td>
                     <td className="px-4 py-2">
                       <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleEditOpen(despesa)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                        >Editar</button>
-                        <button
-                          onClick={() => handleDeleteOpen(despesa)}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
-                        >Eliminar</button>
+                    <button
+                      onClick={() => handleEditOpen(despesa)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                    >Editar</button>
+                    <button
+                      onClick={() => handleDeleteOpen(despesa)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                    >Eliminar</button>
                       </div>
                     </td>
                   </tr>
@@ -380,8 +380,8 @@ export default function DespesasPage() {
                             ))}
                           </div>
                         </div>
-                      </td>
-                    </tr>
+                  </td>
+                </tr>
                   )}
                 </React.Fragment>
               ))
@@ -406,16 +406,16 @@ export default function DespesasPage() {
                   <span className="font-mono text-sm text-blue-400">#{despesa.id}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs mb-2">
-                  <span className="text-gray-400">Nome</span>
-                  <span className="font-bold text-base text-white">{despesa.nome}</span>
-                </div>
+                <span className="text-gray-400">Nome</span>
+                <span className="font-bold text-base text-white">{despesa.nome}</span>
+              </div>
                 <div className="flex justify-between items-center text-xs mb-2">
                   <span className="text-gray-400">Valor Total</span>
                   <span className="font-bold text-lg text-green-400">€{Number(despesa.valor).toFixed(2)}</span>
-                </div>
+              </div>
                 <div className="flex justify-between items-center text-xs mb-3">
-                  <span className="text-gray-400">Data</span>
-                  <span className="font-semibold">{despesa.data.slice(0, 10)}</span>
+                <span className="text-gray-400">Data</span>
+                <span className="font-semibold">{despesa.data.slice(0, 10)}</span>
                 </div>
                 <div className="flex justify-center text-gray-400 text-sm">
                   <span>{despesaExpandida === despesa.id ? '▲ Ver menos' : '▼ Ver produtos'}</span>
@@ -550,8 +550,8 @@ export default function DespesasPage() {
                               onChange={(e) => atualizarProduto(index, 'quantidade', e.target.value)}
                               className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none text-sm"
                             />
-                          </div>
-                          <div>
+                </div>
+                <div>
                             <label className="block text-gray-300 mb-1 text-sm">Preço (€)</label>
                             <input
                               type="number"
@@ -685,8 +685,8 @@ export default function DespesasPage() {
                                 onChange={(e) => atualizarProdutoEdit(index, 'quantidade', e.target.value)}
                                 className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none text-sm"
                               />
-                            </div>
-                            <div>
+                  </div>
+                  <div>
                               <label className="block text-gray-300 mb-1 text-sm">Preço (€)</label>
                               <input
                                 type="number"

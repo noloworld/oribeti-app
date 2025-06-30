@@ -284,7 +284,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="mt-3">
-                    <ListaPagamentos
+              <ListaPagamentos
                       vendaId={venda.vendaId}
                       valorFinal={venda.valorTotal}
                       valorPago={venda.valorPago}
