@@ -44,10 +44,38 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
       console.log('🎯 Usando estratégia específica para Boticário...');
       
       // Filtrar apenas a seção relevante do HTML (após "Detalhes da Encomenda")
-      const secaoDetalhes = htmlContent.split('Detalhes da Encomenda')[1];
+      let secaoDetalhes = null;
+      
+      // Tentar diferentes variações do texto
+      const variacoes = [
+        'Detalhes da Encomenda',
+        'Detalhes da encomenda', 
+        'DETALHES DA ENCOMENDA',
+        'detalhes da encomenda',
+        'Detalhes&nbsp;da&nbsp;Encomenda',
+        'Detalhes&#160;da&#160;Encomenda'
+      ];
+      
+      for (const variacao of variacoes) {
+        if (htmlContent.includes(variacao)) {
+          secaoDetalhes = htmlContent.split(variacao)[1];
+          console.log('✅ Encontrada seção:', variacao);
+          break;
+        }
+      }
+      
       if (!secaoDetalhes) {
-        console.log('❌ Seção "Detalhes da Encomenda" não encontrada');
-      } else {
+        console.log('❌ Seção "Detalhes da Encomenda" não encontrada em nenhuma variação');
+        console.log('📄 Conteúdo HTML disponível (primeiros 1000 chars):', htmlContent.substring(0, 1000));
+        
+        // Tentar procurar por qualquer tabela com produtos
+        if (htmlContent.includes('<table') && (htmlContent.includes('Produto') || htmlContent.includes('produto'))) {
+          console.log('🔍 Encontrou tabela com "Produto" - usando todo o conteúdo HTML');
+          secaoDetalhes = htmlContent;
+        }
+      }
+      
+      if (secaoDetalhes) {
         console.log('✅ Seção "Detalhes da Encomenda" encontrada');
         
         // Regex mais específica para extrair produtos da tabela
@@ -218,49 +246,73 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
           let htmlContent = '';
           
           // Estratégia 1: Procurar por conteúdo base64 (específico para Boticário)
-          const linhas = conteudo.split('\n');
+          const linhas = conteudo.split(/\r?\n/);
           let dentroBase64 = false;
           let base64Lines: string[] = [];
+          let encontrouContentType = false;
+          
+          console.log('🔍 Analisando', linhas.length, 'linhas do ficheiro EML...');
           
           for (let i = 0; i < linhas.length; i++) {
-            const linha = linhas[i];
+            const linha = linhas[i].trim();
+            
+            // Detectar Content-Type: text/html
+            if (linha.toLowerCase().includes('content-type:') && linha.toLowerCase().includes('text/html')) {
+              encontrouContentType = true;
+              console.log('✅ Encontrado Content-Type: text/html na linha', i + 1);
+            }
             
             // Detectar início do conteúdo base64
-            if (linha.includes('Content-Transfer-Encoding: base64')) {
+            if (linha.toLowerCase().includes('content-transfer-encoding: base64')) {
               dentroBase64 = true;
+              console.log('✅ Encontrado Content-Transfer-Encoding: base64 na linha', i + 1);
+              
               // Pular cabeçalhos até encontrar linha vazia
               for (let j = i + 1; j < linhas.length; j++) {
                 if (linhas[j].trim() === '') {
                   i = j;
+                  console.log('📍 Iniciando coleta de base64 na linha', j + 1);
                   break;
                 }
               }
               continue;
             }
             
-            // Se estamos dentro do base64 e encontramos uma linha que não é base64, parar
+            // Se estamos dentro do base64, coletar linhas
             if (dentroBase64) {
               // Verificar se a linha parece base64 (só letras, números, +, /, =)
-              if (linha.match(/^[A-Za-z0-9+/=]*$/)) {
+              if (linha.match(/^[A-Za-z0-9+/=\s]*$/) && linha.length > 0) {
                 base64Lines.push(linha);
-              } else if (linha.trim() === '') {
+              } else if (linha === '') {
                 // Linha vazia, continuar
                 continue;
-              } else {
-                // Linha que não é base64, parar
+              } else if (linha.startsWith('--') || linha.includes('boundary')) {
+                // Encontrou boundary, parar
+                console.log('📍 Encontrou boundary na linha', i + 1, '- parando coleta de base64');
                 break;
               }
             }
           }
           
+          console.log('📊 Base64 coletado:', base64Lines.length, 'linhas');
+          
           if (base64Lines.length > 0) {
-            console.log('🔍 Encontrado conteúdo base64:', base64Lines.length, 'linhas');
             try {
-              const base64Content = base64Lines.join('');
+              const base64Content = base64Lines.join('').replace(/\s/g, '');
+              console.log('🔍 Tentando decodificar', base64Content.length, 'caracteres de base64...');
               htmlContent = atob(base64Content);
               console.log('✅ Base64 decodificado com sucesso, tamanho:', htmlContent.length, 'caracteres');
+              
+              // Verificar se o conteúdo decodificado contém HTML
+              if (htmlContent.includes('<html') || htmlContent.includes('<table') || htmlContent.includes('Detalhes da Encomenda')) {
+                console.log('✅ Conteúdo HTML válido encontrado após decodificação');
+              } else {
+                console.log('⚠️ Conteúdo decodificado não parece ser HTML válido');
+                console.log('📄 Primeiros 200 chars do conteúdo decodificado:', htmlContent.substring(0, 200));
+              }
             } catch (error) {
               console.error('❌ Erro ao decodificar base64:', error);
+              htmlContent = '';
             }
           }
           
