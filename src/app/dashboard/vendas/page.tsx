@@ -555,33 +555,33 @@ export default function VendasPage() {
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {/* Total de Vendas */}
-        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.1s'}}>
           <span className="text-sm font-medium text-gray-600">Total de Vendas</span>
-          <span className="text-xl sm:text-2xl font-bold text-blue-700">{todasVendas.length}</span>
+          <span className="text-xl sm:text-2xl font-bold text-blue-700 transition-all duration-300">{todasVendas.length}</span>
         </div>
         {/* Valor Total de Vendas */}
-        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.2s'}}>
           <span className="text-sm font-medium text-gray-600">Valor Total</span>
-          <span className="text-xl sm:text-2xl font-bold text-green-700">
+          <span className="text-xl sm:text-2xl font-bold text-green-700 transition-all duration-300">
             {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(totalVendas)}
           </span>
         </div>
         {/* Lucro */}
-        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.3s'}}>
           <span className="text-sm font-medium text-gray-600">Lucro</span>
-          <span className="text-xl sm:text-2xl font-bold text-yellow-600">
+          <span className="text-xl sm:text-2xl font-bold text-yellow-600 transition-all duration-300">
             {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(lucro)}
           </span>
         </div>
         {/* Número de Devedores */}
-        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.4s'}}>
           <span className="text-sm font-medium text-gray-600">Devedores</span>
-          <span className="text-xl sm:text-2xl font-bold text-red-600">{clientesDevedores.length}</span>
+          <span className="text-xl sm:text-2xl font-bold text-red-600 transition-all duration-300">{clientesDevedores.length}</span>
         </div>
         {/* Valor Total Devedores */}
-        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.5s'}}>
           <span className="text-sm font-medium text-gray-600">Valor Devedores</span>
-          <span className="text-xl sm:text-2xl font-bold text-red-700">
+          <span className="text-xl sm:text-2xl font-bold text-red-700 transition-all duration-300">
             {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(
               todasVendas
                 .filter(v => (v.produtos.reduce((acc, p) => acc + (p.valorFinal * p.quantidade), 0) - (v.valorPago || 0)) > 0)
@@ -592,7 +592,7 @@ export default function VendasPage() {
       </div>
 
       {/* Botão Adicionar Venda */}
-      <div className="mb-6">
+      <div className="mb-6 animate-fade-in-left" style={{animationDelay: '0.6s'}}>
         <button
           onClick={() => {
             setShowModal(true);
@@ -603,9 +603,9 @@ export default function VendasPage() {
             setTouched(false);
             setClienteModalNome(null);
           }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
                           Adicionar venda
@@ -613,12 +613,12 @@ export default function VendasPage() {
       </div>
 
       {/* Tabelas de Vendas Clientes - DESKTOP */}
-      <div className="mb-8 hidden sm:block">
-        <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+      <div className="mb-8 hidden sm:block animate-fade-in-up" style={{animationDelay: '0.8s'}}>
+        <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2 transition-all duration-300">
+          <span className="inline-block w-3 h-3 rounded-full bg-green-500 animate-pulse-soft"></span>
           Vendas Clientes
         </h2>
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-lg shadow overflow-hidden transform transition-all duration-500 hover:shadow-xl">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-800">
@@ -703,7 +703,7 @@ export default function VendasPage() {
                         </td>
                         <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
                           <button
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
                             onClick={e => { 
                               e.stopPropagation(); 
                               setShowModal(true); 
@@ -737,8 +737,8 @@ export default function VendasPage() {
                                         <div className="flex items-center gap-2">
                                           {venda.valorEmDivida === 0 && (
                                             <>
-                                              <button title="Ver" onClick={e => { e.stopPropagation(); handleVerVenda(venda); }} className="text-blue-600 hover:text-blue-800 p-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
-                                              <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800 p-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
+                                              <button title="Ver" onClick={e => { e.stopPropagation(); handleVerVenda(venda); }} className="text-blue-600 hover:text-blue-800 p-1 transform transition-all duration-200 hover:scale-110"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                                              <button title="Imprimir" onClick={e => { e.stopPropagation(); handlePrintVenda(venda); }} className="text-green-600 hover:text-green-800 p-1 transform transition-all duration-200 hover:scale-110"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 14h12v7H6z" /></svg></button>
                                             </>
                                           )}
                                           <button title="Eliminar" onClick={e => { e.stopPropagation(); setVendaToDelete(venda); setShowDeleteModal(true); }} className="text-red-600 hover:text-red-800 p-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
@@ -784,9 +784,9 @@ export default function VendasPage() {
       </div>
 
       {/* Cards de Vendas Clientes - MOBILE */}
-      <div className="mb-8 block sm:hidden">
-        <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+      <div className="mb-8 block sm:hidden animate-fade-in-up" style={{animationDelay: '0.8s'}}>
+        <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2 transition-all duration-300">
+          <span className="inline-block w-3 h-3 rounded-full bg-green-500 animate-pulse-soft"></span>
           Vendas Clientes
         </h2>
         <div className="space-y-4">
@@ -857,7 +857,7 @@ export default function VendasPage() {
                 </div>
                 <div className="mt-2">
                   <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold text-sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold text-sm transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
                     onClick={e => { 
                       e.stopPropagation(); 
                       setShowModal(true); 

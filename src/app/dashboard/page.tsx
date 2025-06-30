@@ -102,34 +102,34 @@ export default function DashboardPage() {
 
       {/* Cards de totais */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-blue-700 text-white rounded-lg p-4 shadow flex flex-col items-center">
+        <div className="bg-blue-700 text-white rounded-lg p-4 shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.1s'}}>
           <div className="text-lg font-semibold">Total de Clientes</div>
-          <div className="text-3xl font-bold mt-2">{data.totalClientes}</div>
+          <div className="text-3xl font-bold mt-2 transition-all duration-300">{data.totalClientes}</div>
         </div>
-        <div className="bg-green-700 text-white rounded-lg p-4 shadow flex flex-col items-center">
+        <div className="bg-green-700 text-white rounded-lg p-4 shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.2s'}}>
           <div className="text-lg font-semibold">Total de Vendas</div>
-          <div className="text-3xl font-bold mt-2">{data.totalVendas}</div>
+          <div className="text-3xl font-bold mt-2 transition-all duration-300">{data.totalVendas}</div>
         </div>
-        <div className="bg-indigo-700 text-white rounded-lg p-4 shadow flex flex-col items-center">
+        <div className="bg-indigo-700 text-white rounded-lg p-4 shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.3s'}}>
           <div className="text-lg font-semibold">Total Vendido</div>
-          <div className="text-3xl font-bold mt-2">€ {data.totalVendido.toFixed(2)}</div>
+          <div className="text-3xl font-bold mt-2 transition-all duration-300">€ {data.totalVendido.toFixed(2)}</div>
         </div>
-        <div className="bg-purple-700 text-white rounded-lg p-4 shadow flex flex-col items-center">
+        <div className="bg-purple-700 text-white rounded-lg p-4 shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.4s'}}>
           <div className="text-lg font-semibold">Total Ganho</div>
-          <div className="text-3xl font-bold mt-2">€ {data.totalGanho.toFixed(2)}</div>
+          <div className="text-3xl font-bold mt-2 transition-all duration-300">€ {data.totalGanho.toFixed(2)}</div>
         </div>
-        <div className="bg-yellow-600 text-white rounded-lg p-4 shadow flex flex-col items-center">
+        <div className="bg-yellow-600 text-white rounded-lg p-4 shadow flex flex-col items-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.5s'}}>
           <div className="text-lg font-semibold">Clientes Devedores</div>
-          <div className="text-3xl font-bold mt-2">{data.clientesDevedores.length}</div>
+          <div className="text-3xl font-bold mt-2 transition-all duration-300">{data.clientesDevedores.length}</div>
         </div>
       </div>
 
       {/* Gráfico de vendas */}
-      <div className="bg-gray-900 rounded-lg p-6 shadow flex flex-col gap-4">
+      <div className="bg-gray-900 rounded-lg p-6 shadow flex flex-col gap-4 transform transition-all duration-700 hover:shadow-xl animate-fade-in-up" style={{animationDelay: '0.6s'}}>
         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-2">
           <h2 className="text-xl font-bold text-white">Gráfico de Vendas</h2>
           <select
-            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none mt-2 md:mt-0"
+            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none mt-2 md:mt-0 transition-all duration-300 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500"
             value={tipoGrafico}
             onChange={e => setTipoGrafico(e.target.value as 'mes' | 'ano')}
           >
@@ -137,7 +137,7 @@ export default function DashboardPage() {
             <option value="ano">Por ano</option>
           </select>
         </div>
-        <div className="w-full flex justify-center">
+        <div className="w-full flex justify-center transform transition-all duration-500">
           <div className="w-full max-w-2xl" style={{height: 350}}>
             <Bar data={chartData} options={{ responsive: true, plugins: { legend: { display: false } }, maintainAspectRatio: false }} height={350} />
           </div>
@@ -147,14 +147,14 @@ export default function DashboardPage() {
       {/* Top 5 clientes e Últimos clientes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top 5 clientes */}
-        <div className="bg-gray-900 rounded-lg p-6 shadow">
+        <div className="bg-gray-900 rounded-lg p-6 shadow transform transition-all duration-700 hover:shadow-xl animate-fade-in-left" style={{animationDelay: '0.7s'}}>
           <h2 className="text-lg font-bold text-white mb-4">Top 5 Clientes</h2>
           <ol className="space-y-2">
             {data.top5Clientes.length === 0 && (
               <li className="text-gray-400">Nenhum cliente com vendas pagas.</li>
             )}
             {data.top5Clientes.map((c, i) => (
-              <li key={c.id} className="flex justify-between items-center bg-gray-800 rounded px-4 py-2">
+              <li key={c.id} className="flex justify-between items-center bg-gray-800 rounded px-4 py-2 transform transition-all duration-300 hover:bg-gray-700 hover:scale-102 animate-fade-in-right" style={{animationDelay: `${0.8 + i * 0.1}s`}}>
                 <span className="font-semibold text-white">{i + 1}. {c.nome}</span>
                 <span className="text-green-400 font-bold">€ {c.totalGasto.toFixed(2)}</span>
               </li>
@@ -162,14 +162,14 @@ export default function DashboardPage() {
           </ol>
         </div>
         {/* Últimos clientes adicionados */}
-        <div className="bg-gray-900 rounded-lg p-6 shadow">
+        <div className="bg-gray-900 rounded-lg p-6 shadow transform transition-all duration-700 hover:shadow-xl animate-fade-in-right" style={{animationDelay: '0.7s'}}>
           <h2 className="text-lg font-bold text-white mb-4">Últimos Clientes Adicionados</h2>
           <ol className="space-y-2">
             {data.ultimosClientes.length === 0 && (
               <li className="text-gray-400">Nenhum cliente cadastrado.</li>
             )}
-            {data.ultimosClientes.map((c) => (
-              <li key={c.id} className="flex justify-between items-center bg-gray-800 rounded px-4 py-2">
+            {data.ultimosClientes.map((c, i) => (
+              <li key={c.id} className="flex justify-between items-center bg-gray-800 rounded px-4 py-2 transform transition-all duration-300 hover:bg-gray-700 hover:scale-102 animate-fade-in-left" style={{animationDelay: `${0.8 + i * 0.1}s`}}>
                 <span className="font-semibold text-white">{c.nome}</span>
                 <span className="text-gray-400 text-xs">{new Date(c.criadoEm).toLocaleDateString()}</span>
               </li>
