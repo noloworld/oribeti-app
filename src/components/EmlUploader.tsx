@@ -91,20 +91,31 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
           const precoTotal = match[5].replace(',', '.');
           
           // Filtrar produtos válidos (excluir texto de cabeçalhos, criptografia, etc.)
-          if (nome && 
-              nome.length > 5 && 
-              !nome.includes('cipher') && 
-              !nome.includes('TLS') && 
-              !nome.includes('AES') && 
-              !nome.includes('RSA') &&
-              !nome.includes('ECDHE') &&
-              parseFloat(precoUnitario) > 0) {
-            
-            produtos.push({
-              nome: nome,
-              quantidade: quantidade,
-              preco: precoUnitario
-            });
+                       if (nome && 
+                 nome.length > 5 && 
+                 !nome.includes('cipher') && 
+                 !nome.includes('TLS') && 
+                 !nome.includes('AES') && 
+                 !nome.includes('RSA') &&
+                 !nome.includes('ECDHE') &&
+                 parseFloat(precoUnitario) > 0) {
+               
+               // Limpar entidades HTML e caracteres especiais
+               const nomeLimpo = nome
+                 .replace(/&nbsp;/g, ' ')
+                 .replace(/&amp;/g, '&')
+                 .replace(/&lt;/g, '<')
+                 .replace(/&gt;/g, '>')
+                 .replace(/&quot;/g, '"')
+                 .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+                 .replace(/&#x([0-9a-fA-F]+);/g, (match, hex) => String.fromCharCode(parseInt(hex, 16)))
+                 .trim();
+               
+               produtos.push({
+                 nome: nomeLimpo,
+                 quantidade: quantidade,
+                 preco: precoUnitario
+               });
             
             console.log(`📦 Produto encontrado: ${nome} | Qtd: ${quantidade} | Preço: €${precoUnitario}`);
           }
@@ -134,8 +145,19 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
                 !nome.includes('ECDHE') &&
                 parseFloat(precoUnitario) > 0) {
               
+              // Limpar entidades HTML e caracteres especiais
+              const nomeLimpo = nome
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+                .replace(/&#x([0-9a-fA-F]+);/g, (match, hex) => String.fromCharCode(parseInt(hex, 16)))
+                .trim();
+              
               produtos.push({
-                nome: nome,
+                nome: nomeLimpo,
                 quantidade: quantidade,
                 preco: precoUnitario
               });
@@ -174,20 +196,31 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
               const precoTotal = match[5].replace(',', '.');
               
               // Filtrar produtos válidos
-              if (nome && 
-                  nome.length > 10 && 
-                  !nome.includes('cipher') && 
-                  !nome.includes('TLS') && 
-                  !nome.includes('AES') && 
-                  !nome.includes('RSA') &&
-                  !nome.includes('ECDHE') &&
-                  parseFloat(precoUnitario) > 0) {
-                
-                produtos.push({
-                  nome: nome,
-                  quantidade: quantidade,
-                  preco: precoUnitario
-                });
+                             if (nome && 
+                   nome.length > 10 && 
+                   !nome.includes('cipher') && 
+                   !nome.includes('TLS') && 
+                   !nome.includes('AES') && 
+                   !nome.includes('RSA') &&
+                   !nome.includes('ECDHE') &&
+                   parseFloat(precoUnitario) > 0) {
+                 
+                 // Limpar entidades HTML e caracteres especiais
+                 const nomeLimpo = nome
+                   .replace(/&nbsp;/g, ' ')
+                   .replace(/&amp;/g, '&')
+                   .replace(/&lt;/g, '<')
+                   .replace(/&gt;/g, '>')
+                   .replace(/&quot;/g, '"')
+                   .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+                   .replace(/&#x([0-9a-fA-F]+);/g, (match, hex) => String.fromCharCode(parseInt(hex, 16)))
+                   .trim();
+                 
+                 produtos.push({
+                   nome: nomeLimpo,
+                   quantidade: quantidade,
+                   preco: precoUnitario
+                 });
                 
                 console.log(`📦 Produto texto: ${nome} | Qtd: ${quantidade} | Preço: €${precoUnitario}`);
               }
@@ -300,8 +333,19 @@ export default function EmlUploader({ onDadosExtraidos, className = "" }: EmlUpl
             try {
               const base64Content = base64Lines.join('').replace(/\s/g, '');
               console.log('🔍 Tentando decodificar', base64Content.length, 'caracteres de base64...');
-              htmlContent = atob(base64Content);
-              console.log('✅ Base64 decodificado com sucesso, tamanho:', htmlContent.length, 'caracteres');
+              
+              // Decodificar base64 e converter para UTF-8 corretamente
+              const binaryString = atob(base64Content);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              
+              // Usar TextDecoder para decodificar UTF-8 corretamente
+              const decoder = new TextDecoder('utf-8');
+              htmlContent = decoder.decode(bytes);
+              
+              console.log('✅ Base64 decodificado com UTF-8, tamanho:', htmlContent.length, 'caracteres');
               
               // Verificar se o conteúdo decodificado contém HTML
               if (htmlContent.includes('<html') || htmlContent.includes('<table') || htmlContent.includes('Detalhes da Encomenda')) {
