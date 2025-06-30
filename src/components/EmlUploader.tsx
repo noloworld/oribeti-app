@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 
 interface Produto {
   nome: string;

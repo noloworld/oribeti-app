@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, Fragment } from "react";
 import { FaEuroSign } from "react-icons/fa";
-import { Toaster, toast } from "sonner";
+import toast from 'react-hot-toast';
 import { Transition } from "@headlessui/react";
 import { Bar } from 'react-chartjs-2';
 import {
@@ -309,7 +309,6 @@ export default function DespesasPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Toaster position="top-right" richColors />
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold">Despesas</h1>
         <button
