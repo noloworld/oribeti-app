@@ -91,6 +91,16 @@ model Despesa {
   valor     Float
   data      DateTime
   criadoEm  DateTime @default(now())
+  produtos  ProdutoDespesa[]
+}
+
+model ProdutoDespesa {
+  id         Int      @id @default(autoincrement())
+  despesaId  Int
+  despesa    Despesa  @relation(fields: [despesaId], references: [id], onDelete: Cascade)
+  nome       String
+  quantidade Int      @default(1)
+  preco      Float
 }
 
 model Log {

@@ -16,6 +16,9 @@ export async function GET(req: NextRequest) {
         orderBy: { data: 'desc' },
         skip,
         take: limit,
+        include: {
+          produtos: true
+        }
       })
     ]);
     return NextResponse.json({ despesas, total });
@@ -33,17 +36,32 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { nome, valor, data } = body;
-    if (!nome || !valor || !data) {
-      return NextResponse.json({ error: 'Preencha todos os campos.' }, { status: 400 });
+    const { nome, valor, data, produtos } = body;
+    if (!nome || !data) {
+      return NextResponse.json({ error: 'Preencha todos os campos obrigatórios.' }, { status: 400 });
     }
+    
+    // Calcular valor total baseado nos produtos ou usar valor fornecido
+    const valorTotal = produtos && produtos.length > 0 
+      ? produtos.reduce((total: number, produto: any) => total + (produto.quantidade * produto.preco), 0)
+      : parseFloat(valor || '0');
     
     const despesa = await prisma.despesa.create({
       data: {
         nome,
-        valor: parseFloat(valor),
+        valor: valorTotal,
         data: new Date(data),
+        produtos: produtos && produtos.length > 0 ? {
+          create: produtos.map((produto: any) => ({
+            nome: produto.nome,
+            quantidade: parseInt(produto.quantidade),
+            preco: parseFloat(produto.preco)
+          }))
+        } : undefined
       },
+      include: {
+        produtos: true
+      }
     });
 
     // Gravar log da ação
@@ -71,18 +89,38 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, nome, valor, data } = body;
-    if (!id || !nome || !valor || !data) {
-      return NextResponse.json({ error: 'Preencha todos os campos.' }, { status: 400 });
+    const { id, nome, valor, data, produtos } = body;
+    if (!id || !nome || !data) {
+      return NextResponse.json({ error: 'Preencha todos os campos obrigatórios.' }, { status: 400 });
     }
+    
+    // Calcular valor total baseado nos produtos ou usar valor fornecido
+    const valorTotal = produtos && produtos.length > 0 
+      ? produtos.reduce((total: number, produto: any) => total + (produto.quantidade * produto.preco), 0)
+      : parseFloat(valor || '0');
+    
+    // Primeiro, deletar produtos existentes
+    await prisma.produtoDespesa.deleteMany({
+      where: { despesaId: Number(id) }
+    });
     
     const despesa = await prisma.despesa.update({
       where: { id: Number(id) },
       data: {
         nome,
-        valor: parseFloat(valor),
+        valor: valorTotal,
         data: new Date(data),
+        produtos: produtos && produtos.length > 0 ? {
+          create: produtos.map((produto: any) => ({
+            nome: produto.nome,
+            quantidade: parseInt(produto.quantidade),
+            preco: parseFloat(produto.preco)
+          }))
+        } : undefined
       },
+      include: {
+        produtos: true
+      }
     });
 
     // Gravar log da ação
